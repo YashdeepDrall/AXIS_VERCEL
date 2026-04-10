@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SBI Fraud Investigation Assistant</title>
+  <style>
+    :root {
+      --bg-soft: #f7fbff;
+      --bg-accent: #e6f7f2;
+      --ink: #0f2a3a;
+      --muted: #4b6b7a;
+      --panel: rgba(255, 255, 255, 0.82);
+      --panel-solid: #ffffff;
+      --line: rgba(15, 42, 58, 0.08);
+      --primary: #2457c5;
+      --primary-2: #2e7be8;
+      --prompt: rgba(219, 236, 255, 0.7);
+      --prompt-line: rgba(11, 92, 171, 0.15);
+      --user: #e8f1ff;
+      --danger: #b42318;
+      --danger-bg: #fee4e2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(1200px 800px at 10% 10%, var(--bg-accent) 0%, var(--bg-soft) 45%, #ffffff 100%);
+    }
+
+    .page {
+      width: min(1100px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 36px;
+    }
+
+    .title {
+      font-size: clamp(2rem, 3vw, 2.5rem);
+      font-weight: 800;
+      margin: 0 0 8px;
+      letter-spacing: 0.2px;
+    }
+
+    .subtitle {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(15, 42, 58, 0.1);
+      backdrop-filter: blur(8px);
+    }
+
+    .login-wrap {
+      display: flex;
+      justify-content: center;
+      padding-top: 32px;
+    }
+
+    .login-card {
+      width: min(420px, 100%);
+      padding: 24px;
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    }
+
+    .section-title {
+      margin: 0 0 16px;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    label {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    input, button {
+      font: inherit;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      margin-bottom: 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(15, 42, 58, 0.15);
+      padding: 12px 14px;
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #ffffff;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 100%);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(36, 87, 197, 0.25);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      box-shadow: none;
+    }
+
+    .secondary {
+      background: linear-gradient(90deg, #36546b 0%, #4d738e 100%);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .chat-shell {
+      padding: 22px;
+    }
+
+    .chat-title {
+      margin: 0 0 18px;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .chat-history {
+      min-height: 360px;
+      max-height: 62vh;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
+    .chat-row {
+      display: flex;
+      margin: 10px 0;
+    }
+
+    .chat-row.left {
+      justify-content: flex-start;
+    }
+
+    .chat-row.right {
+      justify-content: flex-end;
+    }
+
+    .bubble {
+      max-width: min(72ch, 76%);
+      padding: 12px 14px;
+      border-radius: 16px;
+      line-height: 1.5;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+      box-shadow: 0 8px 20px rgba(15, 42, 58, 0.08);
+    }
+
+    .bubble-ai {
+      background: var(--panel-solid);
+      border: 1px solid var(--line);
+    }
+
+    .bubble-prompt {
+      background: var(--prompt);
+      border: 1px solid var(--prompt-line);
+    }
+
+    .bubble-user {
+      background: var(--user);
+      border: 1px solid rgba(36, 87, 197, 0.18);
+      color: #173255;
+    }
+
+    .documents-card {
+      width: min(72ch, 76%);
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: var(--panel-solid);
+      border: 1px solid var(--line);
+      box-shadow: 0 8px 20px rgba(15, 42, 58, 0.08);
+    }
+
+    .documents-title {
+      margin: 0 0 10px;
+      font-weight: 700;
+    }
+
+    .document-item + .document-item {
+      margin-top: 10px;
+    }
+
+    .document-name {
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .download-link {
+      display: inline-block;
+      text-decoration: none;
+      color: #ffffff;
+      background: linear-gradient(90deg, #0b5cab 0%, #2a7de1 100%);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-weight: 700;
+    }
+
+    .warning {
+      font-size: 0.88rem;
+      color: #7a271a;
+    }
+
+    .status,
+    .error {
+      margin-top: 14px;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.92rem;
+    }
+
+    .status {
+      background: rgba(219, 236, 255, 0.7);
+      border: 1px solid rgba(11, 92, 171, 0.15);
+    }
+
+    .error {
+      background: var(--danger-bg);
+      border: 1px solid rgba(180, 35, 24, 0.18);
+      color: var(--danger);
+    }
+
+    .composer {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .composer input {
+      margin: 0;
+      flex: 1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: calc(100% - 20px);
+        padding-top: 20px;
+      }
+
+      .toolbar {
+        justify-content: stretch;
+      }
+
+      .toolbar button {
+        flex: 1;
+      }
+
+      .bubble,
+      .documents-card {
+        max-width: 100%;
+      }
+
+      .composer {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1 class="title">SBI Fraud Investigation Assistant</h1>
+    <p class="subtitle">Secure, guided fraud investigation for State Bank of India</p>
+
+    <section id="loginView" class="login-wrap">
+      <div class="card login-card">
+        <h2 class="section-title">Login</h2>
+        <form id="loginForm">
+          <label for="userId">User ID</label>
+          <input id="userId" name="userId" type="text" placeholder="Enter your user ID" autocomplete="username">
+
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password">
+
+          <button id="loginButton" type="submit">Continue</button>
+        </form>
+        <div id="loginError" class="error hidden"></div>
+      </div>
+    </section>
+
+    <section id="appView" class="hidden">
+      <div class="toolbar">
+        <button id="resetButton" class="secondary" type="button">Reset Conversation</button>
+        <button id="logoutButton" class="secondary" type="button">Logout</button>
+      </div>
+
+      <div class="card chat-shell">
+        <h2 class="chat-title">SBI Fraud Investigation Chat</h2>
+        <div id="chatHistory" class="chat-history"></div>
+        <div id="chatStatus" class="status hidden"></div>
+        <div id="chatError" class="error hidden"></div>
+        <form id="composerForm" class="composer">
+          <input id="chatInput" type="text" placeholder="Describe the fraud case or reply Yes / No when asked" autocomplete="off">
+          <button id="sendButton" type="submit">Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "sbi-vercel-chat-state";
+    const API_REQUEST_TIMEOUT_MS = 75000;
+    const API_MAX_RETRIES = 4;
+    const API_RETRY_BACKOFF_MS = 3000;
+    const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
+    const FOLLOWUP_ANSWERS = new Set(["yes", "y", "yeah", "yep", "sure", "ok", "okay", "no", "n", "nope", "nah", "nothing"]);
+
+    const els = {
+      loginView: document.getElementById("loginView"),
+      appView: document.getElementById("appView"),
+      loginForm: document.getElementById("loginForm"),
+      userId: document.getElementById("userId"),
+      password: document.getElementById("password"),
+      loginButton: document.getElementById("loginButton"),
+      loginError: document.getElementById("loginError"),
+      resetButton: document.getElementById("resetButton"),
+      logoutButton: document.getElementById("logoutButton"),
+      chatHistory: document.getElementById("chatHistory"),
+      chatStatus: document.getElementById("chatStatus"),
+      chatError: document.getElementById("chatError"),
+      composerForm: document.getElementById("composerForm"),
+      chatInput: document.getElementById("chatInput"),
+      sendButton: document.getElementById("sendButton")
+    };
+
+    function defaultState() {
+      return {
+        loggedIn: false,
+        userId: "",
+        bankId: "",
+        fraudCategory: "",
+        chatHistory: [],
+        conversationState: {
+          step: null,
+          analysis: {},
+          case_query: null,
+          sessionId: ""
+        }
+      };
+    }
+
+    function loadState() {
+      try {
+        const raw = window.sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return defaultState();
+        }
+
+        const parsed = JSON.parse(raw);
+        return {
+          ...defaultState(),
+          ...parsed,
+          conversationState: {
+            ...defaultState().conversationState,
+            ...(parsed.conversationState || {})
+          },
+          chatHistory: Array.isArray(parsed.chatHistory) ? parsed.chatHistory : []
+        };
+      } catch (_error) {
+        return defaultState();
+      }
+    }
+
+    let state = loadState();
+
+    function saveState() {
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function setHidden(element, hidden) {
+      element.classList.toggle("hidden", hidden);
+    }
+
+    function setError(message, target = els.chatError) {
+      if (!message) {
+        target.textContent = "";
+        setHidden(target, true);
+        return;
+      }
+
+      target.textContent = message;
+      setHidden(target, false);
+    }
+
+    function setStatus(message) {
+      if (!message) {
+        els.chatStatus.textContent = "";
+        setHidden(els.chatStatus, true);
+        return;
+      }
+
+      els.chatStatus.textContent = message;
+      setHidden(els.chatStatus, false);
+    }
+
+    function ensureInitialPrompt() {
+      if (!state.loggedIn || state.chatHistory.length > 0) {
+        return;
+      }
+
+      state.chatHistory.push({
+        role: "prompt",
+        content: "Hello. Please provide details about SBI fraud case."
+      });
+      saveState();
+    }
+
+    function addChatItem(item) {
+      state.chatHistory.push(item);
+      saveState();
+    }
+
+    function renderDocuments(items) {
+      const row = document.createElement("div");
+      row.className = "chat-row left";
+
+      const card = document.createElement("div");
+      card.className = "documents-card";
+
+      const title = document.createElement("div");
+      title.className = "documents-title";
+      title.textContent = "Relevant SOP Documents";
+      card.appendChild(title);
+
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "warning";
+        empty.textContent = "No matching documents were returned.";
+        card.appendChild(empty);
+      }
+
+      for (const doc of items) {
+        const item = document.createElement("div");
+        item.className = "document-item";
+
+        const name = document.createElement("div");
+        name.className = "document-name";
+        name.textContent = doc.name || "Document";
+        item.appendChild(name);
+
+        if (doc.fileId) {
+          const link = document.createElement("a");
+          link.className = "download-link";
+          link.href = doc.downloadUrl || `/documents/${encodeURIComponent(doc.fileId)}`;
+          link.textContent = `Download ${doc.name || "Document"}`;
+          link.setAttribute("download", "");
+          item.appendChild(link);
+        } else {
+          const warning = document.createElement("div");
+          warning.className = "warning";
+          warning.textContent = "Document download is currently unavailable.";
+          item.appendChild(warning);
+        }
+
+        card.appendChild(item);
+      }
+
+      row.appendChild(card);
+      els.chatHistory.appendChild(row);
+    }
+
+    function renderHistory() {
+      els.chatHistory.innerHTML = "";
+
+      for (const item of state.chatHistory) {
+        if (item.role === "documents") {
+          renderDocuments(item.items || []);
+          continue;
+        }
+
+        const row = document.createElement("div");
+        row.className = `chat-row ${item.role === "user" ? "right" : "left"}`;
+
+        const bubble = document.createElement("div");
+        bubble.className = `bubble ${item.role === "user" ? "bubble-user" : item.role === "prompt" ? "bubble-prompt" : "bubble-ai"}`;
+        bubble.textContent = item.content || "";
+
+        row.appendChild(bubble);
+        els.chatHistory.appendChild(row);
+      }
+
+      els.chatHistory.scrollTop = els.chatHistory.scrollHeight;
+    }
+
+    function render() {
+      setHidden(els.loginView, state.loggedIn);
+      setHidden(els.appView, !state.loggedIn);
+      els.userId.value = state.userId || "";
+      renderHistory();
+      if (state.loggedIn) {
+        els.chatInput.focus();
+      }
+    }
+
+    function extractPrompt(text) {
+      if (!text) {
+        return { cleaned: "", prompt: "" };
+      }
+
+      const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+      let prompt = "";
+
+      for (let index = lines.length - 1; index >= 0; index -= 1) {
+        const line = lines[index];
+        const lower = line.toLowerCase();
+
+        if (
+          line.includes("(Yes/No)") ||
+          line.endsWith("?") ||
+          lower.includes("provide details about the case") ||
+          lower.includes("describe the new fraud case") ||
+          lower.includes("thank you for using the sbi fraud investigation assistant")
+        ) {
+          prompt = line;
+          break;
+        }
+      }
+
+      if (!prompt) {
+        return { cleaned: text, prompt: "" };
+      }
+
+      return {
+        cleaned: text.replace(prompt, "").trim(),
+        prompt
+      };
+    }
+
+    async function delay(ms) {
+      await new Promise((resolve) => window.setTimeout(resolve, ms));
+    }
+
+    async function requestBackend(method, url, options = {}) {
+      let lastError = null;
+      let lastResponse = null;
+
+      for (let attempt = 0; attempt < API_MAX_RETRIES; attempt += 1) {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+
+        try {
+          const response = await fetch(url, {
+            method,
+            signal: controller.signal,
+            headers: {
+              "Content-Type": "application/json",
+              ...(options.headers || {})
+            },
+            body: options.body
+          });
+
+          window.clearTimeout(timeoutId);
+
+          if (!TRANSIENT_STATUS_CODES.has(response.status)) {
+            return response;
+          }
+
+          lastResponse = response;
+        } catch (error) {
+          window.clearTimeout(timeoutId);
+          lastError = error;
+        }
+
+        if (attempt < API_MAX_RETRIES - 1) {
+          await delay(API_RETRY_BACKOFF_MS * (attempt + 1));
+        }
+      }
+
+      if (lastResponse) {
+        return lastResponse;
+      }
+
+      throw lastError || new Error("Backend request failed without a response.");
+    }
+
+    async function login(userId, password) {
+      const response = await requestBackend("POST", "/login", {
+        body: JSON.stringify({ userId, password })
+      });
+
+      if (response.status === 200) {
+        return response.json();
+      }
+
+      if (response.status === 401) {
+        throw new Error("Invalid user ID or password.");
+      }
+
+      if (TRANSIENT_STATUS_CODES.has(response.status)) {
+        throw new Error(`Backend temporarily returned ${response.status}. Please wait a few seconds and try again.`);
+      }
+
+      let detail = "";
+      try {
+        const payload = await response.json();
+        detail = payload.detail || "";
+      } catch (_error) {
+        detail = await response.text();
+      }
+
+      throw new Error(detail || `Backend returned status ${response.status}.`);
+    }
+
+    function setComposerBusy(isBusy) {
+      els.chatInput.disabled = isBusy;
+      els.sendButton.disabled = isBusy;
+      els.sendButton.textContent = isBusy ? "Sending..." : "Send";
+    }
+
+    async function sendChat(query) {
+      const trimmed = query.trim();
+      if (!trimmed) {
+        return;
+      }
+
+      const normalized = trimmed.toLowerCase();
+      addChatItem({ role: "user", content: trimmed });
+      render();
+
+      setComposerBusy(true);
+      setError("");
+      setStatus("Working on your request...");
+
+      try {
+        const response = await requestBackend("POST", "/chat", {
+          body: JSON.stringify({
+            userId: state.userId,
+            query: trimmed,
+            state: state.conversationState
+          })
+        });
+
+        let payload;
+        try {
+          payload = await response.json();
+        } catch (_error) {
+          throw new Error("Backend returned an unreadable response.");
+        }
+
+        if (!response.ok) {
+          throw new Error(payload.detail || payload.chatbot_response || `Backend returned status ${response.status}.`);
+        }
+
+        if (!FOLLOWUP_ANSWERS.has(normalized)) {
+          state.fraudCategory = "";
+        }
+
+        if (payload.fraud_category) {
+          state.fraudCategory = payload.fraud_category;
+        }
+
+        state.conversationState = payload.conversation_state || defaultState().conversationState;
+        saveState();
+
+        const documents = Array.isArray(payload.documents) ? payload.documents : [];
+        if (documents.length) {
+          addChatItem({ role: "documents", items: documents });
+        }
+
+        const chatbotResponse = payload.chatbot_response || "";
+        const promptParts = extractPrompt(chatbotResponse);
+        let fullResponse = promptParts.cleaned || chatbotResponse;
+
+        if (promptParts.prompt && fullResponse.trim() === promptParts.prompt.trim()) {
+          fullResponse = "";
+        }
+
+        if (documents.length) {
+          fullResponse = fullResponse.replace("Relevant SOP Documents:", "").trim();
+          for (const doc of documents) {
+            if (doc.name) {
+              fullResponse = fullResponse.replace(doc.name, "").trim();
+            }
+          }
+        }
+
+        if (fullResponse.trim()) {
+          addChatItem({ role: "bot", content: fullResponse.trim() });
+        }
+
+        if (promptParts.prompt) {
+          addChatItem({ role: "prompt", content: promptParts.prompt });
+        }
+
+        render();
+      } catch (error) {
+        setError(`API Error: ${error.message}. If your Vercel function is cold-starting, retry once after a few seconds.`);
+      } finally {
+        setComposerBusy(false);
+        setStatus("");
+        els.chatInput.value = "";
+        els.chatInput.focus();
+      }
+    }
+
+    function resetConversation() {
+      state.chatHistory = [];
+      state.fraudCategory = "";
+      state.conversationState = defaultState().conversationState;
+      saveState();
+      ensureInitialPrompt();
+      setError("");
+      setStatus("");
+      render();
+    }
+
+    function logout() {
+      state = defaultState();
+      saveState();
+      els.password.value = "";
+      setError("", els.loginError);
+      setError("");
+      setStatus("");
+      render();
+    }
+
+    els.loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setError("", els.loginError);
+
+      const userId = els.userId.value.trim();
+      const password = els.password.value.trim();
+
+      if (!userId || !password) {
+        setError("User ID and password are required.", els.loginError);
+        return;
+      }
+
+      els.loginButton.disabled = true;
+      els.loginButton.textContent = "Signing in...";
+
+      try {
+        const payload = await login(userId, password);
+        state.loggedIn = true;
+        state.userId = userId;
+        state.bankId = payload.bankId || "";
+        state.chatHistory = [];
+        state.fraudCategory = "";
+        state.conversationState = defaultState().conversationState;
+        saveState();
+        ensureInitialPrompt();
+        els.password.value = "";
+        render();
+      } catch (error) {
+        setError(error.message, els.loginError);
+      } finally {
+        els.loginButton.disabled = false;
+        els.loginButton.textContent = "Continue";
+      }
+    });
+
+    els.composerForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await sendChat(els.chatInput.value);
+    });
+
+    els.resetButton.addEventListener("click", () => {
+      resetConversation();
+    });
+
+    els.logoutButton.addEventListener("click", () => {
+      logout();
+    });
+
+    ensureInitialPrompt();
+    render();
+  </script>
+</body>
+</html>

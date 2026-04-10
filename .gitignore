@@ -1,0 +1,68 @@
+# Python Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables (Sensitive Data)
+.env
+.env.*
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local Logs
+*.log
+
+# Vector Store / ML local artifacts
+*.faiss
+*.pkl
+*.index
+local_cache/
+
+# Project Data
+# Ignore actual PDFs in the banks folder to keep SOPs private
+banks/**/*.pdf
