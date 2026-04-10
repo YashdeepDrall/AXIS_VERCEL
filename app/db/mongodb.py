@@ -3,7 +3,7 @@ import os
 import uuid
 from copy import deepcopy
 
-from app.core.config import SBI_BANK_ID, SBI_BANK_NAME
+from app.core.config import AXIS_BANK_ID, AXIS_BANK_NAME
 
 
 def _matches(document, query):
@@ -133,8 +133,8 @@ fs = InMemoryGridFS()
 
 
 def _seed_default_user():
-    default_user_id = os.getenv("SBI_DEFAULT_USER_ID", "sbi001")
-    default_password = os.getenv("SBI_DEFAULT_PASSWORD", "0000")
+    default_user_id = os.getenv("AXIS_DEFAULT_USER_ID", "axis001")
+    default_password = os.getenv("AXIS_DEFAULT_PASSWORD", "0000")
 
     if users_collection.find_one({"userId": default_user_id}):
         return
@@ -143,8 +143,8 @@ def _seed_default_user():
         {
             "userId": default_user_id,
             "password": default_password,
-            "bankId": SBI_BANK_ID,
-            "bankName": SBI_BANK_NAME,
+            "bankId": AXIS_BANK_ID,
+            "bankName": AXIS_BANK_NAME,
             "role": "investigator",
         }
     )

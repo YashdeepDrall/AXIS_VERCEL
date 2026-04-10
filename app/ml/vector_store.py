@@ -7,13 +7,14 @@ from copy import deepcopy
 from pypdf import PdfReader
 
 from app.core.config import (
+    AXIS_BANK_DIR,
+    AXIS_BANK_ID,
+    AXIS_SOP_FILE,
     GEMINI_EMBEDDING_DIMENSION,
     GEMINI_EMBEDDING_MODEL,
+    LOCAL_VECTOR_CACHE_FILE,
     RAG_CHUNK_OVERLAP,
     RAG_CHUNK_SIZE,
-    LOCAL_VECTOR_CACHE_FILE,
-    SBI_BANK_DIR,
-    SBI_BANK_ID,
 )
 from app.db.mongodb import documents_collection, fs
 from app.ml.embeddings import generate_embedding as build_embedding
@@ -91,7 +92,7 @@ def _stable_file_id(bank_id, file_name):
     return digest[:32]
 
 
-def store_pdf(file_path, bank_id=SBI_BANK_ID):
+def store_pdf(file_path, bank_id=AXIS_BANK_ID):
     file_name = os.path.basename(file_path)
     file_id = _stable_file_id(bank_id, file_name)
 
@@ -242,32 +243,34 @@ def rebuild_vector_index():
     vector_store = list(
         documents_collection.find(
             {
-                "bankId": SBI_BANK_ID,
+                "bankId": AXIS_BANK_ID,
                 "embedding": {"$exists": True},
             }
         )
     )
 
 
-def _register_sbi_pdfs():
-    if not os.path.exists(SBI_BANK_DIR):
+def _register_axis_pdfs():
+    if not os.path.exists(AXIS_BANK_DIR):
         return []
 
     registered_files = []
 
-    for file_name in os.listdir(SBI_BANK_DIR):
+    for file_name in os.listdir(AXIS_BANK_DIR):
         if not file_name.lower().endswith(".pdf"):
             continue
+        if file_name != AXIS_SOP_FILE:
+            continue
 
-        file_path = os.path.join(SBI_BANK_DIR, file_name)
-        file_id = store_pdf(file_path, SBI_BANK_ID)
+        file_path = os.path.join(AXIS_BANK_DIR, file_name)
+        file_id = store_pdf(file_path, AXIS_BANK_ID)
         registered_files.append((file_name, file_path, file_id))
 
     return registered_files
 
 
-def load_sbi_documents(force_rebuild=False):
-    registered_files = _register_sbi_pdfs()
+def load_axis_documents(force_rebuild=False):
+    registered_files = _register_axis_pdfs()
 
     if not registered_files:
         return
@@ -285,7 +288,7 @@ def load_sbi_documents(force_rebuild=False):
 
     documents_collection.delete_many(
         {
-            "bankId": SBI_BANK_ID,
+            "bankId": AXIS_BANK_ID,
             "embedding": {"$exists": True},
         }
     )
@@ -299,7 +302,7 @@ def load_sbi_documents(force_rebuild=False):
         cache_entry = _get_cached_document({"documents": cached_documents}, file_name, fingerprint)
 
         if cache_entry:
-            _load_cached_chunks(cache_entry, SBI_BANK_ID, file_id)
+            _load_cached_chunks(cache_entry, AXIS_BANK_ID, file_id)
             updated_cache["documents"][file_name] = cache_entry
             continue
 
@@ -318,7 +321,7 @@ def load_sbi_documents(force_rebuild=False):
             add_vector(
                 embedding,
                 chunk,
-                SBI_BANK_ID,
+                AXIS_BANK_ID,
                 chunk_file_name,
                 file_id,
                 source_file=file_name,
@@ -352,7 +355,7 @@ def _cosine_similarity(query_embedding, doc_embedding):
 
 def search_vector(query_embedding, bank_id, top_k=3):
     if not vector_store:
-        load_sbi_documents()
+        load_axis_documents()
 
     results = []
 

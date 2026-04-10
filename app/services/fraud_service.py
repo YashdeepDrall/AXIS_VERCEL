@@ -41,7 +41,7 @@ def _build_prompt(query, ranked_chunks):
     joined_context = "\n\n".join(formatted_chunks)
 
     return f"""
-You are an SBI fraud investigation assistant.
+You are an AXIS Bank fraud investigation assistant.
 Use only the retrieved SOP context below. Do not use outside knowledge.
 
 If the retrieved SOP context is not relevant enough to answer the user query, respond with JSON where:
@@ -89,7 +89,7 @@ def _build_report_prompt(query, ranked_chunks, analysis):
     indicator_text = ", ".join(indicators) if indicators else "None explicitly identified yet"
 
     return f"""
-You are preparing an SBI fraud investigation report.
+You are preparing an AXIS Bank fraud investigation report.
 Use only the retrieved SOP context and grounded analysis below. Do not invent facts.
 
 Write a concise but operationally useful report in plain text using exactly these section headings:
@@ -229,7 +229,7 @@ Required Documentation and Evidence:
 - Based on retrieved SOP context, collect the documents and system evidence referenced in the matched SOP sections.
 
 Escalation and Reporting:
-- Record the case in the appropriate SBI fraud workflow and continue escalation based on the retrieved SOP guidance.
+- Record the case in the appropriate AXIS Bank fraud workflow and continue escalation based on the retrieved SOP guidance.
 
 Source References:
 {source_lines}

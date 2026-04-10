@@ -26,13 +26,13 @@ def _load_env_file():
 
 _load_env_file()
 
-SBI_BANK_ID = "sbi"
-SBI_BANK_NAME = "State Bank of India"
+AXIS_BANK_ID = "axis"
+AXIS_BANK_NAME = "AXIS Bank"
 
 BASE_DIR = str(ROOT_DIR)
 BANKS_DIR = os.path.join(BASE_DIR, "banks")
-SBI_BANK_DIR = os.path.join(BANKS_DIR, SBI_BANK_ID)
-SBI_SOP_FILE = "SBI_SOP.pdf"
+AXIS_BANK_DIR = os.path.join(BANKS_DIR, "Axis")
+AXIS_SOP_FILE = "AXIS_SOP.pdf"
 
 GEMINI_API_BASE = os.getenv("GEMINI_API_BASE", "https://generativelanguage.googleapis.com/v1beta")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
@@ -65,5 +65,5 @@ RAG_CHUNK_OVERLAP = int(os.getenv("RAG_CHUNK_OVERLAP", "220"))
 LOCAL_VECTOR_CACHE_DIR = os.getenv("LOCAL_VECTOR_CACHE_DIR", os.path.join(BASE_DIR, "local_cache"))
 LOCAL_VECTOR_CACHE_FILE = os.getenv(
     "LOCAL_VECTOR_CACHE_FILE",
-    os.path.join(LOCAL_VECTOR_CACHE_DIR, "sbi_vectors.json"),
+    os.path.join(LOCAL_VECTOR_CACHE_DIR, "axis_vectors.json"),
 )

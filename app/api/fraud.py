@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.core.config import BASE_DIR, BANKS_DIR, SBI_BANK_ID, SBI_BANK_NAME
+from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BANK_NAME, BASE_DIR
 from app.db.mongodb import cases_collection, chat_logs_collection, documents_collection, fs
 from app.services.auth_service import verify_user, verify_user_credentials
 from app.services.fraud_service import detect_fraud, generate_investigation_report
@@ -71,7 +71,7 @@ def format_analysis(analysis):
 
 
 def fetch_relevant_documents(bank_id):
-    if bank_id != SBI_BANK_ID:
+    if bank_id != AXIS_BANK_ID:
         return []
 
     docs = list(
@@ -98,7 +98,7 @@ def fetch_relevant_documents(bank_id):
             file_path = os.path.abspath(os.path.join(BASE_DIR, file_path))
 
         if not file_path and file_name:
-            candidate_path = os.path.join(BANKS_DIR, bank_id, file_name)
+            candidate_path = os.path.join(AXIS_BANK_DIR, file_name)
             if os.path.exists(candidate_path):
                 file_path = candidate_path
 
@@ -183,7 +183,7 @@ def _run_chat_turn(user_id, bank_id, query, step=None, analysis=None, case_query
         if not analysis.get("supported"):
             response = (
                 analysis.get("reason")
-                or f"The content you asked for is not available in the {SBI_BANK_NAME} SOP. Please ask a relevant fraud-related query."
+                or f"The content you asked for is not available in the {AXIS_BANK_NAME} SOP. Please ask a relevant fraud-related query."
             )
             next_step = "conversation_end"
             analysis = {}
@@ -292,7 +292,7 @@ I did not get a clear Yes/No. Please reply Yes or No.
 
         elif choice == "no":
             response = (
-                "Thank you for using the SBI Fraud Investigation Assistant. "
+                "Thank you for using the AXIS Bank Fraud Investigation Assistant. "
                 "If you need help again, just type the case details anytime and I will be ready to assist."
             )
             next_step = "conversation_end"

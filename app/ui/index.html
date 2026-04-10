@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SBI Fraud Investigation Assistant</title>
+  <title>AXIS Bank Fraud Investigation Assistant</title>
   <style>
     :root {
-      --bg-soft: #f7fbff;
-      --bg-accent: #e6f7f2;
-      --ink: #0f2a3a;
-      --muted: #4b6b7a;
+      --bg-soft: #fff7f9;
+      --bg-accent: #eef8f6;
+      --ink: #22151b;
+      --muted: #63515a;
       --panel: rgba(255, 255, 255, 0.82);
       --panel-solid: #ffffff;
-      --line: rgba(15, 42, 58, 0.08);
-      --primary: #2457c5;
-      --primary-2: #2e7be8;
-      --prompt: rgba(219, 236, 255, 0.7);
-      --prompt-line: rgba(11, 92, 171, 0.15);
-      --user: #e8f1ff;
+      --line: rgba(34, 21, 27, 0.1);
+      --primary: #a50034;
+      --primary-2: #d71920;
+      --prompt: rgba(238, 248, 246, 0.86);
+      --prompt-line: rgba(15, 118, 110, 0.16);
+      --user: #fce8ee;
       --danger: #b42318;
       --danger-bg: #fee4e2;
     }
@@ -31,7 +31,7 @@
       min-height: 100vh;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       color: var(--ink);
-      background: radial-gradient(1200px 800px at 10% 10%, var(--bg-accent) 0%, var(--bg-soft) 45%, #ffffff 100%);
+      background: linear-gradient(135deg, var(--bg-soft) 0%, #ffffff 48%, var(--bg-accent) 100%);
     }
 
     .page {
@@ -41,10 +41,10 @@
     }
 
     .title {
-      font-size: clamp(2rem, 3vw, 2.5rem);
+      font-size: 2.35rem;
       font-weight: 800;
       margin: 0 0 8px;
-      letter-spacing: 0.2px;
+      letter-spacing: 0;
     }
 
     .subtitle {
@@ -56,8 +56,8 @@
     .card {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: 0 16px 40px rgba(15, 42, 58, 0.1);
+      border-radius: 8px;
+      box-shadow: 0 16px 40px rgba(34, 21, 27, 0.1);
       backdrop-filter: blur(8px);
     }
 
@@ -70,7 +70,7 @@
     .login-card {
       width: min(420px, 100%);
       padding: 24px;
-      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      background: linear-gradient(180deg, #ffffff 0%, #fff7f9 100%);
     }
 
     .section-title {
@@ -94,8 +94,8 @@
     input[type="password"] {
       width: 100%;
       margin-bottom: 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(15, 42, 58, 0.15);
+      border-radius: 8px;
+      border: 1px solid rgba(34, 21, 27, 0.15);
       padding: 12px 14px;
       background: #ffffff;
       color: var(--ink);
@@ -103,7 +103,7 @@
 
     button {
       border: 0;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 11px 16px;
       font-weight: 700;
       cursor: pointer;
@@ -114,7 +114,7 @@
 
     button:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(36, 87, 197, 0.25);
+      box-shadow: 0 8px 20px rgba(165, 0, 52, 0.25);
     }
 
     button:disabled {
@@ -124,7 +124,7 @@
     }
 
     .secondary {
-      background: linear-gradient(90deg, #36546b 0%, #4d738e 100%);
+      background: linear-gradient(90deg, #39515a 0%, #0f766e 100%);
     }
 
     .toolbar {
@@ -167,11 +167,11 @@
     .bubble {
       max-width: min(72ch, 76%);
       padding: 12px 14px;
-      border-radius: 16px;
+      border-radius: 8px;
       line-height: 1.5;
       font-size: 0.95rem;
       white-space: pre-wrap;
-      box-shadow: 0 8px 20px rgba(15, 42, 58, 0.08);
+      box-shadow: 0 8px 20px rgba(34, 21, 27, 0.08);
     }
 
     .bubble-ai {
@@ -186,17 +186,17 @@
 
     .bubble-user {
       background: var(--user);
-      border: 1px solid rgba(36, 87, 197, 0.18);
-      color: #173255;
+      border: 1px solid rgba(165, 0, 52, 0.18);
+      color: #4a1021;
     }
 
     .documents-card {
       width: min(72ch, 76%);
       padding: 14px 16px;
-      border-radius: 16px;
+      border-radius: 8px;
       background: var(--panel-solid);
       border: 1px solid var(--line);
-      box-shadow: 0 8px 20px rgba(15, 42, 58, 0.08);
+      box-shadow: 0 8px 20px rgba(34, 21, 27, 0.08);
     }
 
     .documents-title {
@@ -217,8 +217,8 @@
       display: inline-block;
       text-decoration: none;
       color: #ffffff;
-      background: linear-gradient(90deg, #0b5cab 0%, #2a7de1 100%);
-      border-radius: 10px;
+      background: linear-gradient(90deg, #a50034 0%, #d71920 100%);
+      border-radius: 8px;
       padding: 8px 12px;
       font-weight: 700;
     }
@@ -231,14 +231,14 @@
     .status,
     .error {
       margin-top: 14px;
-      border-radius: 12px;
+      border-radius: 8px;
       padding: 12px 14px;
       font-size: 0.92rem;
     }
 
     .status {
-      background: rgba(219, 236, 255, 0.7);
-      border: 1px solid rgba(11, 92, 171, 0.15);
+      background: rgba(238, 248, 246, 0.86);
+      border: 1px solid rgba(15, 118, 110, 0.16);
     }
 
     .error {
@@ -268,6 +268,10 @@
         padding-top: 20px;
       }
 
+      .title {
+        font-size: 1.9rem;
+      }
+
       .toolbar {
         justify-content: stretch;
       }
@@ -289,8 +293,8 @@
 </head>
 <body>
   <main class="page">
-    <h1 class="title">SBI Fraud Investigation Assistant</h1>
-    <p class="subtitle">Secure, guided fraud investigation for State Bank of India</p>
+    <h1 class="title">AXIS Bank Fraud Investigation Assistant</h1>
+    <p class="subtitle">Secure, guided fraud investigation for AXIS Bank</p>
 
     <section id="loginView" class="login-wrap">
       <div class="card login-card">
@@ -315,7 +319,7 @@
       </div>
 
       <div class="card chat-shell">
-        <h2 class="chat-title">SBI Fraud Investigation Chat</h2>
+        <h2 class="chat-title">AXIS Bank Fraud Investigation Chat</h2>
         <div id="chatHistory" class="chat-history"></div>
         <div id="chatStatus" class="status hidden"></div>
         <div id="chatError" class="error hidden"></div>
@@ -328,7 +332,7 @@
   </main>
 
   <script>
-    const STORAGE_KEY = "sbi-vercel-chat-state";
+    const STORAGE_KEY = "axis-vercel-chat-state";
     const API_REQUEST_TIMEOUT_MS = 75000;
     const API_MAX_RETRIES = 4;
     const API_RETRY_BACKOFF_MS = 3000;
@@ -430,7 +434,7 @@
 
       state.chatHistory.push({
         role: "prompt",
-        content: "Hello. Please provide details about SBI fraud case."
+        content: "Hello. Please provide details about the AXIS Bank fraud case."
       });
       saveState();
     }
@@ -539,7 +543,7 @@
           line.endsWith("?") ||
           lower.includes("provide details about the case") ||
           lower.includes("describe the new fraud case") ||
-          lower.includes("thank you for using the sbi fraud investigation assistant")
+          lower.includes("thank you for using the axis bank fraud investigation assistant")
         ) {
           prompt = line;
           break;
