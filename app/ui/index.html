@@ -17,7 +17,7 @@
       --primary-2: #d71920;
       --prompt: rgba(238, 248, 246, 0.86);
       --prompt-line: rgba(15, 118, 110, 0.16);
-      --user: #fce8ee;
+      --user: #edf3ff;
       --danger: #b42318;
       --danger-bg: #fee4e2;
     }
@@ -35,9 +35,8 @@
     }
 
     .page {
-      width: min(1100px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0 36px;
+      width: 100%;
+      min-height: 100vh;
     }
 
     .title {
@@ -64,13 +63,31 @@
     .login-wrap {
       display: flex;
       justify-content: center;
-      padding-top: 32px;
+      align-items: center;
+      min-height: 100vh;
+      padding: 32px 16px;
     }
 
     .login-card {
-      width: min(420px, 100%);
-      padding: 24px;
+      width: min(460px, 100%);
+      padding: 28px;
       background: linear-gradient(180deg, #ffffff 0%, #fff7f9 100%);
+    }
+
+    .login-kicker {
+      margin: 0 0 10px;
+      color: var(--primary);
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .login-subtitle {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 0.96rem;
+      line-height: 1.5;
     }
 
     .section-title {
@@ -86,7 +103,7 @@
       margin-bottom: 8px;
     }
 
-    input, button {
+    input, button, textarea {
       font: inherit;
     }
 
@@ -186,8 +203,8 @@
 
     .bubble-user {
       background: var(--user);
-      border: 1px solid rgba(165, 0, 52, 0.18);
-      color: #4a1021;
+      border: 1px solid rgba(52, 84, 209, 0.16);
+      color: #24324a;
     }
 
     .documents-card {
@@ -259,13 +276,530 @@
     }
 
     .hidden {
-      display: none;
+      display: none !important;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .sidebar-shell {
+      border-right: 1px solid var(--line);
+      background: rgba(250, 247, 249, 0.92);
+      padding: 16px 14px;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 12px;
+    }
+
+    .sidebar-head,
+    .brand-row,
+    .topbar-shell,
+    .profile-btn,
+    .member-stack {
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-head,
+    .topbar-shell {
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand-row {
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-dot,
+    .avatar,
+    .member-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+      color: #ffffff;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .brand-copy,
+    .profile-copy,
+    .conversation-copy {
+      min-width: 0;
+    }
+
+    .brand-copy strong,
+    .brand-copy span,
+    .profile-copy strong,
+    .profile-copy span,
+    .conversation-copy strong,
+    .conversation-copy span {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-copy span,
+    .profile-copy span,
+    .conversation-copy span,
+    .sidebar-note,
+    .chat-preview,
+    .chat-meta,
+    .settings-copy,
+    .member-copy span {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .sidebar-action,
+    .ghost-action,
+    .profile-btn,
+    .chat-options,
+    .menu-btn {
+      min-height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel-solid);
+      color: var(--ink);
+      box-shadow: 0 10px 24px rgba(34, 21, 27, 0.06);
+    }
+
+    .sidebar-action,
+    .ghost-action,
+    .menu-btn {
+      padding: 0 14px;
+      font-weight: 700;
+    }
+
+    .sidebar-search-input,
+    .member-input,
+    .composer-shell textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel-solid);
+      color: var(--ink);
+      outline: none;
+    }
+
+    .sidebar-search-input,
+    .member-input {
+      min-height: 36px;
+      border-radius: 6px;
+      padding: 0 12px;
+    }
+
+    .sidebar-section {
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    .sidebar-section label {
+      margin: 0;
+    }
+
+    .chat-list {
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: grid;
+      gap: 2px;
+      padding-right: 0;
+    }
+
+    .chat-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 4px;
+      padding: 0;
+      border-radius: 6px;
+    }
+
+    .chat-main {
+      text-align: left;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      min-height: 36px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--ink);
+      box-shadow: none;
+    }
+
+    .chat-main:hover:not(:disabled) {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .chat-main strong {
+      display: block;
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+      font-size: 0.9rem;
+      font-weight: 500;
+      -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 22px), transparent 100%);
+      mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 22px), transparent 100%);
+    }
+
+    .chat-item.active .chat-main,
+    .chat-item:hover .chat-main {
+      background: rgba(34, 21, 27, 0.05);
+    }
+
+    .chat-options {
+      width: 34px;
+      padding: 0;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      box-shadow: none;
+      transition: opacity 0.14s ease, visibility 0.14s ease, background 0.14s ease;
+    }
+
+    .chat-options::before {
+      content: "\22EE";
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .chat-options:hover:not(:disabled) {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .chat-item:hover .chat-options,
+    .chat-item:focus-within .chat-options,
+    .chat-item.menu-open .chat-options {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .chat-item.active .chat-options,
+    .chat-item:hover .chat-options,
+    .chat-item.menu-open .chat-options {
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .chat-context-menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 12;
+      width: 196px;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(34, 21, 27, 0.12);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 18px 36px rgba(34, 21, 27, 0.16);
+      display: grid;
+      gap: 2px;
+    }
+
+    .chat-context-menu .menu-btn {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 6px;
+      font-weight: 500;
+      justify-content: flex-start;
+    }
+
+    .chat-context-menu .menu-btn:hover:not(:disabled) {
+      transform: none;
+      box-shadow: none;
+      background: rgba(34, 21, 27, 0.06);
+    }
+
+    .workspace-shell {
+      min-width: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .topbar-shell {
+      padding: 16px 22px 12px;
+      position: sticky;
+      top: 0;
+      z-index: 6;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.78) 70%, rgba(255, 255, 255, 0) 100%);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .member-stack {
+      gap: 8px;
+      padding: 0 12px;
+      min-height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel-solid);
+      color: var(--ink);
+      box-shadow: 0 10px 24px rgba(34, 21, 27, 0.06);
+    }
+
+    .member-dot {
+      width: 24px;
+      height: 24px;
+      font-size: 0.72rem;
+      margin-left: -6px;
+      border: 2px solid var(--panel-solid);
+    }
+
+    .member-dot:first-child {
+      margin-left: 0;
+    }
+
+    .profile-wrap {
+      position: relative;
+    }
+
+    .profile-btn {
+      padding: 4px 10px 4px 6px;
+      gap: 10px;
+    }
+
+    .profile-btn[aria-expanded="true"],
+    .member-stack[aria-expanded="true"],
+    .ghost-action[aria-expanded="true"],
+    .chat-options[aria-expanded="true"] {
+      border-color: rgba(165, 0, 52, 0.24);
+      box-shadow: 0 12px 26px rgba(165, 0, 52, 0.12);
+    }
+
+    .profile-copy strong {
+      font-size: 0.88rem;
+    }
+
+    .profile-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      z-index: 7;
+      width: 260px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel-solid);
+      box-shadow: 0 16px 32px rgba(34, 21, 27, 0.12);
+      display: grid;
+      gap: 8px;
+    }
+
+    .menu-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: left;
+    }
+
+    .profile-header,
+    .settings-block,
+    .member-row {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .profile-header strong,
+    .settings-title {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .content-shell {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 0 22px 150px;
+    }
+
+    .welcome {
+      width: min(860px, 100%);
+      margin: 34px auto 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .suggestions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .suggestion {
+      text-align: left;
+      min-height: 76px;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--ink);
+      box-shadow: 0 10px 24px rgba(34, 21, 27, 0.05);
+    }
+
+    .suggestion span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .composer-dock {
+      position: sticky;
+      bottom: 0;
+      z-index: 6;
+      padding: 14px 22px 22px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.88) 35%, rgba(255, 255, 255, 0.98) 100%);
+    }
+
+    .composer-shell {
+      width: min(860px, 100%);
+      margin: 0 auto;
+      padding: 10px;
+      border-radius: 30px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 18px 36px rgba(34, 21, 27, 0.12);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .composer-tools-wrap {
+      position: relative;
+    }
+
+    .composer-tools-menu {
+      position: absolute;
+      left: 0;
+      bottom: calc(100% + 12px);
+      z-index: 7;
+      width: 170px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel-solid);
+      box-shadow: 0 16px 32px rgba(34, 21, 27, 0.12);
+      display: grid;
+      gap: 8px;
+    }
+
+    .composer-shell textarea {
+      min-height: 42px;
+      max-height: 150px;
+      resize: none;
+      padding: 10px 0;
+      border-radius: 0;
+      border: 0;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .composer-aux {
+      width: min(860px, 100%);
+      margin: 10px auto 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      flex-wrap: wrap;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 8;
+      background: rgba(34, 21, 27, 0.24);
+    }
+
+    .settings-drawer,
+    .member-modal {
+      position: fixed;
+      z-index: 9;
+      right: 16px;
+      bottom: 16px;
+      width: min(420px, calc(100% - 32px));
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel-solid);
+      box-shadow: 0 24px 48px rgba(34, 21, 27, 0.18);
+      display: grid;
+      gap: 14px;
+    }
+
+    .member-modal {
+      right: auto;
+      left: 50%;
+      bottom: auto;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .member-list {
+      display: grid;
+      gap: 10px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .member-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .member-copy {
+      min-width: 0;
     }
 
     @media (max-width: 720px) {
       .page {
-        width: calc(100% - 20px);
-        padding-top: 20px;
+        width: 100%;
       }
 
       .title {
@@ -288,16 +822,29 @@
       .composer {
         flex-direction: column;
       }
+
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-shell {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .suggestions {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
   <main class="page">
-    <h1 class="title">AXIS Bank Fraud Investigation Assistant</h1>
-    <p class="subtitle">Secure, guided fraud investigation for AXIS Bank</p>
-
     <section id="loginView" class="login-wrap">
       <div class="card login-card">
+        <p class="login-kicker">AXIS Bank</p>
+        <h1 class="title">Fraud Investigation Assistant</h1>
+        <p class="login-subtitle">Secure access to the investigator workspace and case conversations.</p>
         <h2 class="section-title">Login</h2>
         <form id="loginForm">
           <label for="userId">User ID</label>
@@ -312,32 +859,138 @@
       </div>
     </section>
 
-    <section id="appView" class="hidden">
-      <div class="toolbar">
-        <button id="resetButton" class="secondary" type="button">Reset Conversation</button>
-        <button id="logoutButton" class="secondary" type="button">Logout</button>
-      </div>
+    <section id="appView" class="app-shell hidden">
+      <aside class="sidebar-shell">
+        <div class="sidebar-head">
+          <div class="brand-row">
+            <div class="brand-dot">A</div>
+            <div class="brand-copy">
+              <strong>AXIS Bank Assistant</strong>
+              <span>Fraud workspace</span>
+            </div>
+          </div>
+        </div>
 
-      <div class="card chat-shell">
-        <h2 class="chat-title">AXIS Bank Fraud Investigation Chat</h2>
-        <div id="chatHistory" class="chat-history"></div>
-        <div id="chatStatus" class="status hidden"></div>
-        <div id="chatError" class="error hidden"></div>
-        <form id="composerForm" class="composer">
-          <input id="chatInput" type="text" placeholder="Describe the fraud case or reply Yes / No when asked" autocomplete="off">
-          <button id="sendButton" type="submit">Send</button>
-        </form>
-      </div>
+        <button id="newChatButton" class="sidebar-action" type="button">+ New chat</button>
+
+        <div class="sidebar-section">
+          <label for="chatSearch">Recent chats</label>
+          <input id="chatSearch" class="sidebar-search-input" type="text" placeholder="Search chats" autocomplete="off">
+          <div id="chatList" class="chat-list"></div>
+        </div>
+      </aside>
+
+      <section class="workspace-shell">
+        <div class="topbar-shell">
+          <div class="conversation-copy">
+            <strong id="conversationTitle">New chat</strong>
+            <span id="conversationMeta">AXIS Bank fraud investigation workspace</span>
+          </div>
+
+          <div class="topbar-right">
+            <button id="memberStack" class="member-stack hidden" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="memberModal">
+              <div id="memberDots"></div>
+              <span id="memberCount">1 member</span>
+            </button>
+
+            <div class="profile-wrap">
+              <button id="profileButton" class="profile-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="profileMenu">
+                <div id="profileAvatar" class="avatar">A</div>
+                <div class="profile-copy">
+                  <strong id="profileName">axis001</strong>
+                  <span>Investigator</span>
+                </div>
+              </button>
+
+               <div id="profileMenu" class="profile-menu hidden" role="menu">
+                <div class="profile-header">
+                  <strong id="profileMenuName">axis001</strong>
+                  <span id="profileMenuMeta">AXIS Bank workspace</span>
+                </div>
+                <button id="openSettingsButton" class="menu-btn" type="button">Profile &amp; settings</button>
+                <button id="profileDeleteChatButton" class="menu-btn" type="button">Delete current chat</button>
+                <button id="quickThemeButton" class="menu-btn" type="button">Switch theme</button>
+                <button id="logoutButton" class="menu-btn" type="button">Logout</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-shell">
+          <div id="welcomeState" class="welcome">
+            <p class="subtitle">Start a case from the bottom composer. Every new thread stays in Recent chats on the left.</p>
+          </div>
+
+          <div id="chatHistory" class="chat-history hidden"></div>
+          <div id="chatStatus" class="status hidden"></div>
+          <div id="chatError" class="error hidden"></div>
+        </div>
+
+        <div class="composer-dock">
+          <form id="composerForm" class="composer-shell">
+            <div class="composer-tools-wrap">
+              <button id="composerMenuButton" class="ghost-action" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="composerToolsMenu">+</button>
+              <div id="composerToolsMenu" class="composer-tools-menu hidden" role="menu">
+                <button id="composerNewChatButton" class="menu-btn" type="button">New chat</button>
+              </div>
+            </div>
+            <textarea id="chatInput" rows="1" placeholder="Ask anything about an AXIS Bank fraud case"></textarea>
+            <button id="sendButton" type="submit">Send</button>
+          </form>
+          <div class="composer-aux">
+            <span>Every new thread stays in Recent chats until deleted.</span>
+            <span id="composerMeta">AXIS SOP grounded responses</span>
+          </div>
+        </div>
+      </section>
     </section>
   </main>
 
+  <div id="overlay" class="overlay hidden"></div>
+  <div id="chatContextMenu" class="chat-context-menu hidden" role="menu">
+    <button id="chatMenuRenameButton" class="menu-btn" type="button">Rename</button>
+    <button id="chatMenuDeleteButton" class="menu-btn" type="button">Delete</button>
+  </div>
+  <section id="settingsDrawer" class="settings-drawer hidden">
+    <div class="settings-block">
+      <strong class="settings-title">Profile &amp; settings</strong>
+      <div id="settingsCopy" class="settings-copy">AXIS Bank investigator workspace.</div>
+    </div>
+    <div class="settings-block">
+      <strong class="settings-title">Appearance</strong>
+      <div class="toolbar">
+        <button id="themeLightButton" class="secondary" type="button">Light</button>
+        <button id="themeDarkButton" class="secondary" type="button">Dark</button>
+      </div>
+    </div>
+    <div class="settings-block">
+      <strong class="settings-title">Access roadmap</strong>
+      <div class="settings-copy">Role-based access and shared controls can plug into this shell next.</div>
+    </div>
+    <button id="closeSettingsButton" class="ghost-action" type="button">Close</button>
+  </section>
+
+  <section id="memberModal" class="member-modal hidden">
+    <div class="settings-block">
+      <strong class="settings-title">Conversation members</strong>
+      <div class="settings-copy">Add names or emails for the shared-thread UI. Backend access rules can follow later.</div>
+    </div>
+    <form id="memberForm" class="composer">
+      <input id="memberInput" class="member-input" type="text" placeholder="Add name or email">
+      <button type="submit">Add member</button>
+    </form>
+    <div id="memberList" class="member-list"></div>
+    <button id="closeMemberModalButton" class="ghost-action" type="button">Close</button>
+  </section>
+
   <script>
-    const STORAGE_KEY = "axis-vercel-chat-state";
+    const STORAGE_KEY = "axis-vercel-chat-state-v2";
     const API_REQUEST_TIMEOUT_MS = 75000;
     const API_MAX_RETRIES = 4;
     const API_RETRY_BACKOFF_MS = 3000;
     const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
     const FOLLOWUP_ANSWERS = new Set(["yes", "y", "yeah", "yep", "sure", "ok", "okay", "no", "n", "nope", "nah", "nothing"]);
+    const MEMBER_COLORS = ["#a50034", "#0f766e", "#3454d1", "#996c00"];
 
     const els = {
       loginView: document.getElementById("loginView"),
@@ -347,49 +1000,115 @@
       password: document.getElementById("password"),
       loginButton: document.getElementById("loginButton"),
       loginError: document.getElementById("loginError"),
-      resetButton: document.getElementById("resetButton"),
+      newChatButton: document.getElementById("newChatButton"),
+      chatSearch: document.getElementById("chatSearch"),
+      chatList: document.getElementById("chatList"),
+      conversationTitle: document.getElementById("conversationTitle"),
+      conversationMeta: document.getElementById("conversationMeta"),
+      memberStack: document.getElementById("memberStack"),
+      memberDots: document.getElementById("memberDots"),
+      memberCount: document.getElementById("memberCount"),
+      profileButton: document.getElementById("profileButton"),
+      profileAvatar: document.getElementById("profileAvatar"),
+      profileName: document.getElementById("profileName"),
+      profileMenu: document.getElementById("profileMenu"),
+      profileMenuName: document.getElementById("profileMenuName"),
+      profileMenuMeta: document.getElementById("profileMenuMeta"),
+      openSettingsButton: document.getElementById("openSettingsButton"),
+      profileDeleteChatButton: document.getElementById("profileDeleteChatButton"),
+      quickThemeButton: document.getElementById("quickThemeButton"),
       logoutButton: document.getElementById("logoutButton"),
+      welcomeState: document.getElementById("welcomeState"),
       chatHistory: document.getElementById("chatHistory"),
       chatStatus: document.getElementById("chatStatus"),
       chatError: document.getElementById("chatError"),
       composerForm: document.getElementById("composerForm"),
+      composerMenuButton: document.getElementById("composerMenuButton"),
       chatInput: document.getElementById("chatInput"),
-      sendButton: document.getElementById("sendButton")
+      sendButton: document.getElementById("sendButton"),
+      composerMeta: document.getElementById("composerMeta"),
+      overlay: document.getElementById("overlay"),
+      chatContextMenu: document.getElementById("chatContextMenu"),
+      chatMenuRenameButton: document.getElementById("chatMenuRenameButton"),
+      chatMenuDeleteButton: document.getElementById("chatMenuDeleteButton"),
+      settingsDrawer: document.getElementById("settingsDrawer"),
+      settingsCopy: document.getElementById("settingsCopy"),
+      themeLightButton: document.getElementById("themeLightButton"),
+      themeDarkButton: document.getElementById("themeDarkButton"),
+      closeSettingsButton: document.getElementById("closeSettingsButton"),
+      memberModal: document.getElementById("memberModal"),
+      memberForm: document.getElementById("memberForm"),
+      memberInput: document.getElementById("memberInput"),
+      memberList: document.getElementById("memberList"),
+      closeMemberModalButton: document.getElementById("closeMemberModalButton"),
+      composerToolsMenu: document.getElementById("composerToolsMenu"),
+      composerNewChatButton: document.getElementById("composerNewChatButton"),
+      suggestionButtons: Array.from(document.querySelectorAll("[data-suggestion]"))
     };
 
+    const ui = {
+      activeMenuId: "",
+      profileOpen: false,
+      settingsOpen: false,
+      membersOpen: false,
+      composerMenuOpen: false,
+      busyConversationId: "",
+      chatSearch: ""
+    };
+
+    function defaultConversationState() {
+      return { step: null, analysis: {}, case_query: null, sessionId: "" };
+    }
+
     function defaultState() {
+      return { loggedIn: false, userId: "", bankId: "", theme: "light", conversations: [], activeConversationId: "" };
+    }
+
+    function makeId() {
+      return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function initials(value) {
+      return String(value || "A").trim().slice(0, 2).toUpperCase();
+    }
+
+    function memberColor(value) {
+      let total = 0;
+      for (const char of String(value || "")) total += char.charCodeAt(0);
+      return MEMBER_COLORS[total % MEMBER_COLORS.length];
+    }
+
+    function createMember(name) {
+      return { id: String(name || "").trim().toLowerCase(), name: String(name || "").trim(), color: memberColor(name) };
+    }
+
+    function createConversation(seed = {}) {
       return {
-        loggedIn: false,
-        userId: "",
-        bankId: "",
-        fraudCategory: "",
-        chatHistory: [],
-        conversationState: {
-          step: null,
-          analysis: {},
-          case_query: null,
-          sessionId: ""
-        }
+        id: seed.id || makeId(),
+        title: seed.title || "New chat",
+        updatedAt: seed.updatedAt || new Date().toISOString(),
+        members: Array.isArray(seed.members) ? seed.members : [],
+        chatHistory: Array.isArray(seed.chatHistory) ? seed.chatHistory : [],
+        fraudCategory: seed.fraudCategory || "",
+        conversationState: { ...defaultConversationState(), ...(seed.conversationState || {}) }
       };
     }
 
     function loadState() {
       try {
         const raw = window.sessionStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          return defaultState();
-        }
-
+        if (!raw) return defaultState();
         const parsed = JSON.parse(raw);
-        return {
-          ...defaultState(),
-          ...parsed,
-          conversationState: {
-            ...defaultState().conversationState,
-            ...(parsed.conversationState || {})
-          },
-          chatHistory: Array.isArray(parsed.chatHistory) ? parsed.chatHistory : []
-        };
+        if (Array.isArray(parsed.chatHistory)) {
+          const migrated = createConversation({
+            title: "Imported chat",
+            chatHistory: parsed.chatHistory,
+            fraudCategory: parsed.fraudCategory || "",
+            conversationState: parsed.conversationState || defaultConversationState()
+          });
+          return { ...defaultState(), ...parsed, conversations: [migrated], activeConversationId: migrated.id };
+        }
+        return { ...defaultState(), ...parsed, conversations: (parsed.conversations || []).map(createConversation) };
       } catch (_error) {
         return defaultState();
       }
@@ -401,77 +1120,135 @@
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
-    function setHidden(element, hidden) {
-      element.classList.toggle("hidden", hidden);
+    function activeConversation() {
+      return state.conversations.find((item) => item.id === state.activeConversationId) || null;
     }
 
-    function setError(message, target = els.chatError) {
-      if (!message) {
-        target.textContent = "";
-        setHidden(target, true);
-        return;
-      }
-
-      target.textContent = message;
-      setHidden(target, false);
-    }
-
-    function setStatus(message) {
-      if (!message) {
-        els.chatStatus.textContent = "";
-        setHidden(els.chatStatus, true);
-        return;
-      }
-
-      els.chatStatus.textContent = message;
-      setHidden(els.chatStatus, false);
-    }
-
-    function ensureInitialPrompt() {
-      if (!state.loggedIn || state.chatHistory.length > 0) {
-        return;
-      }
-
-      state.chatHistory.push({
-        role: "prompt",
-        content: "Hello. Please provide details about the AXIS Bank fraud case."
+    function updateConversation(conversationId, updater) {
+      state.conversations = state.conversations.map((conversation) => {
+        return conversation.id === conversationId ? updater(conversation) : conversation;
       });
       saveState();
     }
 
-    function addChatItem(item) {
-      state.chatHistory.push(item);
+    function sortedConversations() {
+      return [...state.conversations].sort((left, right) => new Date(right.updatedAt) - new Date(left.updatedAt));
+    }
+
+    function ensureConversation() {
+      if (!state.loggedIn) return;
+      if (state.conversations.length && !state.activeConversationId) {
+        state.activeConversationId = state.conversations[0].id;
+        saveState();
+        return;
+      }
+      if (state.conversations.length) return;
+      const conversation = createConversation({ members: state.userId ? [createMember(state.userId)] : [] });
+      state.conversations = [conversation];
+      state.activeConversationId = conversation.id;
       saveState();
+    }
+
+    function ensureInitialPrompt() {
+      const conversation = activeConversation();
+      if (!state.loggedIn || !conversation || conversation.chatHistory.length) return;
+      conversation.chatHistory.push({ role: "prompt", content: "Hello. Please provide details about the AXIS Bank fraud case." });
+      saveState();
+    }
+
+    function setHidden(element, hidden) {
+      if (!element) return;
+      element.classList.toggle("hidden", hidden);
+      element.setAttribute("aria-hidden", hidden ? "true" : "false");
+    }
+
+    function closeTransientUi(options = {}) {
+      ui.profileOpen = Boolean(options.profile);
+      ui.settingsOpen = Boolean(options.settings);
+      ui.membersOpen = Boolean(options.members);
+      ui.composerMenuOpen = Boolean(options.composerMenu);
+      if (!options.keepChatMenu) ui.activeMenuId = "";
+    }
+
+    function chatOptionsButton(conversationId) {
+      if (!conversationId) return null;
+      return document.querySelector(`[data-chat-options-id="${conversationId}"]`);
+    }
+
+    function positionChatContextMenu() {
+      if (!ui.activeMenuId || els.chatContextMenu.classList.contains("hidden")) return;
+      const button = chatOptionsButton(ui.activeMenuId);
+      if (!button) return;
+      const rect = button.getBoundingClientRect();
+      const menuWidth = els.chatContextMenu.offsetWidth || 196;
+      const menuHeight = els.chatContextMenu.offsetHeight || 92;
+      let left = rect.right + 8;
+      let top = rect.top - 6;
+
+      if (left + menuWidth > window.innerWidth - 12) {
+        left = rect.left - menuWidth - 8;
+      }
+
+      if (top + menuHeight > window.innerHeight - 12) {
+        top = window.innerHeight - menuHeight - 12;
+      }
+
+      left = Math.max(12, left);
+      top = Math.max(12, top);
+
+      els.chatContextMenu.style.left = `${left}px`;
+      els.chatContextMenu.style.top = `${top}px`;
+    }
+
+    function openMembersModal() {
+      if (!state.loggedIn) return;
+      closeTransientUi({ members: true });
+      render();
+      window.requestAnimationFrame(() => els.memberInput.focus());
+    }
+
+    function openSettingsDrawer() {
+      closeTransientUi({ settings: true });
+      render();
+    }
+
+    function toggleProfileMenu() {
+      const next = !ui.profileOpen;
+      closeTransientUi();
+      ui.profileOpen = next;
+      render();
+    }
+
+    function toggleComposerTools() {
+      const next = !ui.composerMenuOpen;
+      closeTransientUi();
+      ui.composerMenuOpen = next;
+      render();
+    }
+
+    function setError(message, target = els.chatError) {
+      target.textContent = message || "";
+      setHidden(target, !message);
+    }
+
+    function setStatus(message) {
+      els.chatStatus.textContent = message || "";
+      setHidden(els.chatStatus, !message);
     }
 
     function renderDocuments(items) {
       const row = document.createElement("div");
       row.className = "chat-row left";
-
       const card = document.createElement("div");
       card.className = "documents-card";
-
       const title = document.createElement("div");
       title.className = "documents-title";
       title.textContent = "Relevant SOP Documents";
       card.appendChild(title);
-
-      if (!items.length) {
-        const empty = document.createElement("div");
-        empty.className = "warning";
-        empty.textContent = "No matching documents were returned.";
-        card.appendChild(empty);
-      }
-
       for (const doc of items) {
         const item = document.createElement("div");
         item.className = "document-item";
-
-        const name = document.createElement("div");
-        name.className = "document-name";
-        name.textContent = doc.name || "Document";
-        item.appendChild(name);
-
+        item.innerHTML = `<div class="document-name">${doc.name || "Document"}</div>`;
         if (doc.fileId) {
           const link = document.createElement("a");
           link.className = "download-link";
@@ -479,51 +1256,162 @@
           link.textContent = `Download ${doc.name || "Document"}`;
           link.setAttribute("download", "");
           item.appendChild(link);
-        } else {
-          const warning = document.createElement("div");
-          warning.className = "warning";
-          warning.textContent = "Document download is currently unavailable.";
-          item.appendChild(warning);
         }
-
         card.appendChild(item);
       }
-
       row.appendChild(card);
       els.chatHistory.appendChild(row);
     }
 
-    function renderHistory() {
-      els.chatHistory.innerHTML = "";
+    function conversationPreview(conversation) {
+      for (let index = conversation.chatHistory.length - 1; index >= 0; index -= 1) {
+        const item = conversation.chatHistory[index];
+        if (item.role === "user" || item.role === "bot") return item.content || "";
+      }
+      return "No messages yet";
+    }
 
-      for (const item of state.chatHistory) {
+    function renderChatList() {
+      els.chatList.innerHTML = "";
+      const search = ui.chatSearch.trim().toLowerCase();
+      const conversations = sortedConversations().filter((conversation) => {
+        return !search || conversation.title.toLowerCase().includes(search);
+      });
+      for (const conversation of conversations) {
+        const item = document.createElement("div");
+        item.className = `chat-item${conversation.id === state.activeConversationId ? " active" : ""}${ui.activeMenuId === conversation.id ? " menu-open" : ""}`;
+        const main = document.createElement("button");
+        main.className = "chat-main";
+        main.type = "button";
+        main.setAttribute("aria-label", conversation.title);
+        const title = document.createElement("strong");
+        title.textContent = conversation.title;
+        title.title = conversation.title;
+        main.appendChild(title);
+        main.addEventListener("click", () => {
+          state.activeConversationId = conversation.id;
+          closeTransientUi();
+          saveState();
+          render();
+        });
+        const options = document.createElement("button");
+        options.className = "chat-options";
+        options.type = "button";
+        options.setAttribute("aria-label", "Chat options");
+        options.dataset.chatOptionsId = conversation.id;
+        options.setAttribute("aria-haspopup", "menu");
+        options.setAttribute("aria-expanded", ui.activeMenuId === conversation.id ? "true" : "false");
+        options.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const nextMenuId = ui.activeMenuId === conversation.id ? "" : conversation.id;
+          closeTransientUi({ keepChatMenu: true });
+          ui.activeMenuId = nextMenuId;
+          render();
+        });
+        item.appendChild(main);
+        item.appendChild(options);
+        els.chatList.appendChild(item);
+      }
+    }
+
+    function renderMembers(conversation) {
+      els.memberDots.innerHTML = "";
+      if (!conversation || !conversation.members.length) {
+        setHidden(els.memberStack, true);
+        return;
+      }
+      for (const member of conversation.members.slice(0, 3)) {
+        const dot = document.createElement("div");
+        dot.className = "member-dot";
+        dot.textContent = initials(member.name);
+        dot.style.background = member.color;
+        els.memberDots.appendChild(dot);
+      }
+      els.memberCount.textContent = `AX ${conversation.members.length} member${conversation.members.length === 1 ? "" : "s"}`;
+      setHidden(els.memberStack, false);
+    }
+
+    function renderHistory() {
+      const conversation = activeConversation();
+      els.chatHistory.innerHTML = "";
+      if (!conversation) return;
+      for (const item of conversation.chatHistory) {
         if (item.role === "documents") {
           renderDocuments(item.items || []);
           continue;
         }
-
         const row = document.createElement("div");
         row.className = `chat-row ${item.role === "user" ? "right" : "left"}`;
-
         const bubble = document.createElement("div");
         bubble.className = `bubble ${item.role === "user" ? "bubble-user" : item.role === "prompt" ? "bubble-prompt" : "bubble-ai"}`;
         bubble.textContent = item.content || "";
-
         row.appendChild(bubble);
         els.chatHistory.appendChild(row);
       }
-
       els.chatHistory.scrollTop = els.chatHistory.scrollHeight;
     }
 
+    function renderMembersModal() {
+      const conversation = activeConversation();
+      els.memberList.innerHTML = "";
+      if (!conversation) return;
+      for (const member of conversation.members) {
+        const row = document.createElement("div");
+        row.className = "member-row";
+        row.innerHTML = `<div class="member-copy"><strong>${member.name}</strong><span>${member.id === String(state.userId).toLowerCase() ? "Current investigator" : "Shared thread member"}</span></div>`;
+        const button = document.createElement("button");
+        button.className = "ghost-action";
+        button.type = "button";
+        button.textContent = member.id === String(state.userId).toLowerCase() ? "Owner" : "Remove";
+        button.disabled = member.id === String(state.userId).toLowerCase();
+        button.addEventListener("click", () => {
+          updateConversation(conversation.id, (current) => ({ ...current, members: current.members.filter((item) => item.id !== member.id), updatedAt: new Date().toISOString() }));
+          render();
+        });
+        row.appendChild(button);
+        els.memberList.appendChild(row);
+      }
+    }
+
     function render() {
+      ensureConversation();
+      ensureInitialPrompt();
+      const conversation = activeConversation();
+      document.body.dataset.theme = state.theme || "light";
+      document.body.style.overflow = ui.settingsOpen || ui.membersOpen ? "hidden" : "";
       setHidden(els.loginView, state.loggedIn);
       setHidden(els.appView, !state.loggedIn);
+      els.loginView.style.display = state.loggedIn ? "none" : "";
+      els.appView.style.display = state.loggedIn ? "" : "none";
       els.userId.value = state.userId || "";
+      renderChatList();
       renderHistory();
-      if (state.loggedIn) {
-        els.chatInput.focus();
-      }
+      setHidden(els.welcomeState, true);
+      setHidden(els.chatHistory, false);
+      els.conversationTitle.textContent = conversation ? conversation.title : "New chat";
+      els.conversationMeta.textContent = conversation && conversation.fraudCategory ? conversation.fraudCategory : "AXIS Bank fraud investigation workspace";
+      els.profileAvatar.textContent = initials(state.userId || "A");
+      els.profileAvatar.style.background = memberColor(state.userId || "axis");
+      els.profileName.textContent = state.userId || "Investigator";
+      els.profileMenuName.textContent = state.userId || "Investigator";
+      els.profileMenuMeta.textContent = state.bankId ? `${String(state.bankId).toUpperCase()} workspace` : "AXIS Bank workspace";
+      els.settingsCopy.textContent = `${state.conversations.length} saved chat${state.conversations.length === 1 ? "" : "s"} in this workspace.`;
+      els.composerMeta.textContent = conversation && conversation.fraudCategory ? conversation.fraudCategory : "AXIS SOP grounded responses";
+      els.themeLightButton.disabled = state.theme === "light";
+      els.themeDarkButton.disabled = state.theme === "dark";
+      renderMembers(conversation);
+      renderMembersModal();
+      els.profileButton.setAttribute("aria-expanded", ui.profileOpen ? "true" : "false");
+      els.memberStack.setAttribute("aria-expanded", ui.membersOpen ? "true" : "false");
+      els.composerMenuButton.setAttribute("aria-expanded", ui.composerMenuOpen ? "true" : "false");
+      setHidden(els.profileMenu, !ui.profileOpen);
+      setHidden(els.chatContextMenu, !ui.activeMenuId);
+      setHidden(els.settingsDrawer, !ui.settingsOpen);
+      setHidden(els.memberModal, !ui.membersOpen);
+      setHidden(els.composerToolsMenu, !ui.composerMenuOpen);
+      setHidden(els.overlay, !(ui.settingsOpen || ui.membersOpen));
+      positionChatContextMenu();
+      if (state.loggedIn && !ui.settingsOpen && !ui.membersOpen) els.chatInput.focus();
     }
 
     function extractPrompt(text) {
@@ -638,99 +1526,20 @@
     function setComposerBusy(isBusy) {
       els.chatInput.disabled = isBusy;
       els.sendButton.disabled = isBusy;
-      els.sendButton.textContent = isBusy ? "Sending..." : "Send";
+      els.sendButton.textContent = isBusy ? "..." : "Send";
+      ui.busyConversationId = isBusy ? state.activeConversationId : "";
     }
 
-    async function sendChat(query) {
-      const trimmed = query.trim();
-      if (!trimmed) {
-        return;
-      }
-
-      const normalized = trimmed.toLowerCase();
-      addChatItem({ role: "user", content: trimmed });
-      render();
-
-      setComposerBusy(true);
-      setError("");
-      setStatus("Working on your request...");
-
-      try {
-        const response = await requestBackend("POST", "/chat", {
-          body: JSON.stringify({
-            userId: state.userId,
-            query: trimmed,
-            state: state.conversationState
-          })
-        });
-
-        let payload;
-        try {
-          payload = await response.json();
-        } catch (_error) {
-          throw new Error("Backend returned an unreadable response.");
-        }
-
-        if (!response.ok) {
-          throw new Error(payload.detail || payload.chatbot_response || `Backend returned status ${response.status}.`);
-        }
-
-        if (!FOLLOWUP_ANSWERS.has(normalized)) {
-          state.fraudCategory = "";
-        }
-
-        if (payload.fraud_category) {
-          state.fraudCategory = payload.fraud_category;
-        }
-
-        state.conversationState = payload.conversation_state || defaultState().conversationState;
-        saveState();
-
-        const documents = Array.isArray(payload.documents) ? payload.documents : [];
-        if (documents.length) {
-          addChatItem({ role: "documents", items: documents });
-        }
-
-        const chatbotResponse = payload.chatbot_response || "";
-        const promptParts = extractPrompt(chatbotResponse);
-        let fullResponse = promptParts.cleaned || chatbotResponse;
-
-        if (promptParts.prompt && fullResponse.trim() === promptParts.prompt.trim()) {
-          fullResponse = "";
-        }
-
-        if (documents.length) {
-          fullResponse = fullResponse.replace("Relevant SOP Documents:", "").trim();
-          for (const doc of documents) {
-            if (doc.name) {
-              fullResponse = fullResponse.replace(doc.name, "").trim();
-            }
-          }
-        }
-
-        if (fullResponse.trim()) {
-          addChatItem({ role: "bot", content: fullResponse.trim() });
-        }
-
-        if (promptParts.prompt) {
-          addChatItem({ role: "prompt", content: promptParts.prompt });
-        }
-
-        render();
-      } catch (error) {
-        setError(`API Error: ${error.message}. If your Vercel function is cold-starting, retry once after a few seconds.`);
-      } finally {
-        setComposerBusy(false);
-        setStatus("");
-        els.chatInput.value = "";
-        els.chatInput.focus();
-      }
+    function adjustComposer() {
+      els.chatInput.style.height = "auto";
+      els.chatInput.style.height = `${Math.min(els.chatInput.scrollHeight, 150)}px`;
     }
 
-    function resetConversation() {
-      state.chatHistory = [];
-      state.fraudCategory = "";
-      state.conversationState = defaultState().conversationState;
+    function createNewChat() {
+      const conversation = createConversation({ members: state.userId ? [createMember(state.userId)] : [] });
+      state.conversations.push(conversation);
+      state.activeConversationId = conversation.id;
+      closeTransientUi();
       saveState();
       ensureInitialPrompt();
       setError("");
@@ -738,9 +1547,107 @@
       render();
     }
 
+    function deleteConversation(conversationId) {
+      const conversation = state.conversations.find((item) => item.id === conversationId);
+      if (!conversation) return;
+      if (!window.confirm(`Delete "${conversation.title}"?`)) return;
+      state.conversations = state.conversations.filter((item) => item.id !== conversationId);
+      if (!state.conversations.length) {
+        const fresh = createConversation({ members: state.userId ? [createMember(state.userId)] : [] });
+        state.conversations = [fresh];
+      }
+      state.activeConversationId = state.conversations[0].id;
+      closeTransientUi();
+      saveState();
+      ensureInitialPrompt();
+      render();
+    }
+
+    function renameConversation(conversationId) {
+      const conversation = state.conversations.find((item) => item.id === conversationId);
+      if (!conversation) return;
+      const nextTitle = window.prompt("Rename chat", conversation.title);
+      if (nextTitle === null) return;
+      const trimmed = nextTitle.trim();
+      if (!trimmed || trimmed === conversation.title) return;
+      updateConversation(conversationId, (current) => ({
+        ...current,
+        title: trimmed.slice(0, 80),
+        updatedAt: new Date().toISOString()
+      }));
+      ui.activeMenuId = "";
+      render();
+    }
+
+    function toggleTheme(nextTheme) {
+      state.theme = nextTheme || (state.theme === "dark" ? "light" : "dark");
+      saveState();
+      render();
+    }
+
+    function closePanels() {
+      closeTransientUi();
+      render();
+    }
+
+    async function sendChat(query) {
+      const conversation = activeConversation();
+      const trimmed = query.trim();
+      if (!conversation || !trimmed) return;
+      const normalized = trimmed.toLowerCase();
+      updateConversation(conversation.id, (current) => ({
+        ...current,
+        title: current.title === "New chat" ? trimmed.slice(0, 42) : current.title,
+        chatHistory: [...current.chatHistory, { role: "user", content: trimmed }],
+        updatedAt: new Date().toISOString()
+      }));
+      render();
+      setComposerBusy(true);
+      setError("");
+      setStatus("Working on your request...");
+      try {
+        const current = activeConversation();
+        const response = await requestBackend("POST", "/chat", {
+          body: JSON.stringify({ userId: state.userId, query: trimmed, state: current.conversationState })
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.detail || payload.chatbot_response || `Backend returned status ${response.status}.`);
+        updateConversation(conversation.id, (currentConversation) => {
+          const documents = Array.isArray(payload.documents) ? payload.documents : [];
+          const promptParts = extractPrompt(payload.chatbot_response || "");
+          let fullResponse = promptParts.cleaned || payload.chatbot_response || "";
+          if (documents.length) {
+            fullResponse = fullResponse.replace("Relevant SOP Documents:", "").trim();
+            for (const doc of documents) if (doc.name) fullResponse = fullResponse.replace(doc.name, "").trim();
+          }
+          const nextHistory = [...currentConversation.chatHistory];
+          if (documents.length) nextHistory.push({ role: "documents", items: documents });
+          if (fullResponse.trim()) nextHistory.push({ role: "bot", content: fullResponse.trim() });
+          if (promptParts.prompt) nextHistory.push({ role: "prompt", content: promptParts.prompt });
+          return {
+            ...currentConversation,
+            fraudCategory: FOLLOWUP_ANSWERS.has(normalized) ? (payload.fraud_category || currentConversation.fraudCategory) : (payload.fraud_category || ""),
+            conversationState: payload.conversation_state || defaultConversationState(),
+            chatHistory: nextHistory,
+            updatedAt: new Date().toISOString()
+          };
+        });
+        render();
+      } catch (error) {
+        setError(`API Error: ${error.message}. If your Vercel function is cold-starting, retry once after a few seconds.`);
+      } finally {
+        setComposerBusy(false);
+        setStatus("");
+        els.chatInput.value = "";
+        adjustComposer();
+        els.chatInput.focus();
+      }
+    }
+
     function logout() {
       state = defaultState();
       saveState();
+      closeTransientUi();
       els.password.value = "";
       setError("", els.loginError);
       setError("");
@@ -751,30 +1658,24 @@
     els.loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       setError("", els.loginError);
-
       const userId = els.userId.value.trim();
       const password = els.password.value.trim();
-
       if (!userId || !password) {
         setError("User ID and password are required.", els.loginError);
         return;
       }
-
       els.loginButton.disabled = true;
       els.loginButton.textContent = "Signing in...";
-
       try {
         const payload = await login(userId, password);
         state.loggedIn = true;
         state.userId = userId;
         state.bankId = payload.bankId || "";
-        state.chatHistory = [];
-        state.fraudCategory = "";
-        state.conversationState = defaultState().conversationState;
+        state.conversations = [];
+        state.activeConversationId = "";
         saveState();
-        ensureInitialPrompt();
+        createNewChat();
         els.password.value = "";
-        render();
       } catch (error) {
         setError(error.message, els.loginError);
       } finally {
@@ -783,20 +1684,100 @@
       }
     });
 
+    els.newChatButton.addEventListener("click", createNewChat);
+    els.chatSearch.addEventListener("input", () => { ui.chatSearch = els.chatSearch.value; renderChatList(); });
+    els.profileButton.addEventListener("click", toggleProfileMenu);
+    els.openSettingsButton.addEventListener("click", openSettingsDrawer);
+    els.profileDeleteChatButton.addEventListener("click", () => {
+      closeTransientUi();
+      deleteConversation(state.activeConversationId);
+    });
+    els.quickThemeButton.addEventListener("click", () => {
+      closeTransientUi();
+      toggleTheme();
+    });
+    els.chatMenuRenameButton.addEventListener("click", () => renameConversation(ui.activeMenuId));
+    els.chatMenuDeleteButton.addEventListener("click", () => deleteConversation(ui.activeMenuId));
+    els.themeLightButton.addEventListener("click", () => toggleTheme("light"));
+    els.themeDarkButton.addEventListener("click", () => toggleTheme("dark"));
+    els.closeSettingsButton.addEventListener("click", closePanels);
+    els.memberStack.addEventListener("click", openMembersModal);
+    els.closeMemberModalButton.addEventListener("click", closePanels);
+    els.overlay.addEventListener("click", closePanels);
+    els.logoutButton.addEventListener("click", logout);
+    els.composerMenuButton.addEventListener("click", toggleComposerTools);
+    els.composerNewChatButton.addEventListener("click", createNewChat);
+
+    els.memberForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const conversation = activeConversation();
+      const value = els.memberInput.value.trim();
+      if (!conversation || !value) return;
+      if (!conversation.members.some((item) => item.id === value.toLowerCase())) {
+        updateConversation(conversation.id, (current) => ({ ...current, members: [...current.members, createMember(value)], updatedAt: new Date().toISOString() }));
+      }
+      els.memberInput.value = "";
+      render();
+    });
+
     els.composerForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       await sendChat(els.chatInput.value);
     });
 
-    els.resetButton.addEventListener("click", () => {
-      resetConversation();
+    els.chatInput.addEventListener("input", adjustComposer);
+    els.chatInput.addEventListener("keydown", async (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        await sendChat(els.chatInput.value);
+      }
     });
 
-    els.logoutButton.addEventListener("click", () => {
-      logout();
+    els.suggestionButtons.forEach((button) => {
+      button.addEventListener("click", async () => {
+        els.chatInput.value = button.dataset.suggestion || "";
+        adjustComposer();
+        await sendChat(els.chatInput.value);
+      });
     });
 
+    document.addEventListener("click", (event) => {
+      if (!els.profileMenu.contains(event.target) && !els.profileButton.contains(event.target)) {
+        if (ui.profileOpen) {
+          closeTransientUi();
+          render();
+          return;
+        }
+      }
+      if (!els.composerToolsMenu.contains(event.target) && !els.composerMenuButton.contains(event.target)) {
+        if (ui.composerMenuOpen) {
+          closeTransientUi();
+          render();
+          return;
+        }
+      }
+      if (ui.activeMenuId) {
+        const openMenu = els.chatContextMenu;
+        const openButton = chatOptionsButton(ui.activeMenuId);
+        if (openMenu && openButton && !openMenu.contains(event.target) && !openButton.contains(event.target)) {
+          ui.activeMenuId = "";
+          render();
+        }
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && (ui.profileOpen || ui.settingsOpen || ui.membersOpen || ui.composerMenuOpen || ui.activeMenuId)) {
+        closePanels();
+      }
+    });
+
+    window.addEventListener("resize", positionChatContextMenu);
+    document.addEventListener("scroll", positionChatContextMenu, true);
+
+    ensureConversation();
     ensureInitialPrompt();
+    adjustComposer();
     render();
   </script>
 </body>
