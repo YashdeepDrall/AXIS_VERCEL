@@ -67,3 +67,7 @@ LOCAL_VECTOR_CACHE_FILE = os.getenv(
     "LOCAL_VECTOR_CACHE_FILE",
     os.path.join(LOCAL_VECTOR_CACHE_DIR, "axis_vectors.json"),
 )
+LOCAL_CONVERSATION_STORE_FILE = os.getenv(
+    "LOCAL_CONVERSATION_STORE_FILE",
+    os.path.join(LOCAL_VECTOR_CACHE_DIR, "axis_conversations.json"),
+)

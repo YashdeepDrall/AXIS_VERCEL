@@ -132,22 +132,53 @@ chat_logs_collection = InMemoryCollection()
 fs = InMemoryGridFS()
 
 
-def _seed_default_user():
-    default_user_id = os.getenv("AXIS_DEFAULT_USER_ID", "axis001")
-    default_password = os.getenv("AXIS_DEFAULT_PASSWORD", "0000")
-
-    if users_collection.find_one({"userId": default_user_id}):
+def _seed_user(user_id: str, password: str, role: str, display_name: str):
+    if users_collection.find_one({"userId": user_id}):
         return
 
     users_collection.insert_one(
         {
-            "userId": default_user_id,
-            "password": default_password,
+            "userId": user_id,
+            "password": password,
+            "displayName": display_name,
             "bankId": AXIS_BANK_ID,
             "bankName": AXIS_BANK_NAME,
-            "role": "investigator",
+            "role": role,
         }
     )
 
 
-_seed_default_user()
+def _seed_default_users():
+    default_password = os.getenv("AXIS_DEFAULT_PASSWORD", "0000")
+    seeded_users = [
+        (
+            os.getenv("AXIS_DEFAULT_USER_ID", "axis001"),
+            default_password,
+            "investigator",
+            os.getenv("AXIS_DEFAULT_DISPLAY_NAME", "Axis Investigator"),
+        ),
+        (
+            os.getenv("AXIS_SUPERVISOR_USER_ID", "axis_supervisor"),
+            os.getenv("AXIS_SUPERVISOR_PASSWORD", default_password),
+            "supervisor",
+            os.getenv("AXIS_SUPERVISOR_DISPLAY_NAME", "Axis Supervisor"),
+        ),
+        (
+            os.getenv("AXIS_ADMIN_USER_ID", "axis_admin"),
+            os.getenv("AXIS_ADMIN_PASSWORD", default_password),
+            "admin",
+            os.getenv("AXIS_ADMIN_DISPLAY_NAME", "Axis Admin"),
+        ),
+        (
+            os.getenv("AXIS_AUDITOR_USER_ID", "axis_auditor"),
+            os.getenv("AXIS_AUDITOR_PASSWORD", default_password),
+            "auditor",
+            os.getenv("AXIS_AUDITOR_DISPLAY_NAME", "Axis Auditor"),
+        ),
+    ]
+
+    for user_id, password, role, display_name in seeded_users:
+        _seed_user(user_id, password, role, display_name)
+
+
+_seed_default_users()

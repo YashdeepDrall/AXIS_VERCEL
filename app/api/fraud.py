@@ -9,7 +9,12 @@ from pydantic import BaseModel, Field
 
 from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BANK_NAME, AXIS_BLUEPRINT_FILE, BASE_DIR
 from app.db.mongodb import cases_collection, chat_logs_collection, documents_collection, fs
-from app.services.auth_service import verify_user, verify_user_credentials
+from app.services.conversation_service import (
+    delete_conversation_for_user,
+    list_conversations_for_user,
+    upsert_conversation_for_user,
+)
+from app.services.auth_service import get_user_context, require_permission, verify_user_credentials
 from app.services.fraud_service import detect_fraud, generate_investigation_report
 
 
@@ -29,6 +34,36 @@ class ChatTurnRequest(BaseModel):
     state: ConversationState | None = None
 
 
+class ConversationMemberPayload(BaseModel):
+    id: str
+    name: str | None = None
+    color: str | None = None
+
+
+class ConversationHistoryItemPayload(BaseModel):
+    role: str
+    content: str | None = None
+    items: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ConversationPayload(BaseModel):
+    id: str
+    title: str = "New chat"
+    updatedAt: str | None = None
+    createdAt: str | None = None
+    ownerUserId: str | None = None
+    createdBy: str | None = None
+    members: list[ConversationMemberPayload] = Field(default_factory=list)
+    chatHistory: list[ConversationHistoryItemPayload] = Field(default_factory=list)
+    fraudCategory: str | None = None
+    conversationState: dict[str, Any] = Field(default_factory=dict)
+
+
+class ConversationSyncRequest(BaseModel):
+    userId: str
+    conversation: ConversationPayload
+
+
 def get_last_chat(user_id, session_id):
     return chat_logs_collection.find_one(
         {"userId": user_id, "sessionId": session_id},
@@ -36,11 +71,12 @@ def get_last_chat(user_id, session_id):
     )
 
 
-def save_chat_log(user_id, bank_id, session_id, user_input, bot_output, step, analysis, case_query):
+def save_chat_log(user_id, bank_id, role, session_id, user_input, bot_output, step, analysis, case_query):
     chat_logs_collection.insert_one(
         {
             "userId": user_id,
             "bankId": bank_id,
+            "role": role,
             "sessionId": session_id,
             "user_input": user_input,
             "bot_output": bot_output,
@@ -172,7 +208,67 @@ def _normalize_choice(text):
     return None
 
 
-def _run_chat_turn(user_id, bank_id, query, step=None, analysis=None, case_query=None, session_id=None):
+@router.get("/conversations")
+def list_conversations(userId: str):
+    try:
+        user_context = get_user_context(userId.strip())
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    conversations = list_conversations_for_user(user_context)
+    return {"conversations": conversations}
+
+
+@router.post("/conversations/sync")
+def sync_conversation(request: ConversationSyncRequest):
+    user_id = request.userId.strip()
+
+    if not user_id:
+        raise HTTPException(status_code=400, detail="userId is required")
+
+    try:
+        user_context = get_user_context(user_id)
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        saved_conversation = upsert_conversation_for_user(
+            user_context,
+            request.conversation.model_dump(),
+        )
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return {"conversation": saved_conversation}
+
+
+@router.delete("/conversations/{conversation_id}")
+def remove_conversation(conversation_id: str, userId: str):
+    try:
+        user_context = get_user_context(userId.strip())
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        deleted = delete_conversation_for_user(user_context, conversation_id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    return {"deleted": True, "conversationId": conversation_id}
+
+
+def _run_chat_turn(user_context, query, step=None, analysis=None, case_query=None, session_id=None):
+    user_id = user_context["userId"]
+    bank_id = user_context["bankId"]
+    permissions = user_context.get("permissions") or {}
+
     if not session_id:
         session_id = f"{user_id}_{uuid.uuid4().hex}"
 
@@ -220,14 +316,21 @@ Do you want the relevant documentation for this fraud case? (Yes/No)
 
     elif step == "fetch_documentation":
         if choice == "yes":
-            docs = fetch_relevant_documents(bank_id)
-            documents = docs
-            doc_names = ", ".join([doc.get("name", "Document") for doc in docs]) or "None found"
+            if permissions.get("canDownloadDocuments"):
+                docs = fetch_relevant_documents(bank_id)
+                documents = docs
+                doc_names = ", ".join([doc.get("name", "Document") for doc in docs]) or "None found"
 
-            response = f"""
+                response = f"""
 Relevant Blueprint Documentation:
 
 {doc_names}
+
+Do you want an automated investigation report generated? (Yes/No)
+"""
+            else:
+                response = """
+Document downloads are not available for your role.
 
 Do you want an automated investigation report generated? (Yes/No)
 """
@@ -248,12 +351,19 @@ I did not get a clear Yes/No. Please reply Yes or No.
 
     elif step == "generate_report":
         if choice == "yes":
-            report = generate_investigation_report(case_query or query, bank_id, analysis or {})
+            if permissions.get("canGenerateReport"):
+                report = generate_investigation_report(case_query or query, bank_id, analysis or {})
 
-            response = f"""
+                response = f"""
 Generated Investigation Report:
 
 {report}
+
+Do you want historical fraud case references? (Yes/No)
+"""
+            else:
+                response = """
+Automated investigation reports are not available for your role.
 
 Do you want historical fraud case references? (Yes/No)
 """
@@ -274,12 +384,19 @@ I did not get a clear Yes/No. Please reply Yes or No.
 
     elif step == "historical_docs":
         if choice == "yes":
-            hist_docs = fetch_historical_docs()
+            if permissions.get("canViewHistoricalCases"):
+                hist_docs = fetch_historical_docs()
 
-            response = f"""
+                response = f"""
 Historical Fraud Case References:
 
 {hist_docs}
+
+Is there anything else I can help you with?
+"""
+            else:
+                response = """
+Historical fraud case references are not available for your role.
 
 Is there anything else I can help you with?
 """
@@ -338,9 +455,14 @@ I did not get a clear Yes/No. Please reply Yes or No.
 @router.get("/fraud")
 def fraud_chat(userId: str, query: str, sessionId: str | None = None):
     try:
-        bank_id = verify_user(userId)
+        user_context = get_user_context(userId)
     except Exception as exc:
         raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        require_permission(user_context, "canChat", "Your role has read-only workspace access and cannot start chat analysis.")
+    except Exception as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
 
     if not sessionId:
         sessionId = f"{userId}_{uuid.uuid4().hex}"
@@ -351,8 +473,7 @@ def fraud_chat(userId: str, query: str, sessionId: str | None = None):
     case_query = last_chat.get("case_query") if last_chat else None
 
     result = _run_chat_turn(
-        user_id=userId,
-        bank_id=bank_id,
+        user_context=user_context,
         query=query,
         step=step,
         analysis=analysis,
@@ -362,7 +483,8 @@ def fraud_chat(userId: str, query: str, sessionId: str | None = None):
 
     save_chat_log(
         userId,
-        bank_id,
+        user_context["bankId"],
+        user_context["role"],
         result["sessionId"],
         query,
         result["chatbot_response"],
@@ -383,15 +505,19 @@ def fraud_chat_turn(request: ChatTurnRequest):
         raise HTTPException(status_code=400, detail="userId and query are required")
 
     try:
-        bank_id = verify_user(user_id)
+        user_context = get_user_context(user_id)
     except Exception as exc:
         raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        require_permission(user_context, "canChat", "Your role has read-only workspace access and cannot send chat queries.")
+    except Exception as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
 
     state = request.state or ConversationState()
 
     return _run_chat_turn(
-        user_id=user_id,
-        bank_id=bank_id,
+        user_context=user_context,
         query=query,
         step=state.step,
         analysis=state.analysis,
@@ -409,8 +535,8 @@ def login(request: dict):
         raise HTTPException(status_code=400, detail="userId and password are required")
 
     try:
-        bank_id = verify_user_credentials(user_id, password)
+        user_context = verify_user_credentials(user_id, password)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid userId or password")
 
-    return {"userId": user_id, "bankId": bank_id}
+    return user_context

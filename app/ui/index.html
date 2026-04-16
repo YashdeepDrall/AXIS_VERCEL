@@ -844,7 +844,7 @@
       <div class="card login-card">
         <p class="login-kicker">AXIS Bank</p>
         <h1 class="title">Fraud Investigation Assistant</h1>
-        <p class="login-subtitle">Secure access to the investigator workspace and case conversations.</p>
+        <p class="login-subtitle">Secure access to the fraud workspace, role-based controls, and case conversations.</p>
         <h2 class="section-title">Login</h2>
         <form id="loginForm">
           <label for="userId">User ID</label>
@@ -898,7 +898,7 @@
                 <div id="profileAvatar" class="avatar">A</div>
                 <div class="profile-copy">
                   <strong id="profileName">axis001</strong>
-                  <span>Investigator</span>
+                  <span id="profileRoleLabel">Investigator</span>
                 </div>
               </button>
 
@@ -938,7 +938,7 @@
             <button id="sendButton" type="submit">Send</button>
           </form>
           <div class="composer-aux">
-            <span>Every new thread stays in Recent chats until deleted.</span>
+            <span id="composerHint">Every new thread stays in Recent chats until deleted.</span>
             <span id="composerMeta">AXIS Blueprint grounded responses</span>
           </div>
         </div>
@@ -954,7 +954,7 @@
   <section id="settingsDrawer" class="settings-drawer hidden">
     <div class="settings-block">
       <strong class="settings-title">Profile &amp; settings</strong>
-      <div id="settingsCopy" class="settings-copy">AXIS Bank investigator workspace.</div>
+      <div id="settingsCopy" class="settings-copy">AXIS Bank workspace access.</div>
     </div>
     <div class="settings-block">
       <strong class="settings-title">Appearance</strong>
@@ -964,8 +964,8 @@
       </div>
     </div>
     <div class="settings-block">
-      <strong class="settings-title">Access roadmap</strong>
-      <div class="settings-copy">Role-based access and shared controls can plug into this shell next.</div>
+      <strong class="settings-title">Role access</strong>
+      <div id="roleAccessCopy" class="settings-copy">Role-based access controls are active for this workspace.</div>
     </div>
     <button id="closeSettingsButton" class="ghost-action" type="button">Close</button>
   </section>
@@ -973,11 +973,11 @@
   <section id="memberModal" class="member-modal hidden">
     <div class="settings-block">
       <strong class="settings-title">Conversation members</strong>
-      <div class="settings-copy">Add names or emails for the shared-thread UI. Backend access rules can follow later.</div>
+      <div id="memberAccessCopy" class="settings-copy">Add names or emails for the shared-thread UI.</div>
     </div>
     <form id="memberForm" class="composer">
       <input id="memberInput" class="member-input" type="text" placeholder="Add name or email">
-      <button type="submit">Add member</button>
+      <button id="memberSubmitButton" type="submit">Add member</button>
     </form>
     <div id="memberList" class="member-list"></div>
     <button id="closeMemberModalButton" class="ghost-action" type="button">Close</button>
@@ -991,6 +991,23 @@
     const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
     const FOLLOWUP_ANSWERS = new Set(["yes", "y", "yeah", "yep", "sure", "ok", "okay", "no", "n", "nope", "nah", "nothing"]);
     const MEMBER_COLORS = ["#a50034", "#0f766e", "#3454d1", "#996c00"];
+    const ROLE_LABELS = {
+      investigator: "Investigator",
+      supervisor: "Supervisor",
+      admin: "Admin",
+      auditor: "Auditor"
+    };
+    const PERMISSION_TEMPLATE = Object.freeze({
+      canChat: false,
+      canCreateChat: false,
+      canRenameChat: false,
+      canDeleteChat: false,
+      canManageMembers: false,
+      canGenerateReport: false,
+      canViewHistoricalCases: false,
+      canDownloadDocuments: false,
+      canManageUsers: false
+    });
 
     const els = {
       loginView: document.getElementById("loginView"),
@@ -1011,6 +1028,7 @@
       profileButton: document.getElementById("profileButton"),
       profileAvatar: document.getElementById("profileAvatar"),
       profileName: document.getElementById("profileName"),
+      profileRoleLabel: document.getElementById("profileRoleLabel"),
       profileMenu: document.getElementById("profileMenu"),
       profileMenuName: document.getElementById("profileMenuName"),
       profileMenuMeta: document.getElementById("profileMenuMeta"),
@@ -1033,16 +1051,20 @@
       chatMenuDeleteButton: document.getElementById("chatMenuDeleteButton"),
       settingsDrawer: document.getElementById("settingsDrawer"),
       settingsCopy: document.getElementById("settingsCopy"),
+      roleAccessCopy: document.getElementById("roleAccessCopy"),
       themeLightButton: document.getElementById("themeLightButton"),
       themeDarkButton: document.getElementById("themeDarkButton"),
       closeSettingsButton: document.getElementById("closeSettingsButton"),
       memberModal: document.getElementById("memberModal"),
+      memberAccessCopy: document.getElementById("memberAccessCopy"),
       memberForm: document.getElementById("memberForm"),
       memberInput: document.getElementById("memberInput"),
+      memberSubmitButton: document.getElementById("memberSubmitButton"),
       memberList: document.getElementById("memberList"),
       closeMemberModalButton: document.getElementById("closeMemberModalButton"),
       composerToolsMenu: document.getElementById("composerToolsMenu"),
       composerNewChatButton: document.getElementById("composerNewChatButton"),
+      composerHint: document.getElementById("composerHint"),
       suggestionButtons: Array.from(document.querySelectorAll("[data-suggestion]"))
     };
 
@@ -1052,6 +1074,7 @@
       settingsOpen: false,
       membersOpen: false,
       composerMenuOpen: false,
+      historyHydrating: false,
       busyConversationId: "",
       chatSearch: ""
     };
@@ -1060,8 +1083,57 @@
       return { step: null, analysis: {}, case_query: null, sessionId: "" };
     }
 
+    function emptyPermissions() {
+      return { ...PERMISSION_TEMPLATE };
+    }
+
+    function normalizePermissions(value) {
+      return { ...emptyPermissions(), ...(value || {}) };
+    }
+
+    function roleLabel(role) {
+      return ROLE_LABELS[String(role || "").toLowerCase()] || "Investigator";
+    }
+
+    function can(permissionKey) {
+      return Boolean(state.permissions && state.permissions[permissionKey]);
+    }
+
+    function currentDisplayName() {
+      return state.displayName || state.userId || "AXIS User";
+    }
+
+    function permissionSummaryText() {
+      const items = [];
+
+      if (can("canChat")) items.push("chat analysis");
+      if (can("canDownloadDocuments")) items.push("blueprint downloads");
+      if (can("canGenerateReport")) items.push("report generation");
+      if (can("canViewHistoricalCases")) items.push("historical references");
+      if (can("canManageMembers")) items.push("member controls");
+      if (can("canManageUsers")) items.push("user administration");
+
+      return items.length ? items.join(", ") : "read-only workspace access";
+    }
+
+    function defaultChatInputPlaceholder() {
+      return can("canChat")
+        ? "Ask anything about an AXIS Bank fraud case"
+        : `${roleLabel(state.role)} access is read-only for chat input`;
+    }
+
     function defaultState() {
-      return { loggedIn: false, userId: "", bankId: "", theme: "light", conversations: [], activeConversationId: "" };
+      return {
+        loggedIn: false,
+        userId: "",
+        displayName: "",
+        bankId: "",
+        role: "",
+        permissions: emptyPermissions(),
+        theme: "light",
+        conversations: [],
+        activeConversationId: ""
+      };
     }
 
     function makeId() {
@@ -1106,9 +1178,24 @@
             fraudCategory: parsed.fraudCategory || "",
             conversationState: parsed.conversationState || defaultConversationState()
           });
-          return { ...defaultState(), ...parsed, conversations: [migrated], activeConversationId: migrated.id };
+          return {
+            ...defaultState(),
+            ...parsed,
+            displayName: parsed.displayName || parsed.userId || "",
+            role: String(parsed.role || "").toLowerCase(),
+            permissions: normalizePermissions(parsed.permissions),
+            conversations: [migrated],
+            activeConversationId: migrated.id
+          };
         }
-        return { ...defaultState(), ...parsed, conversations: (parsed.conversations || []).map(createConversation) };
+        return {
+          ...defaultState(),
+          ...parsed,
+          displayName: parsed.displayName || parsed.userId || "",
+          role: String(parsed.role || "").toLowerCase(),
+          permissions: normalizePermissions(parsed.permissions),
+          conversations: (parsed.conversations || []).map(createConversation)
+        };
       } catch (_error) {
         return defaultState();
       }
@@ -1124,6 +1211,61 @@
       return state.conversations.find((item) => item.id === state.activeConversationId) || null;
     }
 
+    function normalizeConversationMember(rawMember) {
+      const memberId = String((rawMember && rawMember.id) || (rawMember && rawMember.name) || "").trim().toLowerCase();
+      const memberName = String((rawMember && rawMember.name) || memberId).trim();
+
+      if (!memberId) return null;
+
+      return {
+        id: memberId,
+        name: memberName || memberId,
+        color: String((rawMember && rawMember.color) || memberColor(memberId)).trim() || memberColor(memberId)
+      };
+    }
+
+    function normalizeConversationRecord(rawConversation) {
+      const conversation = createConversation({
+        ...rawConversation,
+        members: (rawConversation && rawConversation.members ? rawConversation.members : []).map(normalizeConversationMember).filter(Boolean),
+        chatHistory: Array.isArray(rawConversation && rawConversation.chatHistory) ? rawConversation.chatHistory : [],
+        conversationState: {
+          ...defaultConversationState(),
+          ...((rawConversation && rawConversation.conversationState) || {})
+        }
+      });
+
+      if (rawConversation && rawConversation.createdAt) {
+        conversation.createdAt = rawConversation.createdAt;
+      }
+      if (rawConversation && rawConversation.ownerUserId) {
+        conversation.ownerUserId = rawConversation.ownerUserId;
+      }
+      if (rawConversation && rawConversation.createdBy) {
+        conversation.createdBy = rawConversation.createdBy;
+      }
+
+      return conversation;
+    }
+
+    function replaceConversation(savedConversation) {
+      const normalizedConversation = normalizeConversationRecord(savedConversation);
+      const conversationIndex = state.conversations.findIndex((item) => item.id === normalizedConversation.id);
+
+      if (conversationIndex === -1) {
+        state.conversations.push(normalizedConversation);
+      } else {
+        state.conversations[conversationIndex] = normalizedConversation;
+      }
+
+      if (!state.activeConversationId || !state.conversations.some((item) => item.id === state.activeConversationId)) {
+        state.activeConversationId = normalizedConversation.id;
+      }
+
+      saveState();
+      return normalizedConversation;
+    }
+
     function updateConversation(conversationId, updater) {
       state.conversations = state.conversations.map((conversation) => {
         return conversation.id === conversationId ? updater(conversation) : conversation;
@@ -1137,6 +1279,7 @@
 
     function ensureConversation() {
       if (!state.loggedIn) return;
+      if (ui.historyHydrating) return;
       if (state.conversations.length && !state.activeConversationId) {
         state.activeConversationId = state.conversations[0].id;
         saveState();
@@ -1204,7 +1347,13 @@
       if (!state.loggedIn) return;
       closeTransientUi({ members: true });
       render();
-      window.requestAnimationFrame(() => els.memberInput.focus());
+      window.requestAnimationFrame(() => {
+        if (can("canManageMembers")) {
+          els.memberInput.focus();
+        } else {
+          els.closeMemberModalButton.focus();
+        }
+      });
     }
 
     function openSettingsDrawer() {
@@ -1274,12 +1423,13 @@
     function renderChatList() {
       els.chatList.innerHTML = "";
       const search = ui.chatSearch.trim().toLowerCase();
+      const allowChatActions = can("canRenameChat") || can("canDeleteChat");
       const conversations = sortedConversations().filter((conversation) => {
         return !search || conversation.title.toLowerCase().includes(search);
       });
       for (const conversation of conversations) {
         const item = document.createElement("div");
-        item.className = `chat-item${conversation.id === state.activeConversationId ? " active" : ""}${ui.activeMenuId === conversation.id ? " menu-open" : ""}`;
+        item.className = `chat-item${conversation.id === state.activeConversationId ? " active" : ""}${allowChatActions && ui.activeMenuId === conversation.id ? " menu-open" : ""}`;
         const main = document.createElement("button");
         main.className = "chat-main";
         main.type = "button";
@@ -1294,22 +1444,24 @@
           saveState();
           render();
         });
-        const options = document.createElement("button");
-        options.className = "chat-options";
-        options.type = "button";
-        options.setAttribute("aria-label", "Chat options");
-        options.dataset.chatOptionsId = conversation.id;
-        options.setAttribute("aria-haspopup", "menu");
-        options.setAttribute("aria-expanded", ui.activeMenuId === conversation.id ? "true" : "false");
-        options.addEventListener("click", (event) => {
-          event.stopPropagation();
-          const nextMenuId = ui.activeMenuId === conversation.id ? "" : conversation.id;
-          closeTransientUi({ keepChatMenu: true });
-          ui.activeMenuId = nextMenuId;
-          render();
-        });
         item.appendChild(main);
-        item.appendChild(options);
+        if (allowChatActions) {
+          const options = document.createElement("button");
+          options.className = "chat-options";
+          options.type = "button";
+          options.setAttribute("aria-label", "Chat options");
+          options.dataset.chatOptionsId = conversation.id;
+          options.setAttribute("aria-haspopup", "menu");
+          options.setAttribute("aria-expanded", ui.activeMenuId === conversation.id ? "true" : "false");
+          options.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const nextMenuId = ui.activeMenuId === conversation.id ? "" : conversation.id;
+            closeTransientUi({ keepChatMenu: true });
+            ui.activeMenuId = nextMenuId;
+            render();
+          });
+          item.appendChild(options);
+        }
         els.chatList.appendChild(item);
       }
     }
@@ -1358,17 +1510,24 @@
       for (const member of conversation.members) {
         const row = document.createElement("div");
         row.className = "member-row";
-        row.innerHTML = `<div class="member-copy"><strong>${member.name}</strong><span>${member.id === String(state.userId).toLowerCase() ? "Current investigator" : "Shared thread member"}</span></div>`;
-        const button = document.createElement("button");
-        button.className = "ghost-action";
-        button.type = "button";
-        button.textContent = member.id === String(state.userId).toLowerCase() ? "Owner" : "Remove";
-        button.disabled = member.id === String(state.userId).toLowerCase();
-        button.addEventListener("click", () => {
-          updateConversation(conversation.id, (current) => ({ ...current, members: current.members.filter((item) => item.id !== member.id), updatedAt: new Date().toISOString() }));
-          render();
-        });
-        row.appendChild(button);
+        row.innerHTML = `<div class="member-copy"><strong>${member.name}</strong><span>${member.id === String(state.userId).toLowerCase() ? "Current workspace user" : "Shared thread member"}</span></div>`;
+        if (can("canManageMembers")) {
+          const button = document.createElement("button");
+          button.className = "ghost-action";
+          button.type = "button";
+          button.textContent = member.id === String(state.userId).toLowerCase() ? "Owner" : "Remove";
+          button.disabled = member.id === String(state.userId).toLowerCase();
+          button.addEventListener("click", async () => {
+            updateConversation(conversation.id, (current) => ({ ...current, members: current.members.filter((item) => item.id !== member.id), updatedAt: new Date().toISOString() }));
+            try {
+              await syncConversation(conversation.id);
+            } catch (error) {
+              setError(`History Sync Error: ${error.message}`);
+            }
+            render();
+          });
+          row.appendChild(button);
+        }
         els.memberList.appendChild(row);
       }
     }
@@ -1377,6 +1536,16 @@
       ensureConversation();
       ensureInitialPrompt();
       const conversation = activeConversation();
+      const activeRoleLabel = roleLabel(state.role);
+      const canManageMembers = can("canManageMembers");
+      const hasChatMenuActions = can("canRenameChat") || can("canDeleteChat");
+      const chatAllowed = can("canChat");
+      const isComposerBusy = ui.busyConversationId === state.activeConversationId;
+
+      if (!hasChatMenuActions) {
+        ui.activeMenuId = "";
+      }
+
       document.body.dataset.theme = state.theme || "light";
       document.body.style.overflow = ui.settingsOpen || ui.membersOpen ? "hidden" : "";
       setHidden(els.loginView, state.loggedIn);
@@ -1386,32 +1555,57 @@
       els.userId.value = state.userId || "";
       renderChatList();
       renderHistory();
-      setHidden(els.welcomeState, true);
-      setHidden(els.chatHistory, false);
+      setHidden(els.welcomeState, Boolean(conversation));
+      setHidden(els.chatHistory, !conversation);
       els.conversationTitle.textContent = conversation ? conversation.title : "New chat";
       els.conversationMeta.textContent = conversation && conversation.fraudCategory ? conversation.fraudCategory : "AXIS Bank fraud investigation workspace";
-      els.profileAvatar.textContent = initials(state.userId || "A");
+      els.profileAvatar.textContent = initials(currentDisplayName() || "A");
       els.profileAvatar.style.background = memberColor(state.userId || "axis");
-      els.profileName.textContent = state.userId || "Investigator";
-      els.profileMenuName.textContent = state.userId || "Investigator";
-      els.profileMenuMeta.textContent = state.bankId ? `${String(state.bankId).toUpperCase()} workspace` : "AXIS Bank workspace";
-      els.settingsCopy.textContent = `${state.conversations.length} saved chat${state.conversations.length === 1 ? "" : "s"} in this workspace.`;
-      els.composerMeta.textContent = conversation && conversation.fraudCategory ? conversation.fraudCategory : "AXIS Blueprint grounded responses";
+      els.profileName.textContent = currentDisplayName();
+      els.profileRoleLabel.textContent = activeRoleLabel;
+      els.profileMenuName.textContent = currentDisplayName();
+      els.profileMenuMeta.textContent = state.bankId ? `${String(state.bankId).toUpperCase()} workspace - ${activeRoleLabel}` : `AXIS Bank workspace - ${activeRoleLabel}`;
+      els.settingsCopy.textContent = `${activeRoleLabel} access with ${state.conversations.length} saved chat${state.conversations.length === 1 ? "" : "s"} in this workspace.`;
+      els.roleAccessCopy.textContent = `${activeRoleLabel} permissions: ${permissionSummaryText()}.`;
+      els.memberAccessCopy.textContent = canManageMembers
+        ? "Add or remove members for this conversation."
+        : `${activeRoleLabel} access can review members, but only supervisors and admins can change them.`;
+      els.composerHint.textContent = can("canDeleteChat")
+        ? "Every new thread stays in Recent chats until deleted."
+        : `${activeRoleLabel} access keeps chat history protected from rename and delete actions.`;
+      els.composerMeta.textContent = conversation && conversation.fraudCategory
+        ? conversation.fraudCategory
+        : can("canGenerateReport")
+          ? "AXIS Blueprint grounded responses"
+          : `${activeRoleLabel} access: blueprint review and chat guidance`;
+      els.chatInput.placeholder = defaultChatInputPlaceholder();
+      els.chatInput.disabled = !chatAllowed || isComposerBusy;
+      els.chatInput.readOnly = !chatAllowed;
+      els.sendButton.disabled = !chatAllowed || isComposerBusy;
+      els.sendButton.textContent = !chatAllowed ? "Locked" : isComposerBusy ? "..." : "Send";
       els.themeLightButton.disabled = state.theme === "light";
       els.themeDarkButton.disabled = state.theme === "dark";
+      els.memberInput.disabled = !canManageMembers;
+      els.memberSubmitButton.disabled = !canManageMembers;
       renderMembers(conversation);
       renderMembersModal();
       els.profileButton.setAttribute("aria-expanded", ui.profileOpen ? "true" : "false");
       els.memberStack.setAttribute("aria-expanded", ui.membersOpen ? "true" : "false");
       els.composerMenuButton.setAttribute("aria-expanded", ui.composerMenuOpen ? "true" : "false");
+      setHidden(els.newChatButton, !can("canCreateChat"));
+      setHidden(els.profileDeleteChatButton, !can("canDeleteChat"));
+      setHidden(els.memberForm, !canManageMembers);
+      setHidden(els.composerMenuButton, !can("canCreateChat"));
+      setHidden(els.chatMenuRenameButton, !can("canRenameChat"));
+      setHidden(els.chatMenuDeleteButton, !can("canDeleteChat"));
       setHidden(els.profileMenu, !ui.profileOpen);
-      setHidden(els.chatContextMenu, !ui.activeMenuId);
+      setHidden(els.chatContextMenu, !ui.activeMenuId || !hasChatMenuActions);
       setHidden(els.settingsDrawer, !ui.settingsOpen);
       setHidden(els.memberModal, !ui.membersOpen);
-      setHidden(els.composerToolsMenu, !ui.composerMenuOpen);
+      setHidden(els.composerToolsMenu, !ui.composerMenuOpen || !can("canCreateChat"));
       setHidden(els.overlay, !(ui.settingsOpen || ui.membersOpen));
       positionChatContextMenu();
-      if (state.loggedIn && !ui.settingsOpen && !ui.membersOpen) els.chatInput.focus();
+      if (state.loggedIn && chatAllowed && !ui.settingsOpen && !ui.membersOpen) els.chatInput.focus();
     }
 
     function extractPrompt(text) {
@@ -1523,10 +1717,110 @@
       throw new Error(detail || `Backend returned status ${response.status}.`);
     }
 
+    async function fetchStoredConversations() {
+      const response = await requestBackend("GET", `/conversations?userId=${encodeURIComponent(state.userId)}`);
+      let payload = {};
+
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        payload = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.detail || `Conversation history returned status ${response.status}.`);
+      }
+
+      return Array.isArray(payload.conversations) ? payload.conversations.map(normalizeConversationRecord) : [];
+    }
+
+    async function syncConversation(conversationId) {
+      if (!state.loggedIn || !state.userId) return null;
+
+      const conversation = state.conversations.find((item) => item.id === conversationId);
+      if (!conversation) return null;
+
+      const response = await requestBackend("POST", "/conversations/sync", {
+        body: JSON.stringify({
+          userId: state.userId,
+          conversation
+        })
+      });
+
+      let payload = {};
+
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        payload = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.detail || `Conversation sync returned status ${response.status}.`);
+      }
+
+      if (payload.conversation) {
+        return replaceConversation(payload.conversation);
+      }
+
+      return conversation;
+    }
+
+    async function removeConversationFromBackend(conversationId) {
+      const response = await requestBackend("DELETE", `/conversations/${encodeURIComponent(conversationId)}?userId=${encodeURIComponent(state.userId)}`);
+      let payload = {};
+
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        payload = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.detail || `Conversation delete returned status ${response.status}.`);
+      }
+
+      return Boolean(payload.deleted);
+    }
+
+    async function hydrateWorkspace(createIfEmpty = true) {
+      if (!state.loggedIn || !state.userId) return;
+
+      ui.historyHydrating = true;
+      setError("");
+      setStatus("Loading saved conversations...");
+      render();
+
+      try {
+        const storedConversations = await fetchStoredConversations();
+        state.conversations = storedConversations;
+
+        if (!state.conversations.some((item) => item.id === state.activeConversationId)) {
+          state.activeConversationId = state.conversations.length ? state.conversations[0].id : "";
+        }
+
+        saveState();
+      } catch (error) {
+        setError(`History Load Error: ${error.message}`);
+      } finally {
+        ui.historyHydrating = false;
+      }
+
+      if (!state.conversations.length && createIfEmpty && can("canCreateChat")) {
+        await createNewChat();
+        setStatus("");
+        return;
+      }
+
+      setStatus("");
+      render();
+    }
+
     function setComposerBusy(isBusy) {
-      els.chatInput.disabled = isBusy;
-      els.sendButton.disabled = isBusy;
-      els.sendButton.textContent = isBusy ? "..." : "Send";
+      const chatAllowed = can("canChat");
+      els.chatInput.disabled = isBusy || !chatAllowed;
+      els.sendButton.disabled = isBusy || !chatAllowed;
+      els.sendButton.textContent = !chatAllowed ? "Locked" : isBusy ? "..." : "Send";
       ui.busyConversationId = isBusy ? state.activeConversationId : "";
     }
 
@@ -1535,8 +1829,15 @@
       els.chatInput.style.height = `${Math.min(els.chatInput.scrollHeight, 150)}px`;
     }
 
-    function createNewChat() {
+    async function createNewChat() {
+      if (!can("canCreateChat")) {
+        setError(`${roleLabel(state.role)} access cannot create new chats.`);
+        return;
+      }
       const conversation = createConversation({ members: state.userId ? [createMember(state.userId)] : [] });
+      conversation.createdAt = conversation.createdAt || new Date().toISOString();
+      conversation.ownerUserId = state.userId;
+      conversation.createdBy = state.userId;
       state.conversations.push(conversation);
       state.activeConversationId = conversation.id;
       closeTransientUi();
@@ -1544,26 +1845,44 @@
       ensureInitialPrompt();
       setError("");
       setStatus("");
+      try {
+        await syncConversation(conversation.id);
+      } catch (error) {
+        setError(`History Sync Error: ${error.message}`);
+      }
       render();
     }
 
-    function deleteConversation(conversationId) {
+    async function deleteConversation(conversationId) {
+      if (!can("canDeleteChat")) {
+        setError(`${roleLabel(state.role)} access cannot delete chats.`);
+        return;
+      }
       const conversation = state.conversations.find((item) => item.id === conversationId);
       if (!conversation) return;
       if (!window.confirm(`Delete "${conversation.title}"?`)) return;
-      state.conversations = state.conversations.filter((item) => item.id !== conversationId);
-      if (!state.conversations.length) {
-        const fresh = createConversation({ members: state.userId ? [createMember(state.userId)] : [] });
-        state.conversations = [fresh];
+      try {
+        await removeConversationFromBackend(conversationId);
+      } catch (error) {
+        setError(`History Delete Error: ${error.message}`);
+        return;
       }
-      state.activeConversationId = state.conversations[0].id;
+      state.conversations = state.conversations.filter((item) => item.id !== conversationId);
+      state.activeConversationId = state.conversations.length ? state.conversations[0].id : "";
       closeTransientUi();
       saveState();
-      ensureInitialPrompt();
+      if (!state.conversations.length && can("canCreateChat")) {
+        await createNewChat();
+        return;
+      }
       render();
     }
 
-    function renameConversation(conversationId) {
+    async function renameConversation(conversationId) {
+      if (!can("canRenameChat")) {
+        setError(`${roleLabel(state.role)} access cannot rename chats.`);
+        return;
+      }
       const conversation = state.conversations.find((item) => item.id === conversationId);
       if (!conversation) return;
       const nextTitle = window.prompt("Rename chat", conversation.title);
@@ -1576,6 +1895,11 @@
         updatedAt: new Date().toISOString()
       }));
       ui.activeMenuId = "";
+      try {
+        await syncConversation(conversationId);
+      } catch (error) {
+        setError(`History Sync Error: ${error.message}`);
+      }
       render();
     }
 
@@ -1591,6 +1915,10 @@
     }
 
     async function sendChat(query) {
+      if (!can("canChat")) {
+        setError(`${roleLabel(state.role)} access cannot send chat queries.`);
+        return;
+      }
       const conversation = activeConversation();
       const trimmed = query.trim();
       if (!conversation || !trimmed) return;
@@ -1633,15 +1961,25 @@
             updatedAt: new Date().toISOString()
           };
         });
+        try {
+          await syncConversation(conversation.id);
+        } catch (syncError) {
+          setError(`History Sync Error: ${syncError.message}`);
+        }
         render();
       } catch (error) {
         setError(`API Error: ${error.message}. If your Vercel function is cold-starting, retry once after a few seconds.`);
+        try {
+          await syncConversation(conversation.id);
+        } catch (_syncError) {
+          // Keep the primary API error visible.
+        }
       } finally {
         setComposerBusy(false);
         setStatus("");
         els.chatInput.value = "";
         adjustComposer();
-        els.chatInput.focus();
+        if (can("canChat")) els.chatInput.focus();
       }
     }
 
@@ -1671,11 +2009,14 @@
         const payload = await login(userId, password);
         state.loggedIn = true;
         state.userId = userId;
+        state.displayName = payload.displayName || userId;
         state.bankId = payload.bankId || "";
+        state.role = String(payload.role || "").toLowerCase();
+        state.permissions = normalizePermissions(payload.permissions);
         state.conversations = [];
         state.activeConversationId = "";
         saveState();
-        createNewChat();
+        await hydrateWorkspace(true);
         els.password.value = "";
       } catch (error) {
         setError(error.message, els.loginError);
@@ -1685,20 +2026,26 @@
       }
     });
 
-    els.newChatButton.addEventListener("click", createNewChat);
+    els.newChatButton.addEventListener("click", async () => {
+      await createNewChat();
+    });
     els.chatSearch.addEventListener("input", () => { ui.chatSearch = els.chatSearch.value; renderChatList(); });
     els.profileButton.addEventListener("click", toggleProfileMenu);
     els.openSettingsButton.addEventListener("click", openSettingsDrawer);
     els.profileDeleteChatButton.addEventListener("click", () => {
       closeTransientUi();
-      deleteConversation(state.activeConversationId);
+      void deleteConversation(state.activeConversationId);
     });
     els.quickThemeButton.addEventListener("click", () => {
       closeTransientUi();
       toggleTheme();
     });
-    els.chatMenuRenameButton.addEventListener("click", () => renameConversation(ui.activeMenuId));
-    els.chatMenuDeleteButton.addEventListener("click", () => deleteConversation(ui.activeMenuId));
+    els.chatMenuRenameButton.addEventListener("click", () => {
+      void renameConversation(ui.activeMenuId);
+    });
+    els.chatMenuDeleteButton.addEventListener("click", () => {
+      void deleteConversation(ui.activeMenuId);
+    });
     els.themeLightButton.addEventListener("click", () => toggleTheme("light"));
     els.themeDarkButton.addEventListener("click", () => toggleTheme("dark"));
     els.closeSettingsButton.addEventListener("click", closePanels);
@@ -1707,15 +2054,26 @@
     els.overlay.addEventListener("click", closePanels);
     els.logoutButton.addEventListener("click", logout);
     els.composerMenuButton.addEventListener("click", toggleComposerTools);
-    els.composerNewChatButton.addEventListener("click", createNewChat);
+    els.composerNewChatButton.addEventListener("click", async () => {
+      await createNewChat();
+    });
 
-    els.memberForm.addEventListener("submit", (event) => {
+    els.memberForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!can("canManageMembers")) {
+        setError(`${roleLabel(state.role)} access cannot change conversation members.`);
+        return;
+      }
       const conversation = activeConversation();
       const value = els.memberInput.value.trim();
       if (!conversation || !value) return;
       if (!conversation.members.some((item) => item.id === value.toLowerCase())) {
         updateConversation(conversation.id, (current) => ({ ...current, members: [...current.members, createMember(value)], updatedAt: new Date().toISOString() }));
+        try {
+          await syncConversation(conversation.id);
+        } catch (error) {
+          setError(`History Sync Error: ${error.message}`);
+        }
       }
       els.memberInput.value = "";
       render();
@@ -1776,10 +2134,14 @@
     window.addEventListener("resize", positionChatContextMenu);
     document.addEventListener("scroll", positionChatContextMenu, true);
 
-    ensureConversation();
-    ensureInitialPrompt();
     adjustComposer();
+    if (state.loggedIn) {
+      ui.historyHydrating = true;
+    }
     render();
+    if (state.loggedIn) {
+      void hydrateWorkspace(can("canCreateChat"));
+    }
   </script>
 </body>
 </html>

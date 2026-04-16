@@ -8,6 +8,7 @@ This project is scoped for AXIS Bank fraud investigation workflows and runs as a
 - Database: currently replaced with in-memory runtime state
 - RAG: Gemini embeddings plus Gemini answer generation through API calls
 - Vector storage: document chunk embeddings are cached locally on disk and reused for unchanged PDFs
+- Conversation history: persisted locally in `local_cache/axis_conversations.json` with role-based visibility
 
 ## Environment
 
@@ -39,8 +40,10 @@ uvicorn app.main:app --reload
 
 Default local login:
 
-- User ID: `axis001`
-- Password: `0000`
+- Investigator: `axis001 / 0000`
+- Supervisor: `axis_supervisor / 0000`
+- Admin: `axis_admin / 0000`
+- Auditor: `axis_auditor / 0000`
 
 ## Vercel Deploy
 
