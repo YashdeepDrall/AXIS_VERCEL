@@ -3,7 +3,7 @@ import re
 
 from pypdf import PdfReader
 
-from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_SOP_FILE
+from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BLUEPRINT_FILE
 from app.db.mongodb import documents_collection, fs
 from app.ml.embeddings import generate_embedding
 from app.ml.vector_store import add_vector
@@ -98,7 +98,7 @@ def load_axis_documents():
     for file_name in os.listdir(AXIS_BANK_DIR):
         if not file_name.lower().endswith(".pdf"):
             continue
-        if file_name != AXIS_SOP_FILE:
+        if file_name != AXIS_BLUEPRINT_FILE:
             continue
 
         file_path = os.path.join(AXIS_BANK_DIR, file_name)

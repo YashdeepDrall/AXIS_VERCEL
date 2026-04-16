@@ -9,7 +9,7 @@ from pypdf import PdfReader
 from app.core.config import (
     AXIS_BANK_DIR,
     AXIS_BANK_ID,
-    AXIS_SOP_FILE,
+    AXIS_BLUEPRINT_FILE,
     GEMINI_EMBEDDING_DIMENSION,
     GEMINI_EMBEDDING_MODEL,
     LOCAL_VECTOR_CACHE_FILE,
@@ -23,6 +23,21 @@ from app.services.llm_service import get_effective_model_name, is_gemini_configu
 
 vector_store = []
 VECTOR_CACHE_VERSION = 1
+
+
+def _source_file_name(document):
+    source_file = str(document.get("sourceFile") or "").strip()
+    if source_file:
+        return source_file
+
+    file_name = str(document.get("fileName") or "").strip()
+    chunk_marker = ".pdf_chunk"
+    marker_index = file_name.lower().find(chunk_marker)
+
+    if marker_index != -1:
+        return file_name[: marker_index + 4]
+
+    return file_name
 
 
 def generate_embedding(text, task_type="RETRIEVAL_QUERY"):
@@ -250,6 +265,29 @@ def rebuild_vector_index():
     )
 
 
+def _purge_legacy_axis_documents():
+    documents_collection.delete_many(
+        {
+            "bankId": AXIS_BANK_ID,
+            "isPDF": True,
+            "fileName": {"$ne": AXIS_BLUEPRINT_FILE},
+        }
+    )
+
+
+def _has_blueprint_vectors_loaded():
+    if not vector_store:
+        return False
+
+    indexed_sources = {
+        source_file
+        for source_file in (_source_file_name(document) for document in vector_store)
+        if source_file
+    }
+
+    return indexed_sources == {AXIS_BLUEPRINT_FILE}
+
+
 def _register_axis_pdfs():
     if not os.path.exists(AXIS_BANK_DIR):
         return []
@@ -259,7 +297,7 @@ def _register_axis_pdfs():
     for file_name in os.listdir(AXIS_BANK_DIR):
         if not file_name.lower().endswith(".pdf"):
             continue
-        if file_name != AXIS_SOP_FILE:
+        if file_name != AXIS_BLUEPRINT_FILE:
             continue
 
         file_path = os.path.join(AXIS_BANK_DIR, file_name)
@@ -270,12 +308,13 @@ def _register_axis_pdfs():
 
 
 def load_axis_documents(force_rebuild=False):
+    _purge_legacy_axis_documents()
     registered_files = _register_axis_pdfs()
 
     if not registered_files:
         return
 
-    if vector_store and not force_rebuild:
+    if _has_blueprint_vectors_loaded() and not force_rebuild:
         return
 
     cache = _load_vector_cache()

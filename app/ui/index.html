@@ -939,7 +939,7 @@
           </form>
           <div class="composer-aux">
             <span>Every new thread stays in Recent chats until deleted.</span>
-            <span id="composerMeta">AXIS SOP grounded responses</span>
+            <span id="composerMeta">AXIS Blueprint grounded responses</span>
           </div>
         </div>
       </section>
@@ -1243,7 +1243,7 @@
       card.className = "documents-card";
       const title = document.createElement("div");
       title.className = "documents-title";
-      title.textContent = "Relevant SOP Documents";
+      title.textContent = "Relevant Blueprint Documentation";
       card.appendChild(title);
       for (const doc of items) {
         const item = document.createElement("div");
@@ -1396,7 +1396,7 @@
       els.profileMenuName.textContent = state.userId || "Investigator";
       els.profileMenuMeta.textContent = state.bankId ? `${String(state.bankId).toUpperCase()} workspace` : "AXIS Bank workspace";
       els.settingsCopy.textContent = `${state.conversations.length} saved chat${state.conversations.length === 1 ? "" : "s"} in this workspace.`;
-      els.composerMeta.textContent = conversation && conversation.fraudCategory ? conversation.fraudCategory : "AXIS SOP grounded responses";
+      els.composerMeta.textContent = conversation && conversation.fraudCategory ? conversation.fraudCategory : "AXIS Blueprint grounded responses";
       els.themeLightButton.disabled = state.theme === "light";
       els.themeDarkButton.disabled = state.theme === "dark";
       renderMembers(conversation);
@@ -1614,10 +1614,11 @@
         if (!response.ok) throw new Error(payload.detail || payload.chatbot_response || `Backend returned status ${response.status}.`);
         updateConversation(conversation.id, (currentConversation) => {
           const documents = Array.isArray(payload.documents) ? payload.documents : [];
-          const promptParts = extractPrompt(payload.chatbot_response || "");
-          let fullResponse = promptParts.cleaned || payload.chatbot_response || "";
+          const rawResponse = payload.chatbot_response || "";
+          const promptParts = extractPrompt(rawResponse);
+          let fullResponse = promptParts.prompt ? promptParts.cleaned : rawResponse;
           if (documents.length) {
-            fullResponse = fullResponse.replace("Relevant SOP Documents:", "").trim();
+            fullResponse = fullResponse.replace("Relevant Blueprint Documentation:", "").trim();
             for (const doc of documents) if (doc.name) fullResponse = fullResponse.replace(doc.name, "").trim();
           }
           const nextHistory = [...currentConversation.chatHistory];

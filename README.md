@@ -4,7 +4,7 @@ This project is scoped for AXIS Bank fraud investigation workflows and runs as a
 
 - Backend: FastAPI APIs for login, fraud analysis, SOP retrieval, and document download
 - Frontend: same-origin web UI served from the FastAPI app root
-- Knowledge base: `banks/Axis/AXIS_SOP.pdf`
+- Knowledge base: `banks/Axis/Axis_Bank_Fraud_SOP_Blueprint.pdf`
 - Database: currently replaced with in-memory runtime state
 - RAG: Gemini embeddings plus Gemini answer generation through API calls
 - Vector storage: document chunk embeddings are cached locally on disk and reused for unchanged PDFs

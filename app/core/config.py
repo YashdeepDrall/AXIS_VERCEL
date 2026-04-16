@@ -28,11 +28,11 @@ _load_env_file()
 
 AXIS_BANK_ID = "axis"
 AXIS_BANK_NAME = "AXIS Bank"
+AXIS_BLUEPRINT_FILE = "Axis_Bank_Fraud_SOP_Blueprint.pdf"
 
 BASE_DIR = str(ROOT_DIR)
 BANKS_DIR = os.path.join(BASE_DIR, "banks")
 AXIS_BANK_DIR = os.path.join(BANKS_DIR, "Axis")
-AXIS_SOP_FILE = "AXIS_SOP.pdf"
 
 GEMINI_API_BASE = os.getenv("GEMINI_API_BASE", "https://generativelanguage.googleapis.com/v1beta")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()

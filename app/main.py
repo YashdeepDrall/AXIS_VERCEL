@@ -18,7 +18,7 @@ def startup_event():
     try:
         rebuild_vector_index()
         load_axis_documents()
-        print("System ready. AXIS SOP metadata loaded and Gemini RAG index initialized when available.")
+        print("System ready. AXIS fraud blueprint knowledge loaded and Gemini RAG index initialized when available.")
     except Exception as exc:
         print(f"Startup warning: {exc}")
 

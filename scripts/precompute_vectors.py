@@ -18,7 +18,7 @@ def main():
             "GEMINI_API_KEY is not set. The Vercel build needs this so the SOP vector cache can be precomputed."
         )
 
-    print("Precomputing AXIS SOP vector cache...")
+    print("Precomputing AXIS fraud blueprint vector cache...")
     load_axis_documents(force_rebuild=True)
     print(f"Vector cache ready at: {LOCAL_VECTOR_CACHE_FILE}")
 

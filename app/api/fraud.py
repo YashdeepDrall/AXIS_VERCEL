@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BANK_NAME, BASE_DIR
+from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BANK_NAME, AXIS_BLUEPRINT_FILE, BASE_DIR
 from app.db.mongodb import cases_collection, chat_logs_collection, documents_collection, fs
 from app.services.auth_service import verify_user, verify_user_credentials
 from app.services.fraud_service import detect_fraud, generate_investigation_report
@@ -74,10 +74,12 @@ def fetch_relevant_documents(bank_id):
     if bank_id != AXIS_BANK_ID:
         return []
 
+    target_path = os.path.join(AXIS_BANK_DIR, AXIS_BLUEPRINT_FILE)
     docs = list(
         documents_collection.find(
             {
                 "bankId": bank_id,
+                "fileName": AXIS_BLUEPRINT_FILE,
                 "$or": [
                     {"filePath": {"$exists": True}},
                     {"isPDF": True},
@@ -86,6 +88,17 @@ def fetch_relevant_documents(bank_id):
             }
         )
     )
+
+    if not docs and os.path.exists(target_path):
+        grid_file = fs.find_one({"filename": AXIS_BLUEPRINT_FILE, "bankId": bank_id})
+        return [
+            {
+                "name": AXIS_BLUEPRINT_FILE,
+                "path": target_path,
+                "fileId": str(grid_file._id) if grid_file else "",
+                "downloadUrl": f"/documents/{grid_file._id}" if grid_file else "",
+            }
+        ]
 
     results = []
 
@@ -183,7 +196,7 @@ def _run_chat_turn(user_id, bank_id, query, step=None, analysis=None, case_query
         if not analysis.get("supported"):
             response = (
                 analysis.get("reason")
-                or f"The content you asked for is not available in the {AXIS_BANK_NAME} SOP. Please ask a relevant fraud-related query."
+                or f"The content you asked for is not available in the {AXIS_BANK_NAME} fraud blueprint knowledge base. Please ask a relevant fraud-related query."
             )
             next_step = "conversation_end"
             analysis = {}
@@ -212,7 +225,7 @@ Do you want the relevant documentation for this fraud case? (Yes/No)
             doc_names = ", ".join([doc.get("name", "Document") for doc in docs]) or "None found"
 
             response = f"""
-Relevant SOP Documents:
+Relevant Blueprint Documentation:
 
 {doc_names}
 
