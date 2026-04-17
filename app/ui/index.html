@@ -424,6 +424,7 @@
       gap: 4px;
       padding: 0;
       border-radius: 6px;
+      align-items: center;
     }
 
     .chat-main {
@@ -431,13 +432,19 @@
       display: flex;
       align-items: center;
       min-width: 0;
-      min-height: 36px;
-      padding: 0 10px;
+      min-height: 44px;
+      padding: 6px 10px;
       border: 0;
       border-radius: 6px;
       background: transparent;
       color: var(--ink);
       box-shadow: none;
+    }
+
+    .chat-main .conversation-copy {
+      width: 100%;
+      display: grid;
+      gap: 2px;
     }
 
     .chat-main:hover:not(:disabled) {
@@ -456,6 +463,16 @@
       font-weight: 500;
       -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 22px), transparent 100%);
       mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 22px), transparent 100%);
+    }
+
+    .chat-main .chat-meta {
+      display: block;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.76rem;
+      line-height: 1.2;
     }
 
     .chat-item.active .chat-main,
@@ -976,9 +993,10 @@
       <div id="memberAccessCopy" class="settings-copy">Add names or emails for the shared-thread UI.</div>
     </div>
     <form id="memberForm" class="composer">
-      <input id="memberInput" class="member-input" type="text" placeholder="Add name or email">
+      <input id="memberInput" class="member-input" type="text" list="memberSuggestions" placeholder="Add AXIS user ID">
       <button id="memberSubmitButton" type="submit">Add member</button>
     </form>
+    <datalist id="memberSuggestions"></datalist>
     <div id="memberList" class="member-list"></div>
     <button id="closeMemberModalButton" class="ghost-action" type="button">Close</button>
   </section>
@@ -1060,6 +1078,7 @@
       memberForm: document.getElementById("memberForm"),
       memberInput: document.getElementById("memberInput"),
       memberSubmitButton: document.getElementById("memberSubmitButton"),
+      memberSuggestions: document.getElementById("memberSuggestions"),
       memberList: document.getElementById("memberList"),
       closeMemberModalButton: document.getElementById("closeMemberModalButton"),
       composerToolsMenu: document.getElementById("composerToolsMenu"),
@@ -1131,6 +1150,7 @@
         role: "",
         permissions: emptyPermissions(),
         theme: "light",
+        workspaceUsers: [],
         conversations: [],
         activeConversationId: ""
       };
@@ -1151,7 +1171,22 @@
     }
 
     function createMember(name) {
-      return { id: String(name || "").trim().toLowerCase(), name: String(name || "").trim(), color: memberColor(name) };
+      const normalizedId = String(name || "").trim().toLowerCase();
+      const matchingUser = (state.workspaceUsers || []).find((user) => String(user.userId || "").trim().toLowerCase() === normalizedId)
+        || (normalizedId === currentUserId() ? {
+          userId: state.userId,
+          displayName: currentDisplayName(),
+          role: state.role,
+          roleLabel: roleLabel(state.role)
+        } : null);
+
+      return {
+        id: normalizedId,
+        name: matchingUser ? matchingUser.displayName : String(name || "").trim(),
+        role: matchingUser ? matchingUser.role : "",
+        roleLabel: matchingUser ? matchingUser.roleLabel : "",
+        color: memberColor(normalizedId)
+      };
     }
 
     function createConversation(seed = {}) {
@@ -1159,10 +1194,16 @@
         id: seed.id || makeId(),
         title: seed.title || "New chat",
         updatedAt: seed.updatedAt || new Date().toISOString(),
+        createdAt: seed.createdAt || "",
+        ownerUserId: seed.ownerUserId || "",
+        ownerDisplayName: seed.ownerDisplayName || "",
+        ownerRole: seed.ownerRole || "",
+        ownerRoleLabel: seed.ownerRoleLabel || "",
         members: Array.isArray(seed.members) ? seed.members : [],
         chatHistory: Array.isArray(seed.chatHistory) ? seed.chatHistory : [],
         fraudCategory: seed.fraudCategory || "",
-        conversationState: { ...defaultConversationState(), ...(seed.conversationState || {}) }
+        conversationState: { ...defaultConversationState(), ...(seed.conversationState || {}) },
+        capabilities: { ...(seed.capabilities || {}) }
       };
     }
 
@@ -1184,6 +1225,7 @@
             displayName: parsed.displayName || parsed.userId || "",
             role: String(parsed.role || "").toLowerCase(),
             permissions: normalizePermissions(parsed.permissions),
+            workspaceUsers: Array.isArray(parsed.workspaceUsers) ? parsed.workspaceUsers : [],
             conversations: [migrated],
             activeConversationId: migrated.id
           };
@@ -1194,7 +1236,8 @@
           displayName: parsed.displayName || parsed.userId || "",
           role: String(parsed.role || "").toLowerCase(),
           permissions: normalizePermissions(parsed.permissions),
-          conversations: (parsed.conversations || []).map(createConversation)
+          workspaceUsers: Array.isArray(parsed.workspaceUsers) ? parsed.workspaceUsers : [],
+          conversations: (parsed.conversations || []).map(normalizeConversationRecord)
         };
       } catch (_error) {
         return defaultState();
@@ -1220,6 +1263,8 @@
       return {
         id: memberId,
         name: memberName || memberId,
+        role: String((rawMember && rawMember.role) || "").toLowerCase(),
+        roleLabel: String((rawMember && rawMember.roleLabel) || "").trim(),
         color: String((rawMember && rawMember.color) || memberColor(memberId)).trim() || memberColor(memberId)
       };
     }
@@ -1241,11 +1286,108 @@
       if (rawConversation && rawConversation.ownerUserId) {
         conversation.ownerUserId = rawConversation.ownerUserId;
       }
+      if (rawConversation && rawConversation.ownerDisplayName) {
+        conversation.ownerDisplayName = rawConversation.ownerDisplayName;
+      }
+      if (rawConversation && rawConversation.ownerRole) {
+        conversation.ownerRole = String(rawConversation.ownerRole || "").toLowerCase();
+      }
+      if (rawConversation && rawConversation.ownerRoleLabel) {
+        conversation.ownerRoleLabel = rawConversation.ownerRoleLabel;
+      }
       if (rawConversation && rawConversation.createdBy) {
         conversation.createdBy = rawConversation.createdBy;
       }
+      conversation.capabilities = { ...((rawConversation && rawConversation.capabilities) || {}) };
 
       return conversation;
+    }
+
+    function normalizeWorkspaceUser(rawUser) {
+      const userId = String((rawUser && rawUser.userId) || "").trim();
+      if (!userId) return null;
+
+      return {
+        userId,
+        displayName: String((rawUser && rawUser.displayName) || userId).trim() || userId,
+        role: String((rawUser && rawUser.role) || "").toLowerCase(),
+        roleLabel: String((rawUser && rawUser.roleLabel) || roleLabel(rawUser && rawUser.role) || "Investigator").trim() || "Investigator"
+      };
+    }
+
+    function currentUserId() {
+      return String(state.userId || "").trim().toLowerCase();
+    }
+
+    function conversationCapabilities(conversation) {
+      const ownerId = String((conversation && conversation.ownerUserId) || "").trim().toLowerCase();
+      const userId = currentUserId();
+      const role = String(state.role || "").toLowerCase();
+      const isOwner = Boolean(ownerId && userId && ownerId === userId);
+      const isShared = Boolean(userId && conversation && Array.isArray(conversation.members) && conversation.members.some((member) => member.id === userId) && !isOwner);
+      const privilegedRole = role === "supervisor" || role === "admin";
+      const fallback = {
+        canChat: can("canChat"),
+        canRename: can("canRenameChat") && (privilegedRole || isOwner),
+        canDelete: can("canDeleteChat") && (privilegedRole || isOwner),
+        canManageMembers: can("canManageMembers") && privilegedRole,
+        isOwner,
+        isShared,
+        isReadOnly: !can("canChat")
+      };
+
+      return { ...fallback, ...((conversation && conversation.capabilities) || {}) };
+    }
+
+    function conversationOwnerName(conversation) {
+      return String((conversation && conversation.ownerDisplayName) || (conversation && conversation.ownerUserId) || "").trim();
+    }
+
+    function isSupervisorView() {
+      return ["supervisor", "admin", "auditor"].includes(String(state.role || "").toLowerCase());
+    }
+
+    function conversationSidebarMeta(conversation) {
+      if (!conversation) return "";
+
+      const capabilities = conversationCapabilities(conversation);
+      const ownerName = conversationOwnerName(conversation);
+
+      if (capabilities.isShared && ownerName) {
+        return `Shared by ${ownerName}`;
+      }
+
+      if (isSupervisorView() && ownerName) {
+        return `Owner: ${ownerName}`;
+      }
+
+      return "";
+    }
+
+    function conversationHeaderMeta(conversation) {
+      if (!conversation) {
+        return "AXIS Bank fraud investigation workspace";
+      }
+
+      const capabilities = conversationCapabilities(conversation);
+      const ownerName = conversationOwnerName(conversation);
+      const parts = [];
+
+      if (conversation.fraudCategory) {
+        parts.push(conversation.fraudCategory);
+      }
+
+      if (capabilities.isShared && ownerName) {
+        parts.push(`Shared by ${ownerName}`);
+      } else if (ownerName && isSupervisorView()) {
+        parts.push(`Owner: ${ownerName}`);
+      }
+
+      if (capabilities.isReadOnly) {
+        parts.push("Read-only view");
+      }
+
+      return parts.join(" · ") || "AXIS Bank fraud investigation workspace";
     }
 
     function replaceConversation(savedConversation) {
@@ -1286,7 +1428,13 @@
         return;
       }
       if (state.conversations.length) return;
-      const conversation = createConversation({ members: state.userId ? [createMember(state.userId)] : [] });
+      const conversation = createConversation({
+        ownerUserId: state.userId,
+        ownerDisplayName: currentDisplayName(),
+        ownerRole: state.role,
+        ownerRoleLabel: roleLabel(state.role),
+        members: state.userId ? [createMember(state.userId)] : []
+      });
       state.conversations = [conversation];
       state.activeConversationId = conversation.id;
       saveState();
@@ -1347,6 +1495,9 @@
       if (!state.loggedIn) return;
       closeTransientUi({ members: true });
       render();
+      if (can("canManageMembers") && !state.workspaceUsers.length) {
+        void hydrateWorkspaceUsers();
+      }
       window.requestAnimationFrame(() => {
         if (can("canManageMembers")) {
           els.memberInput.focus();
@@ -1423,21 +1574,41 @@
     function renderChatList() {
       els.chatList.innerHTML = "";
       const search = ui.chatSearch.trim().toLowerCase();
-      const allowChatActions = can("canRenameChat") || can("canDeleteChat");
       const conversations = sortedConversations().filter((conversation) => {
-        return !search || conversation.title.toLowerCase().includes(search);
+        const sidebarMeta = conversationSidebarMeta(conversation);
+        const searchable = [
+          conversation.title,
+          sidebarMeta,
+          conversation.ownerDisplayName,
+          conversation.ownerUserId
+        ].join(" ").toLowerCase();
+
+        return !search || searchable.includes(search);
       });
       for (const conversation of conversations) {
+        const itemCapabilities = conversationCapabilities(conversation);
+        const allowChatActions = itemCapabilities.canRename || itemCapabilities.canDelete;
+        const sidebarMeta = conversationSidebarMeta(conversation);
         const item = document.createElement("div");
         item.className = `chat-item${conversation.id === state.activeConversationId ? " active" : ""}${allowChatActions && ui.activeMenuId === conversation.id ? " menu-open" : ""}`;
         const main = document.createElement("button");
         main.className = "chat-main";
         main.type = "button";
         main.setAttribute("aria-label", conversation.title);
+        const copy = document.createElement("div");
+        copy.className = "conversation-copy";
         const title = document.createElement("strong");
         title.textContent = conversation.title;
         title.title = conversation.title;
-        main.appendChild(title);
+        copy.appendChild(title);
+        if (sidebarMeta) {
+          const meta = document.createElement("span");
+          meta.className = "chat-meta";
+          meta.textContent = sidebarMeta;
+          meta.title = sidebarMeta;
+          copy.appendChild(meta);
+        }
+        main.appendChild(copy);
         main.addEventListener("click", () => {
           state.activeConversationId = conversation.id;
           closeTransientUi();
@@ -1506,17 +1677,37 @@
     function renderMembersModal() {
       const conversation = activeConversation();
       els.memberList.innerHTML = "";
+      els.memberSuggestions.innerHTML = "";
       if (!conversation) return;
+      const itemCapabilities = conversationCapabilities(conversation);
+      const ownerId = String(conversation.ownerUserId || "").trim().toLowerCase();
+
+      if (itemCapabilities.canManageMembers) {
+        const memberIds = new Set((conversation.members || []).map((member) => member.id));
+        for (const user of state.workspaceUsers) {
+          if (!user || memberIds.has(String(user.userId || "").trim().toLowerCase())) continue;
+          const option = document.createElement("option");
+          option.value = user.userId;
+          option.label = `${user.displayName} - ${user.roleLabel}`;
+          els.memberSuggestions.appendChild(option);
+        }
+      }
+
       for (const member of conversation.members) {
         const row = document.createElement("div");
         row.className = "member-row";
-        row.innerHTML = `<div class="member-copy"><strong>${member.name}</strong><span>${member.id === String(state.userId).toLowerCase() ? "Current workspace user" : "Shared thread member"}</span></div>`;
-        if (can("canManageMembers")) {
+        const membershipLabel = member.id === ownerId
+          ? `Conversation owner${member.roleLabel ? ` · ${member.roleLabel}` : ""}`
+          : member.id === currentUserId()
+            ? `You${member.roleLabel ? ` · ${member.roleLabel}` : ""}`
+            : `Shared thread member${member.roleLabel ? ` · ${member.roleLabel}` : ""}`;
+        row.innerHTML = `<div class="member-copy"><strong>${member.name}</strong><span>${membershipLabel}</span></div>`;
+        if (itemCapabilities.canManageMembers) {
           const button = document.createElement("button");
           button.className = "ghost-action";
           button.type = "button";
-          button.textContent = member.id === String(state.userId).toLowerCase() ? "Owner" : "Remove";
-          button.disabled = member.id === String(state.userId).toLowerCase();
+          button.textContent = member.id === ownerId ? "Owner" : "Remove";
+          button.disabled = member.id === ownerId;
           button.addEventListener("click", async () => {
             updateConversation(conversation.id, (current) => ({ ...current, members: current.members.filter((item) => item.id !== member.id), updatedAt: new Date().toISOString() }));
             try {
@@ -1537,12 +1728,15 @@
       ensureInitialPrompt();
       const conversation = activeConversation();
       const activeRoleLabel = roleLabel(state.role);
-      const canManageMembers = can("canManageMembers");
-      const hasChatMenuActions = can("canRenameChat") || can("canDeleteChat");
+      const activeConversationCapabilities = conversationCapabilities(conversation);
+      const canManageMembers = activeConversationCapabilities.canManageMembers;
+      const menuConversation = state.conversations.find((item) => item.id === ui.activeMenuId) || null;
+      const menuCapabilities = conversationCapabilities(menuConversation);
+      const hasChatMenuActions = menuCapabilities.canRename || menuCapabilities.canDelete;
       const chatAllowed = can("canChat");
       const isComposerBusy = ui.busyConversationId === state.activeConversationId;
 
-      if (!hasChatMenuActions) {
+      if (ui.activeMenuId && !hasChatMenuActions) {
         ui.activeMenuId = "";
       }
 
@@ -1558,7 +1752,7 @@
       setHidden(els.welcomeState, Boolean(conversation));
       setHidden(els.chatHistory, !conversation);
       els.conversationTitle.textContent = conversation ? conversation.title : "New chat";
-      els.conversationMeta.textContent = conversation && conversation.fraudCategory ? conversation.fraudCategory : "AXIS Bank fraud investigation workspace";
+      els.conversationMeta.textContent = conversationHeaderMeta(conversation);
       els.profileAvatar.textContent = initials(currentDisplayName() || "A");
       els.profileAvatar.style.background = memberColor(state.userId || "axis");
       els.profileName.textContent = currentDisplayName();
@@ -1568,11 +1762,15 @@
       els.settingsCopy.textContent = `${activeRoleLabel} access with ${state.conversations.length} saved chat${state.conversations.length === 1 ? "" : "s"} in this workspace.`;
       els.roleAccessCopy.textContent = `${activeRoleLabel} permissions: ${permissionSummaryText()}.`;
       els.memberAccessCopy.textContent = canManageMembers
-        ? "Add or remove members for this conversation."
-        : `${activeRoleLabel} access can review members, but only supervisors and admins can change them.`;
-      els.composerHint.textContent = can("canDeleteChat")
+        ? `Add or remove AXIS workspace members for this conversation.${state.workspaceUsers.length ? ` ${state.workspaceUsers.length} workspace users available.` : ""}`
+        : activeConversationCapabilities.isShared
+          ? `${activeRoleLabel} access can review shared members, but only supervisors and admins can change them.`
+          : `${activeRoleLabel} access can review members, but only supervisors and admins can change them.`;
+      els.composerHint.textContent = activeConversationCapabilities.canDelete
         ? "Every new thread stays in Recent chats until deleted."
-        : `${activeRoleLabel} access keeps chat history protected from rename and delete actions.`;
+        : activeConversationCapabilities.isShared
+          ? "Shared conversation access lets you work in the thread, while rename and delete stay with the owner or workspace leads."
+          : `${activeRoleLabel} access keeps chat history protected from rename and delete actions.`;
       els.composerMeta.textContent = conversation && conversation.fraudCategory
         ? conversation.fraudCategory
         : can("canGenerateReport")
@@ -1593,11 +1791,11 @@
       els.memberStack.setAttribute("aria-expanded", ui.membersOpen ? "true" : "false");
       els.composerMenuButton.setAttribute("aria-expanded", ui.composerMenuOpen ? "true" : "false");
       setHidden(els.newChatButton, !can("canCreateChat"));
-      setHidden(els.profileDeleteChatButton, !can("canDeleteChat"));
+      setHidden(els.profileDeleteChatButton, !activeConversationCapabilities.canDelete);
       setHidden(els.memberForm, !canManageMembers);
       setHidden(els.composerMenuButton, !can("canCreateChat"));
-      setHidden(els.chatMenuRenameButton, !can("canRenameChat"));
-      setHidden(els.chatMenuDeleteButton, !can("canDeleteChat"));
+      setHidden(els.chatMenuRenameButton, !menuCapabilities.canRename);
+      setHidden(els.chatMenuDeleteButton, !menuCapabilities.canDelete);
       setHidden(els.profileMenu, !ui.profileOpen);
       setHidden(els.chatContextMenu, !ui.activeMenuId || !hasChatMenuActions);
       setHidden(els.settingsDrawer, !ui.settingsOpen);
@@ -1734,6 +1932,25 @@
       return Array.isArray(payload.conversations) ? payload.conversations.map(normalizeConversationRecord) : [];
     }
 
+    async function fetchWorkspaceUsers() {
+      if (!state.loggedIn || !can("canManageMembers")) return [];
+
+      const response = await requestBackend("GET", `/workspace-users?userId=${encodeURIComponent(state.userId)}`);
+      let payload = {};
+
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        payload = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.detail || `Workspace user lookup returned status ${response.status}.`);
+      }
+
+      return Array.isArray(payload.users) ? payload.users.map(normalizeWorkspaceUser).filter(Boolean) : [];
+    }
+
     async function syncConversation(conversationId) {
       if (!state.loggedIn || !state.userId) return null;
 
@@ -1816,6 +2033,24 @@
       render();
     }
 
+    async function hydrateWorkspaceUsers() {
+      if (!state.loggedIn) return;
+      if (!can("canManageMembers")) {
+        state.workspaceUsers = [];
+        saveState();
+        return;
+      }
+
+      try {
+        state.workspaceUsers = await fetchWorkspaceUsers();
+        saveState();
+      } catch (error) {
+        setError(`Member Directory Error: ${error.message}`);
+      }
+
+      render();
+    }
+
     function setComposerBusy(isBusy) {
       const chatAllowed = can("canChat");
       els.chatInput.disabled = isBusy || !chatAllowed;
@@ -1834,9 +2069,18 @@
         setError(`${roleLabel(state.role)} access cannot create new chats.`);
         return;
       }
-      const conversation = createConversation({ members: state.userId ? [createMember(state.userId)] : [] });
+      const conversation = createConversation({
+        ownerUserId: state.userId,
+        ownerDisplayName: currentDisplayName(),
+        ownerRole: state.role,
+        ownerRoleLabel: roleLabel(state.role),
+        members: state.userId ? [createMember(state.userId)] : []
+      });
       conversation.createdAt = conversation.createdAt || new Date().toISOString();
       conversation.ownerUserId = state.userId;
+      conversation.ownerDisplayName = currentDisplayName();
+      conversation.ownerRole = state.role;
+      conversation.ownerRoleLabel = roleLabel(state.role);
       conversation.createdBy = state.userId;
       state.conversations.push(conversation);
       state.activeConversationId = conversation.id;
@@ -1854,12 +2098,12 @@
     }
 
     async function deleteConversation(conversationId) {
-      if (!can("canDeleteChat")) {
-        setError(`${roleLabel(state.role)} access cannot delete chats.`);
-        return;
-      }
       const conversation = state.conversations.find((item) => item.id === conversationId);
       if (!conversation) return;
+      if (!conversationCapabilities(conversation).canDelete) {
+        setError("Only the conversation owner, supervisor, or admin can delete this chat.");
+        return;
+      }
       if (!window.confirm(`Delete "${conversation.title}"?`)) return;
       try {
         await removeConversationFromBackend(conversationId);
@@ -1879,12 +2123,12 @@
     }
 
     async function renameConversation(conversationId) {
-      if (!can("canRenameChat")) {
-        setError(`${roleLabel(state.role)} access cannot rename chats.`);
-        return;
-      }
       const conversation = state.conversations.find((item) => item.id === conversationId);
       if (!conversation) return;
+      if (!conversationCapabilities(conversation).canRename) {
+        setError("Only the conversation owner, supervisor, or admin can rename this chat.");
+        return;
+      }
       const nextTitle = window.prompt("Rename chat", conversation.title);
       if (nextTitle === null) return;
       const trimmed = nextTitle.trim();
@@ -2013,10 +2257,12 @@
         state.bankId = payload.bankId || "";
         state.role = String(payload.role || "").toLowerCase();
         state.permissions = normalizePermissions(payload.permissions);
+        state.workspaceUsers = [];
         state.conversations = [];
         state.activeConversationId = "";
         saveState();
         await hydrateWorkspace(true);
+        await hydrateWorkspaceUsers();
         els.password.value = "";
       } catch (error) {
         setError(error.message, els.loginError);
@@ -2067,11 +2313,26 @@
       const conversation = activeConversation();
       const value = els.memberInput.value.trim();
       if (!conversation || !value) return;
-      if (!conversation.members.some((item) => item.id === value.toLowerCase())) {
-        updateConversation(conversation.id, (current) => ({ ...current, members: [...current.members, createMember(value)], updatedAt: new Date().toISOString() }));
+      const normalizedValue = value.toLowerCase();
+      const resolvedUser = (state.workspaceUsers || []).find((user) => {
+        const userId = String(user.userId || "").trim().toLowerCase();
+        const displayName = String(user.displayName || "").trim().toLowerCase();
+        return normalizedValue === userId || normalizedValue === displayName;
+      });
+
+      if (!resolvedUser) {
+        setError("Enter a valid AXIS workspace user ID from the member list.");
+        return;
+      }
+
+      if (!conversation.members.some((item) => item.id === String(resolvedUser.userId || "").trim().toLowerCase())) {
+        const previousMembers = [...conversation.members];
+        const previousUpdatedAt = conversation.updatedAt;
+        updateConversation(conversation.id, (current) => ({ ...current, members: [...current.members, createMember(resolvedUser.userId)], updatedAt: new Date().toISOString() }));
         try {
           await syncConversation(conversation.id);
         } catch (error) {
+          updateConversation(conversation.id, (current) => ({ ...current, members: previousMembers, updatedAt: previousUpdatedAt }));
           setError(`History Sync Error: ${error.message}`);
         }
       }
@@ -2140,7 +2401,10 @@
     }
     render();
     if (state.loggedIn) {
-      void hydrateWorkspace(can("canCreateChat"));
+      void (async () => {
+        await hydrateWorkspace(can("canCreateChat"));
+        await hydrateWorkspaceUsers();
+      })();
     }
   </script>
 </body>

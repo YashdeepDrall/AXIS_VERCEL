@@ -14,7 +14,7 @@ from app.services.conversation_service import (
     list_conversations_for_user,
     upsert_conversation_for_user,
 )
-from app.services.auth_service import get_user_context, require_permission, verify_user_credentials
+from app.services.auth_service import get_user_context, list_workspace_users, require_permission, verify_user_credentials
 from app.services.fraud_service import detect_fraud, generate_investigation_report
 
 
@@ -217,6 +217,25 @@ def list_conversations(userId: str):
 
     conversations = list_conversations_for_user(user_context)
     return {"conversations": conversations}
+
+
+@router.get("/workspace-users")
+def workspace_users(userId: str):
+    try:
+        user_context = get_user_context(userId.strip())
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        require_permission(
+            user_context,
+            "canManageMembers",
+            "Only supervisors and admins can open the shared member directory.",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+
+    return {"users": list_workspace_users()}
 
 
 @router.post("/conversations/sync")

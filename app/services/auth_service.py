@@ -92,6 +92,50 @@ def _build_user_context(user: dict) -> dict:
     }
 
 
+def _build_workspace_user_summary(user: dict) -> dict:
+    bank_id = _resolve_supported_bank(user)
+    role = _normalize_role((user or {}).get("role"))
+    user_id = str((user or {}).get("userId") or "").strip()
+    display_name = str((user or {}).get("displayName") or user_id).strip() or user_id
+
+    return {
+        "userId": user_id,
+        "displayName": display_name,
+        "bankId": bank_id,
+        "role": role,
+        "roleLabel": ROLE_LABELS.get(role, ROLE_LABELS[DEFAULT_ROLE]),
+    }
+
+
+def list_workspace_users() -> list[dict]:
+    users = []
+
+    for user in users_collection.find({"bankId": AXIS_BANK_ID}):
+        user_id = str((user or {}).get("userId") or "").strip()
+        if not user_id:
+            continue
+        users.append(_build_workspace_user_summary(user))
+
+    users.sort(key=lambda item: (item["displayName"].lower(), item["userId"].lower()))
+    return users
+
+
+def find_workspace_user(identifier: str | None) -> dict | None:
+    needle = str(identifier or "").strip().lower()
+
+    if not needle:
+        return None
+
+    for user in list_workspace_users():
+        user_id = str(user.get("userId") or "").strip().lower()
+        display_name = str(user.get("displayName") or "").strip().lower()
+
+        if needle in {user_id, display_name}:
+            return deepcopy(user)
+
+    return None
+
+
 def get_user_context(user_id: str) -> dict:
     user = users_collection.find_one({"userId": user_id})
     if not user:
