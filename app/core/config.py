@@ -71,3 +71,11 @@ LOCAL_CONVERSATION_STORE_FILE = os.getenv(
     "LOCAL_CONVERSATION_STORE_FILE",
     os.path.join(LOCAL_VECTOR_CACHE_DIR, "axis_conversations.json"),
 )
+LOCAL_USER_STORE_FILE = os.getenv(
+    "LOCAL_USER_STORE_FILE",
+    os.path.join(LOCAL_VECTOR_CACHE_DIR, "axis_users.json"),
+)
+LOCAL_ACTIVITY_LOG_FILE = os.getenv(
+    "LOCAL_ACTIVITY_LOG_FILE",
+    os.path.join(LOCAL_VECTOR_CACHE_DIR, "axis_activity.json"),
+)

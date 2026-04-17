@@ -1,7 +1,12 @@
 from copy import deepcopy
 
 from app.core.config import AXIS_BANK_ID
-from app.db.mongodb import users_collection
+from app.services.user_service import (
+    find_workspace_user as lookup_workspace_user,
+    get_workspace_user,
+    list_workspace_user_records,
+    verify_workspace_user_credentials,
+)
 
 DEFAULT_ROLE = "investigator"
 ROLE_LABELS = {
@@ -104,13 +109,16 @@ def _build_workspace_user_summary(user: dict) -> dict:
         "bankId": bank_id,
         "role": role,
         "roleLabel": ROLE_LABELS.get(role, ROLE_LABELS[DEFAULT_ROLE]),
+        "active": bool((user or {}).get("active", True)),
+        "createdAt": str((user or {}).get("createdAt") or ""),
+        "updatedAt": str((user or {}).get("updatedAt") or ""),
     }
 
 
 def list_workspace_users() -> list[dict]:
     users = []
 
-    for user in users_collection.find({"bankId": AXIS_BANK_ID}):
+    for user in list_workspace_user_records(include_inactive=True):
         user_id = str((user or {}).get("userId") or "").strip()
         if not user_id:
             continue
@@ -120,24 +128,13 @@ def list_workspace_users() -> list[dict]:
     return users
 
 
-def find_workspace_user(identifier: str | None) -> dict | None:
-    needle = str(identifier or "").strip().lower()
-
-    if not needle:
-        return None
-
-    for user in list_workspace_users():
-        user_id = str(user.get("userId") or "").strip().lower()
-        display_name = str(user.get("displayName") or "").strip().lower()
-
-        if needle in {user_id, display_name}:
-            return deepcopy(user)
-
-    return None
+def find_workspace_user(identifier: str | None, include_inactive: bool = False) -> dict | None:
+    user = lookup_workspace_user(identifier, include_inactive=include_inactive)
+    return _build_workspace_user_summary(user) if user else None
 
 
 def get_user_context(user_id: str) -> dict:
-    user = users_collection.find_one({"userId": user_id})
+    user = get_workspace_user(user_id, include_inactive=False)
     if not user:
         raise Exception(f"User {user_id} not found in database")
     return _build_user_context(user)
@@ -148,9 +145,7 @@ def verify_user(user_id: str):
 
 
 def verify_user_credentials(user_id: str, password: str):
-    user = users_collection.find_one({"userId": user_id, "password": password})
-    if not user:
-        raise Exception("Invalid userId or password")
+    user = verify_workspace_user_credentials(user_id, password)
     return _build_user_context(user)
 
 

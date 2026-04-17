@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from threading import Lock
 
 from app.core.config import AXIS_BANK_ID, LOCAL_CONVERSATION_STORE_FILE
+from app.services.audit_service import log_activity
 from app.services.auth_service import find_workspace_user
 
 
@@ -75,7 +76,7 @@ def _normalize_member(member, strict=True):
     user_summary = None
 
     for candidate in candidates:
-        user_summary = find_workspace_user(candidate)
+        user_summary = find_workspace_user(candidate, include_inactive=not strict)
         if user_summary:
             break
 
@@ -102,7 +103,7 @@ def _normalize_member(member, strict=True):
 
 def _owner_summary(existing, user_context):
     owner_id = str((existing or {}).get("ownerUserId") or user_context["userId"]).strip().lower()
-    owner = find_workspace_user(owner_id)
+    owner = find_workspace_user(owner_id, include_inactive=True)
 
     if owner:
         return owner
@@ -313,6 +314,10 @@ def _sort_key(conversation):
     return conversation.get("updatedAt") or conversation.get("createdAt") or ""
 
 
+def _member_id_list(conversation):
+    return sorted(_conversation_member_ids(conversation))
+
+
 def list_conversations_for_user(user_context):
     with STORE_LOCK:
         store = _load_store_unlocked()
@@ -395,6 +400,62 @@ def upsert_conversation_for_user(user_context, payload):
         store["conversations"] = conversations
         _save_store_unlocked(store)
 
+    if not existing:
+        log_activity(
+            "conversation_created",
+            actor=user_context,
+            target_type="conversation",
+            target_id=prepared["id"],
+            summary=f'{user_context.get("displayName") or user_context.get("userId")} created "{prepared["title"]}".',
+            details={
+                "title": prepared["title"],
+                "ownerUserId": prepared.get("ownerUserId"),
+                "relatedUserIds": _member_id_list(prepared),
+            },
+        )
+    else:
+        existing_title = str(existing.get("title") or "").strip()
+        prepared_title = str(prepared.get("title") or "").strip()
+        if existing_title != prepared_title:
+            log_activity(
+                "conversation_renamed",
+                actor=user_context,
+                target_type="conversation",
+                target_id=prepared["id"],
+                summary=f'{user_context.get("displayName") or user_context.get("userId")} renamed a chat to "{prepared_title}".',
+                details={
+                    "before": existing_title,
+                    "after": prepared_title,
+                    "ownerUserId": prepared.get("ownerUserId"),
+                    "relatedUserIds": _member_id_list(prepared),
+                },
+            )
+
+        existing_members = _member_id_list(existing)
+        prepared_members = _member_id_list(prepared)
+        added_members = [member for member in prepared_members if member not in existing_members]
+        removed_members = [member for member in existing_members if member not in prepared_members]
+
+        if added_members or removed_members:
+            change_bits = []
+            if added_members:
+                change_bits.append(f"added {', '.join(added_members)}")
+            if removed_members:
+                change_bits.append(f"removed {', '.join(removed_members)}")
+            log_activity(
+                "conversation_members_updated",
+                actor=user_context,
+                target_type="conversation",
+                target_id=prepared["id"],
+                summary=f'{user_context.get("displayName") or user_context.get("userId")} {", ".join(change_bits)} on "{prepared_title}".',
+                details={
+                    "addedMembers": added_members,
+                    "removedMembers": removed_members,
+                    "ownerUserId": prepared.get("ownerUserId"),
+                    "relatedUserIds": _member_id_list(prepared),
+                },
+            )
+
     return _enrich_conversation_for_user(user_context, prepared)
 
 
@@ -420,5 +481,18 @@ def delete_conversation_for_user(user_context, conversation_id):
 
         store["conversations"] = [item for item in conversations if item.get("id") != conversation_id]
         _save_store_unlocked(store)
+
+    log_activity(
+        "conversation_deleted",
+        actor=user_context,
+        target_type="conversation",
+        target_id=conversation_id,
+        summary=f'{user_context.get("displayName") or user_context.get("userId")} deleted "{existing.get("title") or "chat"}".',
+        details={
+            "title": existing.get("title") or "",
+            "ownerUserId": existing.get("ownerUserId") or "",
+            "relatedUserIds": _member_id_list(existing),
+        },
+    )
 
     return True

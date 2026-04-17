@@ -382,6 +382,8 @@
 
     .sidebar-search-input,
     .member-input,
+    .filter-select,
+    .user-field,
     .composer-shell textarea {
       width: 100%;
       border: 1px solid var(--line);
@@ -391,10 +393,181 @@
     }
 
     .sidebar-search-input,
-    .member-input {
+    .member-input,
+    .filter-select,
+    .user-field {
       min-height: 36px;
       border-radius: 6px;
       padding: 0 12px;
+    }
+
+    .sidebar-filters,
+    .user-form-grid,
+    .user-row-meta {
+      display: grid;
+      gap: 8px;
+    }
+
+    .sidebar-filters {
+      margin-top: 2px;
+    }
+
+    .filter-label,
+    .activity-item time,
+    .user-status {
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .checkbox-filter-panel {
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .checkbox-filter-heading {
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .checkbox-filter-list {
+      display: grid;
+      gap: 6px;
+      max-height: 144px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .checkbox-filter-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 6px 8px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s ease, border-color 0.12s ease;
+    }
+
+    .checkbox-filter-option:hover {
+      background: rgba(15, 118, 110, 0.06);
+      border-color: rgba(15, 118, 110, 0.1);
+    }
+
+    .checkbox-filter-option.is-selected {
+      background: rgba(15, 118, 110, 0.08);
+      border-color: rgba(15, 118, 110, 0.14);
+    }
+
+    .checkbox-filter-option input {
+      width: 15px;
+      height: 15px;
+      margin: 0;
+      accent-color: var(--primary);
+      flex: 0 0 auto;
+    }
+
+    .checkbox-filter-copy {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .checkbox-filter-copy strong,
+    .checkbox-filter-copy span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .checkbox-filter-copy strong {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .checkbox-filter-copy span,
+    .checkbox-filter-empty {
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .user-form-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .user-form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .user-list,
+    .activity-list {
+      display: grid;
+      gap: 10px;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .user-row,
+    .activity-item {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.84);
+      display: grid;
+      gap: 10px;
+    }
+
+    .user-row-top,
+    .user-row-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .user-row-actions .user-field,
+    .user-row-actions .filter-select {
+      flex: 1 1 150px;
+    }
+
+    .user-role-badge,
+    .readonly-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: rgba(15, 118, 110, 0.12);
+      color: #0f766e;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+
+    .readonly-badge {
+      background: rgba(165, 0, 52, 0.08);
+      color: var(--primary);
+    }
+
+    .activity-item strong,
+    .user-row strong {
+      display: block;
+      font-size: 0.9rem;
+    }
+
+    .activity-empty,
+    .user-empty {
+      color: var(--muted);
+      font-size: 0.84rem;
     }
 
     .sidebar-section {
@@ -778,7 +951,7 @@
       z-index: 9;
       right: 16px;
       bottom: 16px;
-      width: min(420px, calc(100% - 32px));
+      width: min(560px, calc(100% - 32px));
       padding: 16px;
       border-radius: 8px;
       border: 1px solid var(--line);
@@ -786,6 +959,8 @@
       box-shadow: 0 24px 48px rgba(34, 21, 27, 0.18);
       display: grid;
       gap: 14px;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
     }
 
     .member-modal {
@@ -793,6 +968,7 @@
       left: 50%;
       bottom: auto;
       top: 50%;
+      width: min(420px, calc(100% - 32px));
       transform: translate(-50%, -50%);
     }
 
@@ -852,6 +1028,10 @@
       .suggestions {
         grid-template-columns: 1fr;
       }
+
+      .user-form-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -893,6 +1073,17 @@
         <div class="sidebar-section">
           <label for="chatSearch">Recent chats</label>
           <input id="chatSearch" class="sidebar-search-input" type="text" placeholder="Search chats" autocomplete="off">
+          <div id="sidebarFilters" class="sidebar-filters hidden">
+            <span class="filter-label">Workspace filters</span>
+            <div class="checkbox-filter-panel">
+              <span class="checkbox-filter-heading">Owners</span>
+              <div id="ownerFilter" class="checkbox-filter-list" role="group" aria-label="Filter chats by owner"></div>
+            </div>
+            <div class="checkbox-filter-panel">
+              <span class="checkbox-filter-heading">Roles</span>
+              <div id="roleFilter" class="checkbox-filter-list" role="group" aria-label="Filter chats by role"></div>
+            </div>
+          </div>
           <div id="chatList" class="chat-list"></div>
         </div>
       </aside>
@@ -984,6 +1175,43 @@
       <strong class="settings-title">Role access</strong>
       <div id="roleAccessCopy" class="settings-copy">Role-based access controls are active for this workspace.</div>
     </div>
+    <div id="auditorBlock" class="settings-block hidden">
+      <strong class="settings-title">Workspace mode</strong>
+      <div class="settings-copy">Auditor access stays read-only across chats, members, and user controls.</div>
+    </div>
+    <div id="adminUserBlock" class="settings-block hidden">
+      <strong class="settings-title">User management</strong>
+      <div class="settings-copy">Create AXIS workspace users, update roles, and control account access.</div>
+      <form id="userCreateForm" class="user-form-grid">
+        <input id="newUserId" class="user-field" type="text" placeholder="User ID">
+        <input id="newUserName" class="user-field" type="text" placeholder="Display name">
+        <select id="newUserRole" class="filter-select">
+          <option value="investigator">Investigator</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="admin">Admin</option>
+          <option value="auditor">Auditor</option>
+        </select>
+        <input id="newUserPassword" class="user-field" type="text" placeholder="Password">
+        <button id="createUserButton" class="full" type="submit">Create user</button>
+      </form>
+      <div id="userList" class="user-list"></div>
+    </div>
+    <div id="activityBlock" class="settings-block hidden">
+      <strong class="settings-title">Activity log</strong>
+      <div id="activityCopy" class="settings-copy">Recent workspace actions appear here.</div>
+      <div class="sidebar-filters">
+        <input id="activitySearch" class="user-field" type="text" placeholder="Search activity">
+        <div class="checkbox-filter-panel">
+          <span class="checkbox-filter-heading">Actions</span>
+          <div id="activityActionFilter" class="checkbox-filter-list" role="group" aria-label="Filter activity by action"></div>
+        </div>
+        <div class="checkbox-filter-panel">
+          <span class="checkbox-filter-heading">Actors</span>
+          <div id="activityActorFilter" class="checkbox-filter-list" role="group" aria-label="Filter activity by actor"></div>
+        </div>
+      </div>
+      <div id="activityList" class="activity-list"></div>
+    </div>
     <button id="closeSettingsButton" class="ghost-action" type="button">Close</button>
   </section>
 
@@ -1037,6 +1265,9 @@
       loginError: document.getElementById("loginError"),
       newChatButton: document.getElementById("newChatButton"),
       chatSearch: document.getElementById("chatSearch"),
+      sidebarFilters: document.getElementById("sidebarFilters"),
+      ownerFilter: document.getElementById("ownerFilter"),
+      roleFilter: document.getElementById("roleFilter"),
       chatList: document.getElementById("chatList"),
       conversationTitle: document.getElementById("conversationTitle"),
       conversationMeta: document.getElementById("conversationMeta"),
@@ -1070,6 +1301,21 @@
       settingsDrawer: document.getElementById("settingsDrawer"),
       settingsCopy: document.getElementById("settingsCopy"),
       roleAccessCopy: document.getElementById("roleAccessCopy"),
+      auditorBlock: document.getElementById("auditorBlock"),
+      adminUserBlock: document.getElementById("adminUserBlock"),
+      userCreateForm: document.getElementById("userCreateForm"),
+      newUserId: document.getElementById("newUserId"),
+      newUserName: document.getElementById("newUserName"),
+      newUserRole: document.getElementById("newUserRole"),
+      newUserPassword: document.getElementById("newUserPassword"),
+      createUserButton: document.getElementById("createUserButton"),
+      userList: document.getElementById("userList"),
+      activityBlock: document.getElementById("activityBlock"),
+      activityCopy: document.getElementById("activityCopy"),
+      activitySearch: document.getElementById("activitySearch"),
+      activityActionFilter: document.getElementById("activityActionFilter"),
+      activityActorFilter: document.getElementById("activityActorFilter"),
+      activityList: document.getElementById("activityList"),
       themeLightButton: document.getElementById("themeLightButton"),
       themeDarkButton: document.getElementById("themeDarkButton"),
       closeSettingsButton: document.getElementById("closeSettingsButton"),
@@ -1095,7 +1341,12 @@
       composerMenuOpen: false,
       historyHydrating: false,
       busyConversationId: "",
-      chatSearch: ""
+      chatSearch: "",
+      ownerFilter: [],
+      roleFilter: [],
+      activitySearch: "",
+      activityActionFilter: [],
+      activityActorFilter: []
     };
 
     function defaultConversationState() {
@@ -1151,6 +1402,7 @@
         permissions: emptyPermissions(),
         theme: "light",
         workspaceUsers: [],
+        activityEvents: [],
         conversations: [],
         activeConversationId: ""
       };
@@ -1226,6 +1478,7 @@
             role: String(parsed.role || "").toLowerCase(),
             permissions: normalizePermissions(parsed.permissions),
             workspaceUsers: Array.isArray(parsed.workspaceUsers) ? parsed.workspaceUsers : [],
+            activityEvents: Array.isArray(parsed.activityEvents) ? parsed.activityEvents : [],
             conversations: [migrated],
             activeConversationId: migrated.id
           };
@@ -1237,6 +1490,7 @@
           role: String(parsed.role || "").toLowerCase(),
           permissions: normalizePermissions(parsed.permissions),
           workspaceUsers: Array.isArray(parsed.workspaceUsers) ? parsed.workspaceUsers : [],
+          activityEvents: Array.isArray(parsed.activityEvents) ? parsed.activityEvents : [],
           conversations: (parsed.conversations || []).map(normalizeConversationRecord)
         };
       } catch (_error) {
@@ -1311,12 +1565,40 @@
         userId,
         displayName: String((rawUser && rawUser.displayName) || userId).trim() || userId,
         role: String((rawUser && rawUser.role) || "").toLowerCase(),
-        roleLabel: String((rawUser && rawUser.roleLabel) || roleLabel(rawUser && rawUser.role) || "Investigator").trim() || "Investigator"
+        roleLabel: String((rawUser && rawUser.roleLabel) || roleLabel(rawUser && rawUser.role) || "Investigator").trim() || "Investigator",
+        active: Boolean(rawUser && Object.prototype.hasOwnProperty.call(rawUser, "active") ? rawUser.active : true),
+        createdAt: String((rawUser && rawUser.createdAt) || "").trim(),
+        updatedAt: String((rawUser && rawUser.updatedAt) || "").trim()
+      };
+    }
+
+    function normalizeActivityEvent(rawEvent) {
+      if (!rawEvent || typeof rawEvent !== "object") return null;
+      const eventId = String(rawEvent.id || "").trim();
+      if (!eventId) return null;
+      return {
+        id: eventId,
+        timestamp: String(rawEvent.timestamp || "").trim(),
+        action: String(rawEvent.action || "").trim(),
+        actorUserId: String(rawEvent.actorUserId || "").trim(),
+        actorDisplayName: String(rawEvent.actorDisplayName || rawEvent.actorUserId || "AXIS User").trim(),
+        targetType: String(rawEvent.targetType || "").trim(),
+        targetId: String(rawEvent.targetId || "").trim(),
+        summary: String(rawEvent.summary || "").trim(),
+        details: rawEvent.details && typeof rawEvent.details === "object" ? rawEvent.details : {}
       };
     }
 
     function currentUserId() {
       return String(state.userId || "").trim().toLowerCase();
+    }
+
+    function workspaceFilterVisible() {
+      return ["supervisor", "admin", "auditor"].includes(String(state.role || "").toLowerCase());
+    }
+
+    function activityLogVisible() {
+      return Boolean(state.loggedIn && state.userId);
     }
 
     function conversationCapabilities(conversation) {
@@ -1345,6 +1627,117 @@
 
     function isSupervisorView() {
       return ["supervisor", "admin", "auditor"].includes(String(state.role || "").toLowerCase());
+    }
+
+    function activeWorkspaceUsers() {
+      return (state.workspaceUsers || []).filter((user) => user && user.active !== false);
+    }
+
+    function filteredWorkspaceUsers() {
+      return [...(state.workspaceUsers || [])].sort((left, right) => {
+        return `${left.displayName}`.localeCompare(`${right.displayName}`) || `${left.userId}`.localeCompare(`${right.userId}`);
+      });
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "";
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return value;
+      return parsed.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function selectedCheckboxValues(container) {
+      if (!container) return [];
+      return Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
+        .map((input) => String(input.value || "").trim())
+        .filter(Boolean);
+    }
+
+    function syncCheckboxOptionStyles(container) {
+      if (!container) return;
+      for (const option of Array.from(container.querySelectorAll(".checkbox-filter-option"))) {
+        const input = option.querySelector('input[type="checkbox"]');
+        option.classList.toggle("is-selected", Boolean(input && input.checked));
+      }
+    }
+
+    function renderCheckboxOptions(container, items, values, emptyText) {
+      if (!container) return [];
+
+      const requestedValues = Array.isArray(values) ? values : [];
+      const selected = new Set(requestedValues.map((value) => String(value || "").trim()).filter(Boolean));
+      const validSelected = [];
+      const seen = new Set();
+      container.innerHTML = "";
+
+      for (const item of Array.isArray(items) ? items : []) {
+        const rawValue = item && item.value != null ? item.value : "";
+        const value = String(rawValue || "").trim();
+        if (!value || seen.has(value)) continue;
+        seen.add(value);
+
+        const option = document.createElement("label");
+        option.className = "checkbox-filter-option";
+
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = value;
+        input.checked = selected.has(value);
+        if (input.checked) {
+          validSelected.push(value);
+        }
+
+        const copy = document.createElement("div");
+        copy.className = "checkbox-filter-copy";
+
+        const title = document.createElement("strong");
+        title.textContent = item.label || value;
+        copy.appendChild(title);
+
+        const metaValue = String(item.meta || "").trim();
+        if (metaValue) {
+          const meta = document.createElement("span");
+          meta.textContent = metaValue;
+          copy.appendChild(meta);
+        }
+
+        option.appendChild(input);
+        option.appendChild(copy);
+        container.appendChild(option);
+      }
+
+      if (!container.children.length) {
+        const empty = document.createElement("div");
+        empty.className = "checkbox-filter-empty";
+        empty.textContent = emptyText || "No filters available yet.";
+        container.appendChild(empty);
+      }
+
+      syncCheckboxOptionStyles(container);
+      return validSelected;
+    }
+
+    function friendlyActivityAction(action) {
+      const value = String(action || "").trim();
+      if (!value) return "Activity";
+
+      const labels = {
+        user_login: "User Login",
+        user_created: "User Created",
+        user_updated: "User Updated",
+        conversation_created: "Conversation Created",
+        conversation_renamed: "Conversation Renamed",
+        conversation_deleted: "Conversation Deleted",
+        conversation_members_updated: "Member Changes"
+      };
+
+      return labels[value] || value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
     function conversationSidebarMeta(conversation) {
@@ -1387,7 +1780,7 @@
         parts.push("Read-only view");
       }
 
-      return parts.join(" · ") || "AXIS Bank fraud investigation workspace";
+      return parts.join(" - ") || "AXIS Bank fraud investigation workspace";
     }
 
     function replaceConversation(savedConversation) {
@@ -1574,6 +1967,8 @@
     function renderChatList() {
       els.chatList.innerHTML = "";
       const search = ui.chatSearch.trim().toLowerCase();
+      const ownerFilter = new Set((Array.isArray(ui.ownerFilter) ? ui.ownerFilter : []).map((value) => String(value || "").trim().toLowerCase()).filter(Boolean));
+      const roleFilter = new Set((Array.isArray(ui.roleFilter) ? ui.roleFilter : []).map((value) => String(value || "").trim().toLowerCase()).filter(Boolean));
       const conversations = sortedConversations().filter((conversation) => {
         const sidebarMeta = conversationSidebarMeta(conversation);
         const searchable = [
@@ -1583,7 +1978,10 @@
           conversation.ownerUserId
         ].join(" ").toLowerCase();
 
-        return !search || searchable.includes(search);
+        if (search && !searchable.includes(search)) return false;
+        if (ownerFilter.size && !ownerFilter.has(String(conversation.ownerUserId || "").trim().toLowerCase())) return false;
+        if (roleFilter.size && !roleFilter.has(String(conversation.ownerRole || "").trim().toLowerCase())) return false;
+        return true;
       });
       for (const conversation of conversations) {
         const itemCapabilities = conversationCapabilities(conversation);
@@ -1654,6 +2052,38 @@
       setHidden(els.memberStack, false);
     }
 
+    function renderSidebarFilters() {
+      const showFilters = workspaceFilterVisible();
+      setHidden(els.sidebarFilters, !showFilters);
+      if (!showFilters) return;
+
+      const previousOwner = Array.isArray(ui.ownerFilter) ? ui.ownerFilter : [];
+      const previousRole = Array.isArray(ui.roleFilter) ? ui.roleFilter : [];
+
+      const owners = filteredWorkspaceUsers();
+      ui.ownerFilter = renderCheckboxOptions(
+        els.ownerFilter,
+        owners.map((user) => ({
+          value: user.userId,
+          label: user.displayName || user.userId,
+          meta: `${user.userId}${user.roleLabel ? ` - ${user.roleLabel}` : ""}${user.active === false ? " - Inactive" : ""}`
+        })),
+        previousOwner,
+        "No workspace owners available."
+      );
+      ui.roleFilter = renderCheckboxOptions(
+        els.roleFilter,
+        [
+          { value: "investigator", label: "Investigator" },
+          { value: "supervisor", label: "Supervisor" },
+          { value: "admin", label: "Admin" },
+          { value: "auditor", label: "Auditor" }
+        ],
+        previousRole,
+        "No roles available."
+      );
+    }
+
     function renderHistory() {
       const conversation = activeConversation();
       els.chatHistory.innerHTML = "";
@@ -1684,7 +2114,7 @@
 
       if (itemCapabilities.canManageMembers) {
         const memberIds = new Set((conversation.members || []).map((member) => member.id));
-        for (const user of state.workspaceUsers) {
+        for (const user of activeWorkspaceUsers()) {
           if (!user || memberIds.has(String(user.userId || "").trim().toLowerCase())) continue;
           const option = document.createElement("option");
           option.value = user.userId;
@@ -1697,10 +2127,10 @@
         const row = document.createElement("div");
         row.className = "member-row";
         const membershipLabel = member.id === ownerId
-          ? `Conversation owner${member.roleLabel ? ` · ${member.roleLabel}` : ""}`
+          ? `Conversation owner${member.roleLabel ? ` - ${member.roleLabel}` : ""}`
           : member.id === currentUserId()
-            ? `You${member.roleLabel ? ` · ${member.roleLabel}` : ""}`
-            : `Shared thread member${member.roleLabel ? ` · ${member.roleLabel}` : ""}`;
+            ? `You${member.roleLabel ? ` - ${member.roleLabel}` : ""}`
+            : `Shared thread member${member.roleLabel ? ` - ${member.roleLabel}` : ""}`;
         row.innerHTML = `<div class="member-copy"><strong>${member.name}</strong><span>${membershipLabel}</span></div>`;
         if (itemCapabilities.canManageMembers) {
           const button = document.createElement("button");
@@ -1720,6 +2150,163 @@
           row.appendChild(button);
         }
         els.memberList.appendChild(row);
+      }
+    }
+
+    function renderUserManagement() {
+      els.userList.innerHTML = "";
+
+      if (!can("canManageUsers")) {
+        return;
+      }
+
+      const users = filteredWorkspaceUsers();
+      if (!users.length) {
+        els.userList.innerHTML = '<div class="user-empty">No workspace users available yet.</div>';
+        return;
+      }
+
+      for (const user of users) {
+        const row = document.createElement("div");
+        row.className = "user-row";
+
+        const top = document.createElement("div");
+        top.className = "user-row-top";
+        top.innerHTML = `<div><strong>${user.displayName}</strong><div class="user-status">${user.userId}</div></div><span class="user-role-badge">${user.roleLabel}</span>`;
+        row.appendChild(top);
+
+        const meta = document.createElement("div");
+        meta.className = "user-row-meta";
+        meta.innerHTML = `<span class="user-status">${user.active === false ? "Inactive account" : "Active account"}${user.updatedAt ? ` - Updated ${formatDateTime(user.updatedAt)}` : ""}</span>`;
+        row.appendChild(meta);
+
+        const actions = document.createElement("div");
+        actions.className = "user-row-actions";
+
+        const nameInput = document.createElement("input");
+        nameInput.className = "user-field";
+        nameInput.type = "text";
+        nameInput.value = user.displayName;
+        nameInput.placeholder = "Display name";
+
+        const roleSelect = document.createElement("select");
+        roleSelect.className = "filter-select";
+        roleSelect.innerHTML = `
+          <option value="investigator">Investigator</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="admin">Admin</option>
+          <option value="auditor">Auditor</option>
+        `;
+        roleSelect.value = user.role;
+
+        const saveButton = document.createElement("button");
+        saveButton.type = "button";
+        saveButton.className = "ghost-action";
+        saveButton.textContent = "Save";
+        saveButton.addEventListener("click", async () => {
+          await patchWorkspaceUser(user.userId, {
+            displayName: nameInput.value.trim(),
+            role: roleSelect.value
+          });
+        });
+
+        const toggleButton = document.createElement("button");
+        toggleButton.type = "button";
+        toggleButton.className = "ghost-action";
+        toggleButton.textContent = user.active === false ? "Enable" : "Disable";
+        toggleButton.addEventListener("click", async () => {
+          await patchWorkspaceUser(user.userId, { active: !(user.active !== false) });
+        });
+
+        actions.appendChild(nameInput);
+        actions.appendChild(roleSelect);
+        actions.appendChild(saveButton);
+        actions.appendChild(toggleButton);
+        row.appendChild(actions);
+        els.userList.appendChild(row);
+      }
+    }
+
+    function renderActivityFilters() {
+      const visible = activityLogVisible();
+      if (!visible) return;
+
+      const previousAction = Array.isArray(ui.activityActionFilter) ? ui.activityActionFilter : [];
+      const previousActor = Array.isArray(ui.activityActorFilter) ? ui.activityActorFilter : [];
+
+      const actionOptions = [...new Set((state.activityEvents || []).map((event) => event.action).filter(Boolean))].sort();
+      const actorMap = new Map();
+      for (const event of state.activityEvents || []) {
+        const actorId = String(event.actorUserId || "").trim();
+        if (!actorId || actorMap.has(actorId)) continue;
+        actorMap.set(actorId, String(event.actorDisplayName || actorId).trim() || actorId);
+      }
+      ui.activityActionFilter = renderCheckboxOptions(
+        els.activityActionFilter,
+        actionOptions.map((action) => ({ value: action, label: friendlyActivityAction(action) })),
+        previousAction,
+        "No activity actions available yet."
+      );
+      ui.activityActorFilter = renderCheckboxOptions(
+        els.activityActorFilter,
+        [...actorMap.entries()]
+          .sort((left, right) => left[1].localeCompare(right[1]) || left[0].localeCompare(right[0]))
+          .map(([actorId, actorName]) => ({ value: actorId, label: actorName, meta: actorId !== actorName ? actorId : "" })),
+        previousActor,
+        "No activity actors available yet."
+      );
+      els.activitySearch.value = ui.activitySearch || "";
+    }
+
+    function filteredActivityEvents() {
+      const search = String(ui.activitySearch || "").trim().toLowerCase();
+      const actionFilter = new Set((Array.isArray(ui.activityActionFilter) ? ui.activityActionFilter : []).map((value) => String(value || "").trim()).filter(Boolean));
+      const actorFilter = new Set((Array.isArray(ui.activityActorFilter) ? ui.activityActorFilter : []).map((value) => String(value || "").trim().toLowerCase()).filter(Boolean));
+
+      return (state.activityEvents || []).filter((event) => {
+        if (actionFilter.size && !actionFilter.has(String(event.action || "").trim())) return false;
+        if (actorFilter.size && !actorFilter.has(String(event.actorUserId || "").trim().toLowerCase())) return false;
+
+        if (!search) return true;
+
+        const haystack = [
+          event.summary,
+          event.action,
+          friendlyActivityAction(event.action),
+          event.actorDisplayName,
+          event.actorUserId,
+          event.targetId
+        ].join(" ").toLowerCase();
+
+        return haystack.includes(search);
+      });
+    }
+
+    function renderActivityLog() {
+      els.activityList.innerHTML = "";
+
+      if (!activityLogVisible()) {
+        return;
+      }
+
+      const events = filteredActivityEvents();
+
+      if (!events.length) {
+        els.activityList.innerHTML = '<div class="activity-empty">No recent workspace activity yet.</div>';
+        return;
+      }
+
+      for (const event of events) {
+        const item = document.createElement("div");
+        item.className = "activity-item";
+        item.innerHTML = `
+          <div>
+            <strong>${event.summary || friendlyActivityAction(event.action)}</strong>
+            <time>${formatDateTime(event.timestamp)}</time>
+          </div>
+          <div class="settings-copy">${friendlyActivityAction(event.action)} - ${event.actorDisplayName || event.actorUserId || "AXIS User"}${event.targetId ? ` - ${event.targetId}` : ""}</div>
+        `;
+        els.activityList.appendChild(item);
       }
     }
 
@@ -1747,6 +2334,7 @@
       els.loginView.style.display = state.loggedIn ? "none" : "";
       els.appView.style.display = state.loggedIn ? "" : "none";
       els.userId.value = state.userId || "";
+      renderSidebarFilters();
       renderChatList();
       renderHistory();
       setHidden(els.welcomeState, Boolean(conversation));
@@ -1761,6 +2349,9 @@
       els.profileMenuMeta.textContent = state.bankId ? `${String(state.bankId).toUpperCase()} workspace - ${activeRoleLabel}` : `AXIS Bank workspace - ${activeRoleLabel}`;
       els.settingsCopy.textContent = `${activeRoleLabel} access with ${state.conversations.length} saved chat${state.conversations.length === 1 ? "" : "s"} in this workspace.`;
       els.roleAccessCopy.textContent = `${activeRoleLabel} permissions: ${permissionSummaryText()}.`;
+      els.activityCopy.textContent = workspaceFilterVisible() || can("canManageUsers")
+        ? "Recent workspace actions across chats, users, and sharing appear here. All logs are preserved, and filters help narrow the view."
+        : "Your activity view shows only events relevant to your role and conversations.";
       els.memberAccessCopy.textContent = canManageMembers
         ? `Add or remove AXIS workspace members for this conversation.${state.workspaceUsers.length ? ` ${state.workspaceUsers.length} workspace users available.` : ""}`
         : activeConversationCapabilities.isShared
@@ -1787,6 +2378,9 @@
       els.memberSubmitButton.disabled = !canManageMembers;
       renderMembers(conversation);
       renderMembersModal();
+      renderUserManagement();
+      renderActivityFilters();
+      renderActivityLog();
       els.profileButton.setAttribute("aria-expanded", ui.profileOpen ? "true" : "false");
       els.memberStack.setAttribute("aria-expanded", ui.membersOpen ? "true" : "false");
       els.composerMenuButton.setAttribute("aria-expanded", ui.composerMenuOpen ? "true" : "false");
@@ -1800,8 +2394,12 @@
       setHidden(els.chatContextMenu, !ui.activeMenuId || !hasChatMenuActions);
       setHidden(els.settingsDrawer, !ui.settingsOpen);
       setHidden(els.memberModal, !ui.membersOpen);
+      setHidden(els.auditorBlock, String(state.role || "").toLowerCase() !== "auditor");
+      setHidden(els.adminUserBlock, !can("canManageUsers"));
+      setHidden(els.activityBlock, !activityLogVisible());
       setHidden(els.composerToolsMenu, !ui.composerMenuOpen || !can("canCreateChat"));
       setHidden(els.overlay, !(ui.settingsOpen || ui.membersOpen));
+      setHidden(els.sidebarFilters, !workspaceFilterVisible());
       positionChatContextMenu();
       if (state.loggedIn && chatAllowed && !ui.settingsOpen && !ui.membersOpen) els.chatInput.focus();
     }
@@ -1933,7 +2531,7 @@
     }
 
     async function fetchWorkspaceUsers() {
-      if (!state.loggedIn || !can("canManageMembers")) return [];
+      if (!state.loggedIn || !(workspaceFilterVisible() || can("canManageMembers") || can("canManageUsers"))) return [];
 
       const response = await requestBackend("GET", `/workspace-users?userId=${encodeURIComponent(state.userId)}`);
       let payload = {};
@@ -1949,6 +2547,25 @@
       }
 
       return Array.isArray(payload.users) ? payload.users.map(normalizeWorkspaceUser).filter(Boolean) : [];
+    }
+
+    async function fetchActivityEvents() {
+      if (!activityLogVisible()) return [];
+
+      const response = await requestBackend("GET", `/activity?userId=${encodeURIComponent(state.userId)}`);
+      let payload = {};
+
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        payload = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(payload.detail || `Activity log returned status ${response.status}.`);
+      }
+
+      return Array.isArray(payload.events) ? payload.events.map(normalizeActivityEvent).filter(Boolean) : [];
     }
 
     async function syncConversation(conversationId) {
@@ -2035,7 +2652,7 @@
 
     async function hydrateWorkspaceUsers() {
       if (!state.loggedIn) return;
-      if (!can("canManageMembers")) {
+      if (!(workspaceFilterVisible() || can("canManageMembers") || can("canManageUsers"))) {
         state.workspaceUsers = [];
         saveState();
         return;
@@ -2049,6 +2666,81 @@
       }
 
       render();
+    }
+
+    async function hydrateActivityEvents() {
+      if (!state.loggedIn) return;
+      if (!activityLogVisible()) {
+        state.activityEvents = [];
+        saveState();
+        return;
+      }
+
+      try {
+        state.activityEvents = await fetchActivityEvents();
+        saveState();
+      } catch (error) {
+        setError(`Activity Log Error: ${error.message}`);
+      }
+
+      render();
+    }
+
+    async function createWorkspaceUserRequest(payload) {
+      const response = await requestBackend("POST", `/workspace-users?userId=${encodeURIComponent(state.userId)}`, {
+        body: JSON.stringify(payload)
+      });
+      let responsePayload = {};
+
+      try {
+        responsePayload = await response.json();
+      } catch (_error) {
+        responsePayload = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(responsePayload.detail || `User creation returned status ${response.status}.`);
+      }
+
+      return normalizeWorkspaceUser(responsePayload.user);
+    }
+
+    async function patchWorkspaceUserRequest(targetUserId, updates) {
+      const response = await requestBackend("PATCH", `/workspace-users/${encodeURIComponent(targetUserId)}?userId=${encodeURIComponent(state.userId)}`, {
+        body: JSON.stringify(updates)
+      });
+      let responsePayload = {};
+
+      try {
+        responsePayload = await response.json();
+      } catch (_error) {
+        responsePayload = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(responsePayload.detail || `User update returned status ${response.status}.`);
+      }
+
+      return normalizeWorkspaceUser(responsePayload.user);
+    }
+
+    async function refreshWorkspaceAdminData() {
+      await hydrateWorkspaceUsers();
+      await hydrateActivityEvents();
+      await hydrateWorkspace(false);
+    }
+
+    async function patchWorkspaceUser(targetUserId, updates) {
+      try {
+        const updatedUser = await patchWorkspaceUserRequest(targetUserId, updates);
+        if (updatedUser && String(updatedUser.userId || "").trim().toLowerCase() === currentUserId()) {
+          state.displayName = updatedUser.displayName || state.displayName;
+        }
+        await refreshWorkspaceAdminData();
+        setStatus("Workspace user updated.");
+      } catch (error) {
+        setError(`User Update Error: ${error.message}`);
+      }
     }
 
     function setComposerBusy(isBusy) {
@@ -2258,11 +2950,13 @@
         state.role = String(payload.role || "").toLowerCase();
         state.permissions = normalizePermissions(payload.permissions);
         state.workspaceUsers = [];
+        state.activityEvents = [];
         state.conversations = [];
         state.activeConversationId = "";
         saveState();
         await hydrateWorkspace(true);
         await hydrateWorkspaceUsers();
+        await hydrateActivityEvents();
         els.password.value = "";
       } catch (error) {
         setError(error.message, els.loginError);
@@ -2276,6 +2970,34 @@
       await createNewChat();
     });
     els.chatSearch.addEventListener("input", () => { ui.chatSearch = els.chatSearch.value; renderChatList(); });
+    els.ownerFilter.addEventListener("change", (event) => {
+      if (!(event.target instanceof HTMLInputElement) || event.target.type !== "checkbox") return;
+      ui.ownerFilter = selectedCheckboxValues(els.ownerFilter);
+      syncCheckboxOptionStyles(els.ownerFilter);
+      renderChatList();
+    });
+    els.roleFilter.addEventListener("change", (event) => {
+      if (!(event.target instanceof HTMLInputElement) || event.target.type !== "checkbox") return;
+      ui.roleFilter = selectedCheckboxValues(els.roleFilter);
+      syncCheckboxOptionStyles(els.roleFilter);
+      renderChatList();
+    });
+    els.activitySearch.addEventListener("input", () => {
+      ui.activitySearch = els.activitySearch.value;
+      renderActivityLog();
+    });
+    els.activityActionFilter.addEventListener("change", (event) => {
+      if (!(event.target instanceof HTMLInputElement) || event.target.type !== "checkbox") return;
+      ui.activityActionFilter = selectedCheckboxValues(els.activityActionFilter);
+      syncCheckboxOptionStyles(els.activityActionFilter);
+      renderActivityLog();
+    });
+    els.activityActorFilter.addEventListener("change", (event) => {
+      if (!(event.target instanceof HTMLInputElement) || event.target.type !== "checkbox") return;
+      ui.activityActorFilter = selectedCheckboxValues(els.activityActorFilter);
+      syncCheckboxOptionStyles(els.activityActorFilter);
+      renderActivityLog();
+    });
     els.profileButton.addEventListener("click", toggleProfileMenu);
     els.openSettingsButton.addEventListener("click", openSettingsDrawer);
     els.profileDeleteChatButton.addEventListener("click", () => {
@@ -2304,6 +3026,41 @@
       await createNewChat();
     });
 
+    els.userCreateForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!can("canManageUsers")) {
+        setError("Only admins can create workspace users.");
+        return;
+      }
+
+      const payload = {
+        userId: els.newUserId.value.trim(),
+        displayName: els.newUserName.value.trim(),
+        role: els.newUserRole.value,
+        password: els.newUserPassword.value.trim()
+      };
+
+      if (!payload.userId || !payload.displayName || !payload.password) {
+        setError("User ID, display name, role, and password are required.");
+        return;
+      }
+
+      try {
+        els.createUserButton.disabled = true;
+        await createWorkspaceUserRequest(payload);
+        els.newUserId.value = "";
+        els.newUserName.value = "";
+        els.newUserPassword.value = "";
+        els.newUserRole.value = "investigator";
+        await refreshWorkspaceAdminData();
+        setStatus("Workspace user created.");
+      } catch (error) {
+        setError(`User Create Error: ${error.message}`);
+      } finally {
+        els.createUserButton.disabled = false;
+      }
+    });
+
     els.memberForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!can("canManageMembers")) {
@@ -2314,7 +3071,7 @@
       const value = els.memberInput.value.trim();
       if (!conversation || !value) return;
       const normalizedValue = value.toLowerCase();
-      const resolvedUser = (state.workspaceUsers || []).find((user) => {
+      const resolvedUser = activeWorkspaceUsers().find((user) => {
         const userId = String(user.userId || "").trim().toLowerCase();
         const displayName = String(user.displayName || "").trim().toLowerCase();
         return normalizedValue === userId || normalizedValue === displayName;
@@ -2404,6 +3161,7 @@
       void (async () => {
         await hydrateWorkspace(can("canCreateChat"));
         await hydrateWorkspaceUsers();
+        await hydrateActivityEvents();
       })();
     }
   </script>

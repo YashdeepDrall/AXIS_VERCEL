@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 
 from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BANK_NAME, AXIS_BLUEPRINT_FILE, BASE_DIR
 from app.db.mongodb import cases_collection, chat_logs_collection, documents_collection, fs
+from app.services.audit_service import list_activity_events, log_activity
 from app.services.conversation_service import (
     delete_conversation_for_user,
     list_conversations_for_user,
@@ -16,6 +17,7 @@ from app.services.conversation_service import (
 )
 from app.services.auth_service import get_user_context, list_workspace_users, require_permission, verify_user_credentials
 from app.services.fraud_service import detect_fraud, generate_investigation_report
+from app.services.user_service import create_workspace_user, update_workspace_user
 
 
 router = APIRouter()
@@ -62,6 +64,20 @@ class ConversationPayload(BaseModel):
 class ConversationSyncRequest(BaseModel):
     userId: str
     conversation: ConversationPayload
+
+
+class WorkspaceUserCreateRequest(BaseModel):
+    userId: str
+    password: str
+    displayName: str
+    role: str
+
+
+class WorkspaceUserUpdateRequest(BaseModel):
+    displayName: str | None = None
+    password: str | None = None
+    role: str | None = None
+    active: bool | None = None
 
 
 def get_last_chat(user_id, session_id):
@@ -208,6 +224,57 @@ def _normalize_choice(text):
     return None
 
 
+def _can_view_workspace_directory(user_context: dict) -> bool:
+    role = str((user_context or {}).get("role") or "").lower()
+    permissions = (user_context or {}).get("permissions") or {}
+    return bool(role in {"supervisor", "admin", "auditor"} or permissions.get("canManageMembers") or permissions.get("canManageUsers"))
+
+
+def _can_view_activity_log(user_context: dict) -> bool:
+    return bool((user_context or {}).get("userId"))
+
+
+def _activity_event_visible_to_user(user_context: dict, event: dict) -> bool:
+    role = str((user_context or {}).get("role") or "").lower()
+    user_id = str((user_context or {}).get("userId") or "").strip().lower()
+
+    if role in {"supervisor", "admin", "auditor"}:
+        return True
+
+    if not user_id or not isinstance(event, dict):
+        return False
+
+    if str(event.get("actorUserId") or "").strip().lower() == user_id:
+        return True
+
+    if str(event.get("targetType") or "").strip().lower() == "user" and str(event.get("targetId") or "").strip().lower() == user_id:
+        return True
+
+    details = event.get("details") if isinstance(event.get("details"), dict) else {}
+    if str(details.get("ownerUserId") or "").strip().lower() == user_id:
+        return True
+
+    related_users = {
+        str(value or "").strip().lower()
+        for value in (details.get("relatedUserIds") or [])
+        if str(value or "").strip()
+    }
+    return user_id in related_users
+
+
+def _activity_events_for_user(user_context: dict, limit: int | None = None) -> list[dict]:
+    visible_events = [
+        event
+        for event in list_activity_events(limit=None)
+        if _activity_event_visible_to_user(user_context, event)
+    ]
+
+    if limit is None:
+        return visible_events
+
+    return visible_events[: max(0, int(limit))]
+
+
 @router.get("/conversations")
 def list_conversations(userId: str):
     try:
@@ -226,16 +293,100 @@ def workspace_users(userId: str):
     except Exception as exc:
         raise HTTPException(status_code=401, detail=str(exc))
 
+    if not _can_view_workspace_directory(user_context):
+        raise HTTPException(status_code=403, detail="Your role cannot view the AXIS workspace directory.")
+
+    return {"users": list_workspace_users()}
+
+
+@router.post("/workspace-users")
+def create_user(request: WorkspaceUserCreateRequest, userId: str):
     try:
-        require_permission(
-            user_context,
-            "canManageMembers",
-            "Only supervisors and admins can open the shared member directory.",
-        )
+        user_context = get_user_context(userId.strip())
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        require_permission(user_context, "canManageUsers", "Only admins can create workspace users.")
     except Exception as exc:
         raise HTTPException(status_code=403, detail=str(exc))
 
-    return {"users": list_workspace_users()}
+    try:
+        created_user = create_workspace_user(
+            user_id=request.userId,
+            password=request.password,
+            display_name=request.displayName,
+            role=request.role,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    log_activity(
+        "user_created",
+        actor=user_context,
+        target_type="user",
+        target_id=created_user["userId"],
+        summary=f'{user_context.get("displayName") or user_context.get("userId")} created user {created_user["userId"]}.',
+        details={
+            "role": created_user.get("role"),
+            "displayName": created_user.get("displayName"),
+            "relatedUserIds": [created_user["userId"]],
+        },
+    )
+    return {"user": created_user}
+
+
+@router.patch("/workspace-users/{target_user_id}")
+def patch_user(target_user_id: str, request: WorkspaceUserUpdateRequest, userId: str):
+    try:
+        user_context = get_user_context(userId.strip())
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    try:
+        require_permission(user_context, "canManageUsers", "Only admins can update workspace users.")
+    except Exception as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+
+    updates = request.model_dump(exclude_none=True)
+
+    try:
+        updated_user = update_workspace_user(target_user_id, updates, actor_user_id=user_context.get("userId"))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    summary_bits = []
+    if "displayName" in updates:
+        summary_bits.append("updated display name")
+    if "role" in updates:
+        summary_bits.append(f"set role to {updates['role']}")
+    if "active" in updates:
+        summary_bits.append("enabled user" if updates["active"] else "disabled user")
+    if "password" in updates and str(updates.get("password") or "").strip():
+        summary_bits.append("reset password")
+
+    log_activity(
+        "user_updated",
+        actor=user_context,
+        target_type="user",
+        target_id=updated_user["userId"],
+        summary=f'{user_context.get("displayName") or user_context.get("userId")} {", ".join(summary_bits) or "updated a user"} for {updated_user["userId"]}.',
+        details={**updates, "relatedUserIds": [updated_user["userId"]]},
+    )
+    return {"user": updated_user}
+
+
+@router.get("/activity")
+def activity_log(userId: str, limit: int | None = None):
+    try:
+        user_context = get_user_context(userId.strip())
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
+
+    if not _can_view_activity_log(user_context):
+        raise HTTPException(status_code=403, detail="Your role cannot view the activity log.")
+
+    return {"events": _activity_events_for_user(user_context, limit=limit)}
 
 
 @router.post("/conversations/sync")
@@ -557,5 +708,14 @@ def login(request: dict):
         user_context = verify_user_credentials(user_id, password)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid userId or password")
+
+    log_activity(
+        "user_login",
+        actor=user_context,
+        target_type="user",
+        target_id=user_context.get("userId") or "",
+        summary=f'{user_context.get("displayName") or user_context.get("userId")} signed in.',
+        details={"role": user_context.get("role") or "", "relatedUserIds": [user_context.get("userId") or ""]},
+    )
 
     return user_context
