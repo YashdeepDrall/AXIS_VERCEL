@@ -3,7 +3,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from app.api import fraud
+from app.api import customer_fraud, fraud, seed
+from app.db.banking import ensure_banking_indexes
 from app.ml.vector_store import load_axis_documents, rebuild_vector_index
 
 
@@ -22,8 +23,16 @@ def startup_event():
     except Exception as exc:
         print(f"Startup warning: {exc}")
 
+    try:
+        ensure_banking_indexes()
+        print("MongoDB banking indexes ready.")
+    except Exception as exc:
+        print(f"Banking seed setup warning: {exc}")
+
 
 app.include_router(fraud.router)
+app.include_router(customer_fraud.router)
+app.include_router(seed.router)
 
 
 @app.get("/")

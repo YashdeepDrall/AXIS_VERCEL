@@ -1,0 +1,827 @@
+[
+  {
+    "cif_id": "CIF1001",
+    "name": "Rahul Sharma",
+    "mobile": "8854327919",
+    "accounts": [
+      "918020000000001",
+      "918021000000001"
+    ],
+    "created_at": "2024-11-07 10:13:00",
+    "updated_at": "2024-11-11 16:25:00"
+  },
+  {
+    "cif_id": "CIF1002",
+    "name": "Aman Verma",
+    "mobile": "7854335838",
+    "accounts": [
+      "918020000000002"
+    ],
+    "created_at": "2025-04-26 08:17:00",
+    "updated_at": "2025-05-03 09:53:00"
+  },
+  {
+    "cif_id": "CIF1003",
+    "name": "Neha Singh",
+    "mobile": "6854343757",
+    "accounts": [
+      "918020000000003",
+      "918021000000003"
+    ],
+    "created_at": "2025-05-26 03:40:00",
+    "updated_at": "2025-06-16 08:24:00"
+  },
+  {
+    "cif_id": "CIF1004",
+    "name": "Rohit Gupta",
+    "mobile": "9854351676",
+    "accounts": [
+      "918020000000004"
+    ],
+    "created_at": "2025-10-18 06:40:00",
+    "updated_at": "2025-11-19 07:29:00"
+  },
+  {
+    "cif_id": "CIF1005",
+    "name": "Priya Mehta",
+    "mobile": "8854359595",
+    "accounts": [
+      "918020000000005"
+    ],
+    "created_at": "2024-11-15 09:43:00",
+    "updated_at": "2024-12-19 09:58:00"
+  },
+  {
+    "cif_id": "CIF1006",
+    "name": "Ankit Yadav",
+    "mobile": "7854367514",
+    "accounts": [
+      "918020000000006",
+      "918021000000006"
+    ],
+    "created_at": "2025-01-06 10:40:00",
+    "updated_at": "2025-01-15 13:12:00"
+  },
+  {
+    "cif_id": "CIF1007",
+    "name": "Simran Kaur",
+    "mobile": "6854375433",
+    "accounts": [
+      "918020000000007"
+    ],
+    "created_at": "2025-01-30 09:23:00",
+    "updated_at": "2025-02-18 14:53:00"
+  },
+  {
+    "cif_id": "CIF1008",
+    "name": "Karan Malhotra",
+    "mobile": "9854383352",
+    "accounts": [
+      "918020000000008"
+    ],
+    "created_at": "2025-10-01 12:29:00",
+    "updated_at": "2025-10-30 13:45:00"
+  },
+  {
+    "cif_id": "CIF1009",
+    "name": "Meena Devi",
+    "mobile": "8854391271",
+    "accounts": [
+      "918020000000009"
+    ],
+    "created_at": "2026-01-07 15:39:00",
+    "updated_at": "2026-02-11 17:39:00"
+  },
+  {
+    "cif_id": "CIF1010",
+    "name": "Suresh Kumar",
+    "mobile": "7854399190",
+    "accounts": [
+      "918020000000010"
+    ],
+    "created_at": "2025-05-29 11:46:00",
+    "updated_at": "2025-06-06 18:21:00"
+  },
+  {
+    "cif_id": "CIF1011",
+    "name": "Niharika Anand",
+    "mobile": "6854407109",
+    "accounts": [
+      "918020000000011",
+      "918021000000011"
+    ],
+    "created_at": "2024-12-16 03:19:00",
+    "updated_at": "2025-01-23 09:18:00"
+  },
+  {
+    "cif_id": "CIF1012",
+    "name": "Arjun Menon",
+    "mobile": "9854415028",
+    "accounts": [
+      "918020000000012"
+    ],
+    "created_at": "2025-04-25 00:11:00",
+    "updated_at": "2025-05-30 02:58:00"
+  },
+  {
+    "cif_id": "CIF1013",
+    "name": "Anirudh Bhalla",
+    "mobile": "8854422947",
+    "accounts": [
+      "918020000000013"
+    ],
+    "created_at": "2025-09-11 16:40:00",
+    "updated_at": "2025-10-24 17:44:00"
+  },
+  {
+    "cif_id": "CIF1014",
+    "name": "Bhavya Saran",
+    "mobile": "7854430866",
+    "accounts": [
+      "918020000000014"
+    ],
+    "created_at": "2025-04-20 21:29:00",
+    "updated_at": "2025-05-23 01:51:00"
+  },
+  {
+    "cif_id": "CIF1015",
+    "name": "Devansh Bedi",
+    "mobile": "6854438785",
+    "accounts": [
+      "918020000000015",
+      "918021000000015"
+    ],
+    "created_at": "2025-04-07 16:13:00",
+    "updated_at": "2025-05-22 22:25:00"
+  },
+  {
+    "cif_id": "CIF1016",
+    "name": "Komal Thakur",
+    "mobile": "9854446704",
+    "accounts": [
+      "918020000000016"
+    ],
+    "created_at": "2025-06-10 09:03:00",
+    "updated_at": "2025-06-20 15:05:00"
+  },
+  {
+    "cif_id": "CIF1017",
+    "name": "Rashi Kulkarni",
+    "mobile": "8854454623",
+    "accounts": [
+      "918020000000017"
+    ],
+    "created_at": "2025-07-22 15:07:00",
+    "updated_at": "2025-08-18 18:09:00"
+  },
+  {
+    "cif_id": "CIF1018",
+    "name": "Hemant Rawat",
+    "mobile": "7854462542",
+    "accounts": [
+      "918020000000018"
+    ],
+    "created_at": "2026-01-02 17:44:00",
+    "updated_at": "2026-02-14 20:30:00"
+  },
+  {
+    "cif_id": "CIF1019",
+    "name": "Monika Sood",
+    "mobile": "6854470461",
+    "accounts": [
+      "918020000000019",
+      "918021000000019"
+    ],
+    "created_at": "2024-12-07 00:55:00",
+    "updated_at": "2024-12-31 05:50:00"
+  },
+  {
+    "cif_id": "CIF1020",
+    "name": "Divya Narang",
+    "mobile": "9854478380",
+    "accounts": [
+      "918020000000020"
+    ],
+    "created_at": "2025-06-20 19:09:00",
+    "updated_at": "2025-06-25 22:20:00"
+  },
+  {
+    "cif_id": "CIF1021",
+    "name": "Mitali Sen",
+    "mobile": "8854486299",
+    "accounts": [
+      "918020000000021",
+      "918021000000021"
+    ],
+    "created_at": "2026-02-05 03:08:00",
+    "updated_at": "2026-03-21 08:36:00"
+  },
+  {
+    "cif_id": "CIF1022",
+    "name": "Parth Trivedi",
+    "mobile": "7854494218",
+    "accounts": [
+      "918020000000022"
+    ],
+    "created_at": "2024-11-28 22:59:00",
+    "updated_at": "2024-11-30 02:26:00"
+  },
+  {
+    "cif_id": "CIF1023",
+    "name": "Rhea Chatterjee",
+    "mobile": "6854502137",
+    "accounts": [
+      "918020000000023",
+      "918021000000023"
+    ],
+    "created_at": "2025-10-12 23:38:00",
+    "updated_at": "2025-11-22 03:40:00"
+  },
+  {
+    "cif_id": "CIF1024",
+    "name": "Jatin Kalra",
+    "mobile": "9854510056",
+    "accounts": [
+      "918020000000024"
+    ],
+    "created_at": "2026-01-11 13:58:00",
+    "updated_at": "2026-01-30 17:27:00"
+  },
+  {
+    "cif_id": "CIF1025",
+    "name": "Ishita Das",
+    "mobile": "8854517975",
+    "accounts": [
+      "918020000000025",
+      "918021000000025"
+    ],
+    "created_at": "2025-01-21 14:22:00",
+    "updated_at": "2025-02-01 14:31:00"
+  },
+  {
+    "cif_id": "CIF1026",
+    "name": "Tarun Bedi",
+    "mobile": "7854525894",
+    "accounts": [
+      "918020000000026"
+    ],
+    "created_at": "2024-11-02 03:41:00",
+    "updated_at": "2024-12-10 04:01:00"
+  },
+  {
+    "cif_id": "CIF1027",
+    "name": "Palak Sethi",
+    "mobile": "6854533813",
+    "accounts": [
+      "918020000000027"
+    ],
+    "created_at": "2025-06-01 04:19:00",
+    "updated_at": "2025-07-05 04:19:00"
+  },
+  {
+    "cif_id": "CIF1028",
+    "name": "Kunal Saxena",
+    "mobile": "9854541732",
+    "accounts": [
+      "918020000000028",
+      "918021000000028"
+    ],
+    "created_at": "2025-03-31 22:14:00",
+    "updated_at": "2025-05-08 02:54:00"
+  },
+  {
+    "cif_id": "CIF1029",
+    "name": "Deepak Chauhan",
+    "mobile": "8854549651",
+    "accounts": [
+      "918020000000029",
+      "918021000000029"
+    ],
+    "created_at": "2025-02-07 21:39:00",
+    "updated_at": "2025-02-27 01:12:00"
+  },
+  {
+    "cif_id": "CIF1030",
+    "name": "Yash Kulshreshtha",
+    "mobile": "7854557570",
+    "accounts": [
+      "918020000000030",
+      "918021000000030"
+    ],
+    "created_at": "2025-02-19 04:31:00",
+    "updated_at": "2025-03-23 08:33:00"
+  },
+  {
+    "cif_id": "CIF1031",
+    "name": "Navin Pillai",
+    "mobile": "6854565489",
+    "accounts": [
+      "918020000000031",
+      "918021000000031"
+    ],
+    "created_at": "2025-06-17 02:58:00",
+    "updated_at": "2025-06-26 09:28:00"
+  },
+  {
+    "cif_id": "CIF1032",
+    "name": "Siddharth Goyal",
+    "mobile": "9854573408",
+    "accounts": [
+      "918020000000032"
+    ],
+    "created_at": "2024-10-27 00:14:00",
+    "updated_at": "2024-12-06 03:32:00"
+  },
+  {
+    "cif_id": "CIF1033",
+    "name": "Ritika Kapoor",
+    "mobile": "8854581327",
+    "accounts": [
+      "918020000000033"
+    ],
+    "created_at": "2025-12-02 19:41:00",
+    "updated_at": "2025-12-25 00:44:00"
+  },
+  {
+    "cif_id": "CIF1034",
+    "name": "Nikita Jaiswal",
+    "mobile": "7854589246",
+    "accounts": [
+      "918020000000034"
+    ],
+    "created_at": "2026-02-14 19:41:00",
+    "updated_at": "2026-03-11 23:24:00"
+  },
+  {
+    "cif_id": "CIF1035",
+    "name": "Preeti Narayan",
+    "mobile": "6854597165",
+    "accounts": [
+      "918020000000035",
+      "918021000000035"
+    ],
+    "created_at": "2025-12-21 02:01:00",
+    "updated_at": "2025-12-29 04:49:00"
+  },
+  {
+    "cif_id": "CIF1036",
+    "name": "Mansi Chawla",
+    "mobile": "9854605084",
+    "accounts": [
+      "918020000000036",
+      "918021000000036"
+    ],
+    "created_at": "2025-01-18 02:22:00",
+    "updated_at": "2025-02-16 04:03:00"
+  },
+  {
+    "cif_id": "CIF1037",
+    "name": "Rupali Jha",
+    "mobile": "8854613003",
+    "accounts": [
+      "918020000000037",
+      "918021000000037"
+    ],
+    "created_at": "2025-01-25 10:26:00",
+    "updated_at": "2025-02-12 11:07:00"
+  },
+  {
+    "cif_id": "CIF1038",
+    "name": "Bhavna Kohli",
+    "mobile": "7854620922",
+    "accounts": [
+      "918020000000038"
+    ],
+    "created_at": "2025-02-25 12:22:00",
+    "updated_at": "2025-02-27 17:48:00"
+  },
+  {
+    "cif_id": "CIF1039",
+    "name": "Ayesha Khan",
+    "mobile": "6854628841",
+    "accounts": [
+      "918020000000039"
+    ],
+    "created_at": "2025-06-21 12:36:00",
+    "updated_at": "2025-07-22 13:29:00"
+  },
+  {
+    "cif_id": "CIF1040",
+    "name": "Ananya Bose",
+    "mobile": "9854636760",
+    "accounts": [
+      "918020000000040"
+    ],
+    "created_at": "2025-03-27 07:04:00",
+    "updated_at": "2025-04-29 12:44:00"
+  },
+  {
+    "cif_id": "CIF1041",
+    "name": "Rohan Purohit",
+    "mobile": "8854644679",
+    "accounts": [
+      "918020000000041"
+    ],
+    "created_at": "2026-01-30 04:10:00",
+    "updated_at": "2026-02-22 09:00:00"
+  },
+  {
+    "cif_id": "CIF1042",
+    "name": "Chirag Mahajan",
+    "mobile": "7854652598",
+    "accounts": [
+      "918020000000042",
+      "918021000000042"
+    ],
+    "created_at": "2026-01-26 22:18:00",
+    "updated_at": "2026-02-23 00:47:00"
+  },
+  {
+    "cif_id": "CIF1043",
+    "name": "Saurabh Dubey",
+    "mobile": "6854660517",
+    "accounts": [
+      "918020000000043"
+    ],
+    "created_at": "2025-09-30 20:28:00",
+    "updated_at": "2025-10-04 23:45:00"
+  },
+  {
+    "cif_id": "CIF1044",
+    "name": "Sakshi Batra",
+    "mobile": "9854668436",
+    "accounts": [
+      "918020000000044"
+    ],
+    "created_at": "2024-10-29 09:46:00",
+    "updated_at": "2024-11-19 11:28:00"
+  },
+  {
+    "cif_id": "CIF1045",
+    "name": "Shreya Dutta",
+    "mobile": "8854676355",
+    "accounts": [
+      "918020000000045"
+    ],
+    "created_at": "2025-10-24 08:29:00",
+    "updated_at": "2025-12-04 11:32:00"
+  },
+  {
+    "cif_id": "CIF1046",
+    "name": "Tanvi Deshmukh",
+    "mobile": "7854684274",
+    "accounts": [
+      "918020000000046"
+    ],
+    "created_at": "2025-02-27 03:25:00",
+    "updated_at": "2025-03-06 06:37:00"
+  },
+  {
+    "cif_id": "CIF1047",
+    "name": "Pooja Bansal",
+    "mobile": "6854692193",
+    "accounts": [
+      "918020000000047"
+    ],
+    "created_at": "2025-04-29 11:14:00",
+    "updated_at": "2025-06-07 12:33:00"
+  },
+  {
+    "cif_id": "CIF1048",
+    "name": "Aditya Chopra",
+    "mobile": "9854700112",
+    "accounts": [
+      "918020000000048"
+    ],
+    "created_at": "2025-07-01 02:46:00",
+    "updated_at": "2025-08-02 04:43:00"
+  },
+  {
+    "cif_id": "CIF1049",
+    "name": "Yuvraj Gill",
+    "mobile": "8854708031",
+    "accounts": [
+      "918020000000049",
+      "918021000000049"
+    ],
+    "created_at": "2026-02-05 22:39:00",
+    "updated_at": "2026-02-23 01:00:00"
+  },
+  {
+    "cif_id": "CIF1050",
+    "name": "Madhuri Rao",
+    "mobile": "7854715950",
+    "accounts": [
+      "918020000000050"
+    ],
+    "created_at": "2024-11-29 06:50:00",
+    "updated_at": "2025-01-07 13:15:00"
+  },
+  {
+    "cif_id": "CIF1051",
+    "name": "Vivek Iyer",
+    "mobile": "6854723869",
+    "accounts": [
+      "918020000000051"
+    ],
+    "created_at": "2025-04-08 09:38:00",
+    "updated_at": "2025-05-04 12:10:00"
+  },
+  {
+    "cif_id": "CIF1052",
+    "name": "Nidhi Saxena",
+    "mobile": "9854731788",
+    "accounts": [
+      "918020000000052"
+    ],
+    "created_at": "2024-11-17 20:14:00",
+    "updated_at": "2024-12-03 01:55:00"
+  },
+  {
+    "cif_id": "CIF1053",
+    "name": "Akash Thakur",
+    "mobile": "8854739707",
+    "accounts": [
+      "918020000000053",
+      "918021000000053"
+    ],
+    "created_at": "2025-05-09 03:33:00",
+    "updated_at": "2025-06-19 09:41:00"
+  },
+  {
+    "cif_id": "CIF1054",
+    "name": "Pranav Shetty",
+    "mobile": "7854747626",
+    "accounts": [
+      "918020000000054"
+    ],
+    "created_at": "2026-02-11 07:43:00",
+    "updated_at": "2026-03-04 12:07:00"
+  },
+  {
+    "cif_id": "CIF1055",
+    "name": "Ajay Kulkarni",
+    "mobile": "6854755545",
+    "accounts": [
+      "918020000000055"
+    ],
+    "created_at": "2026-01-13 20:45:00",
+    "updated_at": "2026-02-20 01:17:00"
+  },
+  {
+    "cif_id": "CIF1056",
+    "name": "Sneha Patil",
+    "mobile": "9854763464",
+    "accounts": [
+      "918020000000056",
+      "918021000000056"
+    ],
+    "created_at": "2025-11-01 04:37:00",
+    "updated_at": "2025-12-09 07:26:00"
+  },
+  {
+    "cif_id": "CIF1057",
+    "name": "Varsha Pillai",
+    "mobile": "8854771383",
+    "accounts": [
+      "918020000000057",
+      "918021000000057"
+    ],
+    "created_at": "2026-01-12 04:57:00",
+    "updated_at": "2026-02-24 07:56:00"
+  },
+  {
+    "cif_id": "CIF1058",
+    "name": "Sonal Dhingra",
+    "mobile": "7854779302",
+    "accounts": [
+      "918020000000058",
+      "918021000000058"
+    ],
+    "created_at": "2026-02-13 21:10:00",
+    "updated_at": "2026-03-31 02:21:00"
+  },
+  {
+    "cif_id": "CIF1059",
+    "name": "Harleen Bedi",
+    "mobile": "6854787221",
+    "accounts": [
+      "918020000000059"
+    ],
+    "created_at": "2025-12-12 01:00:00",
+    "updated_at": "2026-01-26 02:31:00"
+  },
+  {
+    "cif_id": "CIF1060",
+    "name": "Tanmay Nagpal",
+    "mobile": "9854795140",
+    "accounts": [
+      "918020000000060"
+    ],
+    "created_at": "2025-08-23 01:22:00",
+    "updated_at": "2025-09-14 04:55:00"
+  },
+  {
+    "cif_id": "CIF1061",
+    "name": "Harsh Vardhan",
+    "mobile": "8854803059",
+    "accounts": [
+      "918020000000061"
+    ],
+    "created_at": "2025-11-01 21:49:00",
+    "updated_at": "2025-11-10 22:25:00"
+  },
+  {
+    "cif_id": "CIF1062",
+    "name": "Isha Arora",
+    "mobile": "7854810978",
+    "accounts": [
+      "918020000000062"
+    ],
+    "created_at": "2025-09-27 09:06:00",
+    "updated_at": "2025-10-16 15:35:00"
+  },
+  {
+    "cif_id": "CIF1063",
+    "name": "Naveen Rao",
+    "mobile": "6854818897",
+    "accounts": [
+      "918020000000063"
+    ],
+    "created_at": "2024-12-16 06:37:00",
+    "updated_at": "2024-12-23 06:47:00"
+  },
+  {
+    "cif_id": "CIF1064",
+    "name": "Lakshay Arora",
+    "mobile": "9854826816",
+    "accounts": [
+      "918020000000064"
+    ],
+    "created_at": "2026-01-06 00:50:00",
+    "updated_at": "2026-02-02 07:05:00"
+  },
+  {
+    "cif_id": "CIF1065",
+    "name": "Mukesh Soni",
+    "mobile": "8854834735",
+    "accounts": [
+      "918020000000065"
+    ],
+    "created_at": "2025-04-10 07:46:00",
+    "updated_at": "2025-05-22 08:27:00"
+  },
+  {
+    "cif_id": "CIF1066",
+    "name": "Kavya Reddy",
+    "mobile": "7854842654",
+    "accounts": [
+      "918020000000066"
+    ],
+    "created_at": "2024-12-03 05:34:00",
+    "updated_at": "2025-01-10 08:53:00"
+  },
+  {
+    "cif_id": "CIF1067",
+    "name": "Gaurav Ahuja",
+    "mobile": "6854850573",
+    "accounts": [
+      "918020000000067"
+    ],
+    "created_at": "2025-10-15 18:39:00",
+    "updated_at": "2025-11-29 19:43:00"
+  },
+  {
+    "cif_id": "CIF1068",
+    "name": "Rakesh Solanki",
+    "mobile": "9854858492",
+    "accounts": [
+      "918020000000068"
+    ],
+    "created_at": "2025-02-11 22:22:00",
+    "updated_at": "2025-02-23 03:06:00"
+  },
+  {
+    "cif_id": "CIF1069",
+    "name": "Pallavi Sinha",
+    "mobile": "8854866411",
+    "accounts": [
+      "918020000000069",
+      "918021000000069"
+    ],
+    "created_at": "2025-06-10 03:47:00",
+    "updated_at": "2025-06-19 05:52:00"
+  },
+  {
+    "cif_id": "CIF1070",
+    "name": "Abhishek Jain",
+    "mobile": "7854874330",
+    "accounts": [
+      "918020000000070",
+      "918021000000070"
+    ],
+    "created_at": "2025-09-30 18:20:00",
+    "updated_at": "2025-11-03 18:39:00"
+  },
+  {
+    "cif_id": "CIF1071",
+    "name": "Mohit Bhatia",
+    "mobile": "6854882249",
+    "accounts": [
+      "918020000000071"
+    ],
+    "created_at": "2025-08-28 18:40:00",
+    "updated_at": "2025-10-02 00:35:00"
+  },
+  {
+    "cif_id": "CIF1072",
+    "name": "Manish Tiwari",
+    "mobile": "9854890168",
+    "accounts": [
+      "918020000000072"
+    ],
+    "created_at": "2026-02-04 01:12:00",
+    "updated_at": "2026-02-08 04:25:00"
+  },
+  {
+    "cif_id": "CIF1073",
+    "name": "Aditi Nair",
+    "mobile": "8854898087",
+    "accounts": [
+      "918020000000073"
+    ],
+    "created_at": "2025-06-25 06:56:00",
+    "updated_at": "2025-07-17 09:09:00"
+  },
+  {
+    "cif_id": "CIF1074",
+    "name": "Garima Luthra",
+    "mobile": "7854906006",
+    "accounts": [
+      "918020000000074"
+    ],
+    "created_at": "2025-01-02 04:42:00",
+    "updated_at": "2025-01-24 05:22:00"
+  },
+  {
+    "cif_id": "CIF1075",
+    "name": "Nitin Joshi",
+    "mobile": "6854913925",
+    "accounts": [
+      "918020000000075"
+    ],
+    "created_at": "2025-04-27 10:07:00",
+    "updated_at": "2025-05-28 17:04:00"
+  },
+  {
+    "cif_id": "CIF1076",
+    "name": "Vikas Pandey",
+    "mobile": "9854921844",
+    "accounts": [
+      "918020000000076"
+    ],
+    "created_at": "2024-12-02 23:46:00",
+    "updated_at": "2025-01-04 23:52:00"
+  },
+  {
+    "cif_id": "CIF1077",
+    "name": "Payal Anand",
+    "mobile": "8854929763",
+    "accounts": [
+      "918020000000077"
+    ],
+    "created_at": "2025-08-01 03:24:00",
+    "updated_at": "2025-08-13 04:02:00"
+  },
+  {
+    "cif_id": "CIF1078",
+    "name": "Sanjay Mishra",
+    "mobile": "7854937682",
+    "accounts": [
+      "918020000000078"
+    ],
+    "created_at": "2025-04-22 02:55:00",
+    "updated_at": "2025-05-04 09:47:00"
+  },
+  {
+    "cif_id": "CIF1079",
+    "name": "Pratik Ghosh",
+    "mobile": "6854945601",
+    "accounts": [
+      "918020000000079",
+      "918021000000079"
+    ],
+    "created_at": "2025-11-09 11:07:00",
+    "updated_at": "2025-11-18 12:11:00"
+  },
+  {
+    "cif_id": "CIF1080",
+    "name": "Sanya Khanna",
+    "mobile": "9854953520",
+    "accounts": [
+      "918020000000080"
+    ],
+    "created_at": "2025-06-23 01:58:00",
+    "updated_at": "2025-06-30 08:00:00"
+  }
+]

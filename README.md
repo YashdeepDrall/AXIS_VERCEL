@@ -5,7 +5,8 @@ This project is scoped for AXIS Bank fraud investigation workflows and runs as a
 - Backend: FastAPI APIs for login, fraud analysis, SOP retrieval, and document download
 - Frontend: same-origin web UI served from the FastAPI app root
 - Knowledge base: `banks/Axis/Axis_Bank_Fraud_SOP_Blueprint.pdf`
-- Database: currently replaced with in-memory runtime state
+- Application state: existing chat/workspace flows use local runtime and local cache files
+- Demo seed database: dedicated MongoDB collections in the separate `axis_fraud_chatbot` database
 - RAG: Gemini embeddings plus Gemini answer generation through API calls
 - Vector storage: document chunk embeddings are cached locally on disk and reused for unchanged PDFs
 - Conversation history: persisted locally in `local_cache/axis_conversations.json` with role-based visibility
@@ -14,6 +15,8 @@ This project is scoped for AXIS Bank fraud investigation workflows and runs as a
 
 Set these values in `.env` or your deployment environment:
 
+- `MONGO_URL=your_mongodb_atlas_uri`
+- `MONGO_DB_NAME=axis_fraud_chatbot`
 - `GEMINI_API_KEY=your_api_key`
 - `GEMINI_GENERATION_MODEL=gemini-3.1-flash-lite-preview`
 - `GEMINI_EMBEDDING_MODEL=gemini-embedding-2-preview`
@@ -37,6 +40,12 @@ uvicorn app.main:app --reload
 ```
 
 4. Open `http://127.0.0.1:8000`
+
+Useful demo endpoints:
+
+- `GET /seed/status` to confirm the live Mongo host, database name, collections, and record counts
+- `POST /seed/run` to rebuild the `customers` and `transactions` demo data in the separate `axis_fraud_chatbot` database
+- `POST /customer-fraud/chat` to collect customer/date inputs, fetch Mongo transactions, and return structured fraud analysis
 
 Default local login:
 

@@ -2,3 +2,5 @@ fastapi==0.135.2
 uvicorn==0.42.0
 pypdf==6.9.2
 requests==2.33.0
+pymongo==4.13.2
+dnspython==2.7.0

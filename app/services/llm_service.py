@@ -40,15 +40,18 @@ def _post_to_gemini(model_name, action, payload):
             "GEMINI_API_KEY is not set. Add it to your environment or .env before using Gemini RAG."
         )
 
-    response = requests.post(
-        _build_model_url(model_name, action),
-        headers={
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY,
-        },
-        json=payload,
-        timeout=GEMINI_REQUEST_TIMEOUT_SECONDS,
-    )
+    try:
+        response = requests.post(
+            _build_model_url(model_name, action),
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": GEMINI_API_KEY,
+            },
+            json=payload,
+            timeout=GEMINI_REQUEST_TIMEOUT_SECONDS,
+        )
+    except requests.RequestException as exc:
+        raise GeminiServiceError(f"Gemini API request failed before a response was received: {exc}") from exc
 
     if response.ok:
         return response.json()
