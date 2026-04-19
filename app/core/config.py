@@ -79,6 +79,10 @@ LOCAL_ACTIVITY_LOG_FILE = os.getenv(
     "LOCAL_ACTIVITY_LOG_FILE",
     os.path.join(LOCAL_VECTOR_CACHE_DIR, "axis_activity.json"),
 )
+LOCAL_REPORT_EXPORT_DIR = os.getenv(
+    "LOCAL_REPORT_EXPORT_DIR",
+    os.path.join(LOCAL_VECTOR_CACHE_DIR, "generated_reports"),
+)
 
 MONGO_URI = os.getenv("MONGO_URI", os.getenv("MONGO_URL", "")).strip()
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "axis_fraud_chatbot").strip()

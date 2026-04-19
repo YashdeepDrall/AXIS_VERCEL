@@ -4,7 +4,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BANK_NAME, AXIS_BLUEPRINT_FILE, BASE_DIR
@@ -19,6 +19,7 @@ from app.services.auth_service import get_user_context, list_workspace_users, re
 from app.services.customer_fraud_chat_service import run_integrated_fraud_chat
 from app.services.fraud_service import detect_fraud, generate_investigation_report
 from app.services.historical_reference_service import list_historical_reference_cards
+from app.services.report_export_service import export_investigation_report_pdf, resolve_exported_report
 from app.services.user_service import create_workspace_user, update_workspace_user
 
 
@@ -204,6 +205,19 @@ def download_document(file_id: str):
     filename = grid_out.filename or "document.pdf"
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
     return StreamingResponse(grid_out, media_type="application/pdf", headers=headers)
+
+
+@router.get("/reports/{report_id}")
+def download_generated_report(report_id: str):
+    resolved_report = resolve_exported_report(report_id)
+    if not resolved_report:
+        raise HTTPException(status_code=404, detail="Generated report not found")
+
+    return FileResponse(
+        resolved_report["filePath"],
+        media_type="application/pdf",
+        filename=resolved_report["fileName"],
+    )
 
 
 def fetch_historical_docs():
@@ -525,11 +539,27 @@ I did not get a clear Yes/No. Please reply Yes or No.
         if choice == "yes":
             if permissions.get("canGenerateReport"):
                 report = generate_investigation_report(case_query or query, bank_id, analysis or {})
+                export_note = ""
+                try:
+                    report_title = f"AXIS_Investigation_Report_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+                    report_export = export_investigation_report_pdf(report, report_title=report_title)
+                    documents = [
+                        {
+                            "name": report_export["fileName"],
+                            "path": "",
+                            "fileId": "",
+                            "downloadUrl": report_export["downloadUrl"],
+                            "kind": "report_export",
+                            "buttonLabel": "Download Investigation Report PDF",
+                        }
+                    ]
+                except Exception:
+                    export_note = "\n\nNote: The report was generated, but the downloadable PDF could not be prepared right now."
 
                 response = f"""
 Generated Investigation Report:
 
-{report}
+{report}{export_note}
 
 Do you want historical fraud case references? (Yes/No)
 """
@@ -615,6 +645,7 @@ I did not get a clear Yes/No. Please reply Yes or No.
         "sessionId": session_id,
         "fraud_category": fraud_category,
         "documents": documents,
+        "documents_title": "Investigation Report Export" if documents else "",
         "conversation_state": {
             "step": next_step,
             "analysis": analysis if isinstance(analysis, dict) else {},

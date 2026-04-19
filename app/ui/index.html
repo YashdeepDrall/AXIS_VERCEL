@@ -634,9 +634,14 @@
     .member-input,
     .filter-select,
     .user-field {
-      min-height: 36px;
-      border-radius: 6px;
-      padding: 0 12px;
+      min-height: 40px;
+      border-radius: 8px;
+      padding: 0 14px;
+    }
+
+    .sidebar-search-input {
+      display: block;
+      box-shadow: 0 10px 24px rgba(34, 21, 27, 0.06);
     }
 
     .sidebar-filters,
@@ -813,10 +818,6 @@
       align-content: start;
       gap: 8px;
       min-height: 0;
-    }
-
-    .sidebar-section label {
-      margin: 0;
     }
 
     .chat-list {
@@ -1387,6 +1388,56 @@
       gap: 10px;
     }
 
+    .analysis-timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .analysis-timeline-item {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      border-left: 4px solid rgba(34, 21, 27, 0.12);
+      background: rgba(255, 255, 255, 0.86);
+      display: grid;
+      gap: 8px;
+    }
+
+    .analysis-timeline-high {
+      border-left-color: rgba(180, 35, 24, 0.58);
+      background: rgba(180, 35, 24, 0.04);
+    }
+
+    .analysis-timeline-medium {
+      border-left-color: rgba(153, 108, 0, 0.54);
+      background: rgba(153, 108, 0, 0.04);
+    }
+
+    .analysis-timeline-info {
+      border-left-color: rgba(15, 118, 110, 0.5);
+    }
+
+    .analysis-timeline-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .analysis-timeline-heading {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .analysis-timeline-time,
+    .analysis-timeline-copy {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.86rem;
+    }
+
     .analysis-transaction {
       padding: 12px 14px;
       border-radius: 12px;
@@ -1420,7 +1471,7 @@
     }
 
     .composer-shell {
-      width: min(860px, 100%);
+      width: min(980px, 100%);
       margin: 0 auto;
       padding: 10px;
       border-radius: 30px;
@@ -1474,7 +1525,7 @@
     }
 
     .composer-aux {
-      width: min(860px, 100%);
+      width: min(980px, 100%);
       margin: 10px auto 0;
       display: flex;
       align-items: center;
@@ -2905,9 +2956,10 @@
           link.className = "download-link";
           link.href = doc.downloadUrl || `/documents/${encodeURIComponent(doc.fileId)}`;
           const docName = String(doc.name || "").trim().toLowerCase();
-          link.textContent = docName.includes("blueprint") || docName.includes("sop")
-            ? "Download AXIS SOP PDF"
-            : `Download ${doc.name || "Document"}`;
+          link.textContent = String(doc.buttonLabel || "").trim()
+            || (docName.includes("blueprint") || docName.includes("sop")
+              ? "Download AXIS SOP PDF"
+              : `Download ${doc.name || "Document"}`);
           link.setAttribute("download", "");
           card.appendChild(link);
         } else if (isRichReference) {
@@ -3044,6 +3096,8 @@
       const summary = analysis.transaction_summary || {};
       const patterns = Array.isArray(analysis.suspicious_patterns) ? analysis.suspicious_patterns : [];
       const flaggedTransactions = Array.isArray(analysis.flagged_transactions) ? analysis.flagged_transactions : [];
+      const timelineItems = Array.isArray(analysis.transaction_timeline) ? analysis.transaction_timeline : [];
+      const baseline = analysis.customer_baseline && typeof analysis.customer_baseline === "object" ? analysis.customer_baseline : {};
       const actions = Array.isArray(analysis.recommended_actions) ? analysis.recommended_actions : [];
       const riskLevel = String(analysis.risk_level || "Low").trim() || "Low";
 
@@ -3107,6 +3161,112 @@
         caseSection.appendChild(caseTitle);
         caseSection.appendChild(caseBody);
         card.appendChild(caseSection);
+      }
+
+      const timelineSection = document.createElement("div");
+      timelineSection.className = "analysis-section";
+      const timelineTitle = document.createElement("h4");
+      timelineTitle.className = "analysis-section-title";
+      timelineTitle.textContent = "Transaction Timeline";
+      timelineSection.appendChild(timelineTitle);
+      if (timelineItems.length) {
+        const timelineList = document.createElement("div");
+        timelineList.className = "analysis-timeline";
+        for (const item of timelineItems) {
+          const timelineCard = document.createElement("div");
+          timelineCard.className = `analysis-timeline-item analysis-timeline-${String(item.severity || "info").toLowerCase()}`;
+
+          const topRow = document.createElement("div");
+          topRow.className = "analysis-timeline-top";
+
+          const heading = document.createElement("div");
+          heading.className = "analysis-timeline-heading";
+          heading.textContent = item.title || `${item.channel || "Channel"} transaction`;
+
+          const timestamp = document.createElement("div");
+          timestamp.className = "analysis-timeline-time";
+          timestamp.textContent = formatDateTime(item.timestamp);
+
+          topRow.appendChild(heading);
+          if (timestamp.textContent) topRow.appendChild(timestamp);
+          timelineCard.appendChild(topRow);
+
+          const copy = document.createElement("div");
+          copy.className = "analysis-timeline-copy";
+          copy.textContent = [
+            item.txn_id ? `Txn: ${item.txn_id}` : "",
+            item.details || "",
+          ].filter(Boolean).join(" | ");
+          if (copy.textContent) timelineCard.appendChild(copy);
+
+          if (Array.isArray(item.reasons) && item.reasons.length) {
+            const reasons = document.createElement("div");
+            reasons.className = "analysis-reasons";
+            for (const reason of item.reasons) {
+              const chip = document.createElement("span");
+              chip.className = "analysis-reason";
+              chip.textContent = reason;
+              reasons.appendChild(chip);
+            }
+            timelineCard.appendChild(reasons);
+          }
+
+          timelineList.appendChild(timelineCard);
+        }
+        timelineSection.appendChild(timelineList);
+      } else {
+        const emptyTimeline = document.createElement("div");
+        emptyTimeline.className = "analysis-empty";
+        emptyTimeline.textContent = "No reviewed transaction activity is available to build a timeline for this window.";
+        timelineSection.appendChild(emptyTimeline);
+      }
+      card.appendChild(timelineSection);
+
+      if (
+        baseline.comparison_summary
+        || Number(baseline.historical_debit_count || 0)
+        || Number(baseline.review_window_debit_count || 0)
+      ) {
+        const baselineSection = document.createElement("div");
+        baselineSection.className = "analysis-section";
+        const baselineTitle = document.createElement("h4");
+        baselineTitle.className = "analysis-section-title";
+        baselineTitle.textContent = "Customer Baseline";
+        baselineSection.appendChild(baselineTitle);
+
+        const baselineBody = document.createElement("div");
+        baselineBody.className = "analysis-summary";
+        baselineBody.textContent = baseline.comparison_summary || "Customer baseline comparison is not available for this review window.";
+        baselineSection.appendChild(baselineBody);
+
+        const baselineMetrics = document.createElement("div");
+        baselineMetrics.className = "analysis-metrics";
+        baselineMetrics.appendChild(buildAnalysisMetric("Lookback", `${baseline.lookback_days || 0} days`));
+        baselineMetrics.appendChild(buildAnalysisMetric("Typical Debit", formatCurrency(baseline.typical_debit_amount)));
+        baselineMetrics.appendChild(buildAnalysisMetric("Prior Max", formatCurrency(baseline.prior_max_debit)));
+        baselineMetrics.appendChild(buildAnalysisMetric("Window Max", formatCurrency(baseline.review_window_max_debit)));
+        baselineMetrics.appendChild(buildAnalysisMetric("Daily Outflow", formatCurrency(baseline.average_daily_debit_outflow)));
+        baselineMetrics.appendChild(buildAnalysisMetric(
+          baseline.dominant_channel ? `${baseline.dominant_channel} History` : "History Count",
+          baseline.dominant_channel
+            ? String(baseline.same_channel_history_count || 0)
+            : String(baseline.historical_debit_count || 0)
+        ));
+        baselineSection.appendChild(baselineMetrics);
+
+        if (Array.isArray(baseline.anomalies) && baseline.anomalies.length) {
+          const anomalyRow = document.createElement("div");
+          anomalyRow.className = "analysis-reasons";
+          for (const anomaly of baseline.anomalies) {
+            const chip = document.createElement("span");
+            chip.className = "analysis-reason";
+            chip.textContent = anomaly;
+            anomalyRow.appendChild(chip);
+          }
+          baselineSection.appendChild(anomalyRow);
+        }
+
+        card.appendChild(baselineSection);
       }
 
       const reasoningSection = document.createElement("div");

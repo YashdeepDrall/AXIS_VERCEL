@@ -5,6 +5,7 @@ import os
 import re
 import uuid
 from collections import Counter
+from statistics import median
 from typing import Any
 
 from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BLUEPRINT_FILE, BASE_DIR
@@ -13,6 +14,7 @@ from app.db.mongodb import cases_collection, documents_collection, fs
 from app.services.fraud_service import detect_fraud, generate_investigation_report
 from app.services.historical_reference_service import list_historical_reference_cards
 from app.services.llm_service import GeminiServiceError, generate_text
+from app.services.report_export_service import export_investigation_report_pdf
 
 
 SUSPICIOUS_BENEFICIARY_KEYWORDS = (
@@ -27,6 +29,8 @@ SUSPICIOUS_BENEFICIARY_KEYWORDS = (
 )
 HIGH_VALUE_THRESHOLD = 50000.0
 RAPID_DEBIT_WINDOW_MINUTES = 5
+BASELINE_LOOKBACK_DAYS = 30
+TIMELINE_ITEM_LIMIT = 10
 FOLLOWUP_STEPS = {"fetch_documentation", "generate_report", "historical_docs", "final_assistance"}
 
 
@@ -666,6 +670,230 @@ def _risk_level_from_score(score: int) -> str:
     return "Low"
 
 
+def _format_rupees(value: float) -> str:
+    return f"Rs. {float(value or 0.0):,.2f}"
+
+
+def _distinct_transaction_days(transactions: list[dict[str, Any]]) -> int:
+    days = {
+        transaction["timestamp"].date()
+        for transaction in transactions
+        if isinstance(transaction.get("timestamp"), dt.datetime)
+    }
+    return max(len(days), 1)
+
+
+def _fetch_baseline_transactions(cif_id: str, start_datetime: dt.datetime) -> list[dict[str, Any]]:
+    if not cif_id:
+        return []
+
+    lookback_start = start_datetime - dt.timedelta(days=BASELINE_LOOKBACK_DAYS)
+    query = {
+        "cif_id": cif_id,
+        "timestamp": {
+            "$gte": lookback_start,
+            "$lt": start_datetime,
+        },
+    }
+    return list(get_transactions_collection().find(query, {"_id": 0}).sort("timestamp", 1))
+
+
+def _build_customer_baseline(customer: dict[str, Any], transactions: list[dict[str, Any]], start_datetime: dt.datetime) -> dict[str, Any]:
+    current_debits = [
+        transaction
+        for transaction in transactions
+        if str(transaction.get("type") or "").lower() == "debit" and str(transaction.get("status") or "").lower() == "success"
+    ]
+    baseline_transactions = _fetch_baseline_transactions(str(customer.get("cif_id") or ""), start_datetime)
+    historical_debits = [
+        transaction
+        for transaction in baseline_transactions
+        if str(transaction.get("type") or "").lower() == "debit" and str(transaction.get("status") or "").lower() == "success"
+    ]
+
+    dominant_channel = ""
+    if current_debits:
+        dominant_channel = Counter(
+            str(transaction.get("channel") or "").strip()
+            for transaction in current_debits
+            if str(transaction.get("channel") or "").strip()
+        ).most_common(1)[0][0] if any(str(transaction.get("channel") or "").strip() for transaction in current_debits) else ""
+
+    same_channel_history = [
+        transaction
+        for transaction in historical_debits
+        if dominant_channel and str(transaction.get("channel") or "").strip() == dominant_channel
+    ]
+
+    reference_history = same_channel_history or historical_debits
+    current_amounts = [float(transaction.get("amount") or 0.0) for transaction in current_debits]
+    historical_amounts = [float(transaction.get("amount") or 0.0) for transaction in reference_history]
+    review_window_debit_outflow = round(sum(current_amounts), 2)
+    review_window_max_debit = round(max(current_amounts), 2) if current_amounts else 0.0
+    current_has_new_beneficiary = any(bool(transaction.get("is_new_beneficiary")) for transaction in current_debits)
+
+    if not current_debits:
+        return {
+            "available": bool(historical_debits),
+            "lookback_days": BASELINE_LOOKBACK_DAYS,
+            "dominant_channel": dominant_channel,
+            "historical_debit_count": len(historical_debits),
+            "same_channel_history_count": len(same_channel_history),
+            "typical_debit_amount": round(median(historical_amounts), 2) if historical_amounts else 0.0,
+            "average_debit_amount": round(sum(historical_amounts) / len(historical_amounts), 2) if historical_amounts else 0.0,
+            "prior_max_debit": round(max(historical_amounts), 2) if historical_amounts else 0.0,
+            "average_daily_debit_count": round(len(historical_debits) / _distinct_transaction_days(historical_debits), 2) if historical_debits else 0.0,
+            "average_daily_debit_outflow": round(sum(float(item.get("amount") or 0.0) for item in historical_debits) / _distinct_transaction_days(historical_debits), 2) if historical_debits else 0.0,
+            "review_window_debit_count": 0,
+            "review_window_debit_outflow": 0.0,
+            "review_window_max_debit": 0.0,
+            "comparison_summary": "No reviewed debit activity was available to compare with the customer's recent transaction baseline.",
+            "anomalies": [],
+        }
+
+    if not historical_debits:
+        return {
+            "available": False,
+            "lookback_days": BASELINE_LOOKBACK_DAYS,
+            "dominant_channel": dominant_channel,
+            "historical_debit_count": 0,
+            "same_channel_history_count": 0,
+            "typical_debit_amount": 0.0,
+            "average_debit_amount": 0.0,
+            "prior_max_debit": 0.0,
+            "average_daily_debit_count": 0.0,
+            "average_daily_debit_outflow": 0.0,
+            "review_window_debit_count": len(current_debits),
+            "review_window_debit_outflow": review_window_debit_outflow,
+            "review_window_max_debit": review_window_max_debit,
+            "comparison_summary": (
+                f"Recent baseline unavailable because no successful debit history was found in the {BASELINE_LOOKBACK_DAYS} days "
+                "before the reviewed window."
+            ),
+            "anomalies": [],
+        }
+
+    typical_debit_amount = round(median(historical_amounts), 2) if historical_amounts else 0.0
+    average_debit_amount = round(sum(historical_amounts) / len(historical_amounts), 2) if historical_amounts else 0.0
+    prior_max_debit = round(max(historical_amounts), 2) if historical_amounts else 0.0
+    average_daily_debit_count = round(len(historical_debits) / _distinct_transaction_days(historical_debits), 2)
+    average_daily_debit_outflow = round(
+        sum(float(item.get("amount") or 0.0) for item in historical_debits) / _distinct_transaction_days(historical_debits),
+        2,
+    )
+
+    anomalies: list[str] = []
+    if dominant_channel and not same_channel_history and (
+        review_window_debit_outflow >= HIGH_VALUE_THRESHOLD
+        or len(current_debits) >= 2
+        or current_has_new_beneficiary
+    ):
+        anomalies.append(f"No successful {dominant_channel} debit history was seen in the recent baseline window.")
+    if review_window_max_debit and prior_max_debit and review_window_max_debit > max(prior_max_debit * 1.6, typical_debit_amount * 3 if typical_debit_amount else 0.0):
+        anomalies.append(
+            f"The largest reviewed debit {_format_rupees(review_window_max_debit)} is materially above the prior baseline max of {_format_rupees(prior_max_debit)}."
+        )
+    if review_window_debit_outflow and average_daily_debit_outflow and review_window_debit_outflow > average_daily_debit_outflow * 2.5:
+        anomalies.append(
+            f"Reviewed debit outflow {_format_rupees(review_window_debit_outflow)} is sharply above the recent daily average of {_format_rupees(average_daily_debit_outflow)}."
+        )
+    if len(current_debits) >= 2 and average_daily_debit_count and len(current_debits) > max(average_daily_debit_count * 2, average_daily_debit_count + 1.5):
+        anomalies.append(
+            f"The review window shows {len(current_debits)} debit transactions versus a recent daily average of {average_daily_debit_count:.2f}."
+        )
+
+    baseline_prefix = (
+        f"In the previous {BASELINE_LOOKBACK_DAYS} days, the customer's typical {dominant_channel} debit was {_format_rupees(typical_debit_amount)} "
+        f"with a prior max of {_format_rupees(prior_max_debit)}."
+        if dominant_channel and same_channel_history
+        else f"In the previous {BASELINE_LOOKBACK_DAYS} days, the customer's typical debit was {_format_rupees(typical_debit_amount)} "
+        f"with a prior max of {_format_rupees(prior_max_debit)}."
+    )
+    comparison_summary = (
+        f"{baseline_prefix} The reviewed window shows {len(current_debits)} debit transaction(s) totaling "
+        f"{_format_rupees(review_window_debit_outflow)} with a peak debit of {_format_rupees(review_window_max_debit)}."
+    )
+    if anomalies:
+        comparison_summary = f"{comparison_summary} {' '.join(anomalies[:2])}"
+
+    return {
+        "available": True,
+        "lookback_days": BASELINE_LOOKBACK_DAYS,
+        "dominant_channel": dominant_channel,
+        "historical_debit_count": len(historical_debits),
+        "same_channel_history_count": len(same_channel_history),
+        "typical_debit_amount": typical_debit_amount,
+        "average_debit_amount": average_debit_amount,
+        "prior_max_debit": prior_max_debit,
+        "average_daily_debit_count": average_daily_debit_count,
+        "average_daily_debit_outflow": average_daily_debit_outflow,
+        "review_window_debit_count": len(current_debits),
+        "review_window_debit_outflow": review_window_debit_outflow,
+        "review_window_max_debit": review_window_max_debit,
+        "comparison_summary": comparison_summary,
+        "anomalies": anomalies,
+    }
+
+
+def _build_transaction_timeline(transactions: list[dict[str, Any]], reasons_by_txn: dict[str, set[str]]) -> list[dict[str, Any]]:
+    timeline: list[dict[str, Any]] = []
+
+    for transaction in transactions[:TIMELINE_ITEM_LIMIT]:
+        txn_id = str(transaction.get("txn_id") or "").strip()
+        transaction_type = str(transaction.get("type") or "").strip().lower() or "transaction"
+        channel = str(transaction.get("channel") or "").strip() or "Unknown channel"
+        beneficiary = str(transaction.get("beneficiary") or "").strip()
+        status = str(transaction.get("status") or "").strip().lower() or "unknown"
+        amount = float(transaction.get("amount") or 0.0)
+        is_new_beneficiary = bool(transaction.get("is_new_beneficiary"))
+        reasons = sorted(reasons_by_txn.get(txn_id) or [])
+
+        severity = "info"
+        if amount > HIGH_VALUE_THRESHOLD or any("Rapid" in reason or "Repeated" in reason for reason in reasons):
+            severity = "high"
+        elif reasons or is_new_beneficiary or _is_suspicious_beneficiary(beneficiary):
+            severity = "medium"
+
+        if transaction_type == "debit":
+            title = f"{channel} debit"
+            if beneficiary:
+                title = f"{title} to {beneficiary}"
+        elif transaction_type == "credit":
+            title = f"{channel} credit received"
+        else:
+            title = f"{channel} {transaction_type}".strip()
+
+        details_parts = [
+            f"{transaction_type.title()} of {_format_rupees(amount)}",
+            f"Status: {status.title()}",
+        ]
+        if transaction.get("account_id"):
+            details_parts.append(f"Account: {transaction.get('account_id')}")
+        if is_new_beneficiary:
+            details_parts.append("New beneficiary")
+        if beneficiary and transaction_type != "debit":
+            details_parts.append(f"Beneficiary: {beneficiary}")
+
+        timeline.append(
+            {
+                "txn_id": txn_id,
+                "timestamp": _format_datetime(transaction.get("timestamp") if isinstance(transaction.get("timestamp"), dt.datetime) else None) or "",
+                "amount": amount,
+                "type": transaction_type,
+                "channel": channel,
+                "beneficiary": beneficiary,
+                "account_id": str(transaction.get("account_id") or "").strip(),
+                "status": status,
+                "severity": severity,
+                "title": title,
+                "details": " | ".join(part for part in details_parts if part),
+                "reasons": reasons,
+            }
+        )
+
+    return timeline
+
+
 def _classify_fraud(pattern_names: set[str], flagged_transactions: list[dict[str, Any]]) -> str:
     if not flagged_transactions:
         return "No strong fraud signal in the selected window"
@@ -714,17 +942,24 @@ def _build_recommended_actions(risk_level: str, pattern_names: set[str], flagged
 
 def _fallback_reasoning_summary(customer: dict[str, Any], analysis: dict[str, Any]) -> str:
     patterns = analysis.get("suspicious_patterns") or []
+    baseline_summary = str((analysis.get("customer_baseline") or {}).get("comparison_summary") or "").strip()
     if not patterns:
-        return (
+        summary = (
             f"I reviewed the selected transaction window for {customer.get('name')} ({customer.get('cif_id')}) "
             "and did not find a strong fraud pattern in the available transactions."
         )
+        if baseline_summary:
+            summary = f"{summary} {baseline_summary}"
+        return summary
 
     pattern_text = "; ".join(item.get("details", "") for item in patterns[:3] if item.get("details"))
-    return (
+    summary = (
         f"I reviewed the selected transaction window for {customer.get('name')} ({customer.get('cif_id')}). "
         f"Risk is {analysis.get('risk_level', 'Medium')} because {pattern_text}"
     ).strip()
+    if baseline_summary:
+        summary = f"{summary} {baseline_summary}"
+    return summary
 
 
 def _build_reasoning_summary(customer: dict[str, Any], analysis: dict[str, Any]) -> str:
@@ -742,6 +977,8 @@ Fraud analysis:
 - Risk level: {analysis.get("risk_level")}
 - Fraud classification: {analysis.get("fraud_classification")}
 - Transaction summary: {analysis.get("transaction_summary")}
+- Customer baseline: {analysis.get("customer_baseline")}
+- Transaction timeline: {analysis.get("transaction_timeline")}
 - Suspicious patterns: {analysis.get("suspicious_patterns")}
 - Flagged transactions: {analysis.get("flagged_transactions")}
 - Recommended actions: {analysis.get("recommended_actions")}
@@ -817,6 +1054,7 @@ def _analyze_transactions(customer: dict[str, Any], transactions: list[dict[str,
             "fraud_classification": "No transactions found in the selected window",
             "suspicious_patterns": [],
             "flagged_transactions": [],
+            "transaction_timeline": [],
             "reviewed_transactions": [],
             "transaction_summary": {
                 "total_transactions": 0,
@@ -828,6 +1066,7 @@ def _analyze_transactions(customer: dict[str, Any], transactions: list[dict[str,
                 "new_beneficiary_transactions": 0,
                 "high_value_debits": 0,
             },
+            "customer_baseline": _build_customer_baseline(customer, transactions, start_datetime),
             "recommended_actions": [
                 "No transactions were found for the selected range. Ask for a different date range if further review is needed."
             ],
@@ -960,7 +1199,32 @@ def _analyze_transactions(customer: dict[str, Any], transactions: list[dict[str,
         pattern_names.add("Suspicious beneficiary naming pattern")
         risk_score += 20
 
+    customer_baseline = _build_customer_baseline(customer, transactions, start_datetime)
+    baseline_anomalies = customer_baseline.get("anomalies") or []
+    if baseline_anomalies:
+        baseline_candidates = sorted(
+            successful_debits,
+            key=lambda item: float(item.get("amount") or 0.0),
+            reverse=True,
+        )[: max(1, min(2, len(successful_debits)))]
+        baseline_reason = "Amount materially above customer baseline"
+        if customer_baseline.get("dominant_channel") and not customer_baseline.get("same_channel_history_count"):
+            baseline_reason = f"No recent {customer_baseline.get('dominant_channel')} debit history in customer baseline"
+        for transaction in baseline_candidates:
+            mark(transaction, baseline_reason)
+        suspicious_patterns.append(
+            {
+                "pattern": "Customer baseline deviation",
+                "severity": "high" if len(baseline_anomalies) >= 2 else "medium",
+                "details": str(customer_baseline.get("comparison_summary") or "").strip(),
+                "transaction_ids": [str(item.get("txn_id") or "").strip() for item in baseline_candidates],
+            }
+        )
+        pattern_names.add("Customer baseline deviation")
+        risk_score += 15 if len(baseline_anomalies) == 1 else 20
+
     flagged_transactions = _build_flagged_transactions(transactions, reasons_by_txn)
+    transaction_timeline = _build_transaction_timeline(transactions, reasons_by_txn)
     fraud_classification = _classify_fraud(pattern_names, flagged_transactions)
     risk_level = _risk_level_from_score(risk_score)
     recommended_actions = _build_recommended_actions(risk_level, pattern_names, flagged_transactions)
@@ -976,6 +1240,7 @@ def _analyze_transactions(customer: dict[str, Any], transactions: list[dict[str,
         "fraud_classification": fraud_classification,
         "suspicious_patterns": suspicious_patterns,
         "flagged_transactions": flagged_transactions,
+        "transaction_timeline": transaction_timeline,
         "reviewed_transactions": reviewed_transactions,
         "transaction_summary": {
             "total_transactions": len(transactions),
@@ -987,6 +1252,7 @@ def _analyze_transactions(customer: dict[str, Any], transactions: list[dict[str,
             "new_beneficiary_transactions": len(new_beneficiary_debits),
             "high_value_debits": len(high_value_debits),
         },
+        "customer_baseline": customer_baseline,
         "recommended_actions": recommended_actions,
     }
     analysis["reasoning_summary"] = _build_reasoning_summary(customer, analysis)
@@ -1399,6 +1665,7 @@ def _build_sop_grounding_query(case_description: str, customer: dict[str, Any], 
     ) or "No specific transaction IDs were flagged."
 
     channels = ", ".join(transaction_summary.get("channels") or []) or "No channels recorded"
+    baseline_summary = str((analysis.get("customer_baseline") or {}).get("comparison_summary") or "").strip() or "Baseline comparison was not available."
 
     return f"""
 Customer-reported case:
@@ -1417,6 +1684,7 @@ Reviewed transaction window:
 - Risk level from transaction review: {analysis.get("risk_level")}
 - Transaction-led classification: {analysis.get("fraud_classification")}
 - Transaction reasoning summary: {analysis.get("reasoning_summary")}
+- Customer baseline comparison: {baseline_summary}
 - Channels involved: {channels}
 - Suspicious patterns: {pattern_text}
 - Flagged transactions: {flagged_text}
@@ -1522,16 +1790,21 @@ def _build_combined_chat_response(customer: dict[str, Any], analysis: dict[str, 
         ]
         if item
     ) or "The supplied transaction review window"
+    baseline_summary = str((analysis.get("customer_baseline") or {}).get("comparison_summary") or "").strip()
 
-    return (
-        "Executive Summary:\n"
-        f"- Customer confirmed: {customer.get('name')} ({customer.get('cif_id')})\n"
-        f"- Review window: {review_window}\n"
-        f"- Risk level: {analysis.get('risk_level') or 'Medium'}\n"
-        f"- Likely fraud type: {analysis.get('fraud_classification') or 'Manual review required'}\n"
-        f"- Key concern: {primary_pattern}\n"
-        f"- Immediate next action: {first_action}"
-    )
+    lines = [
+        "Executive Summary:",
+        f"- Customer confirmed: {customer.get('name')} ({customer.get('cif_id')})",
+        f"- Review window: {review_window}",
+        f"- Risk level: {analysis.get('risk_level') or 'Medium'}",
+        f"- Likely fraud type: {analysis.get('fraud_classification') or 'Manual review required'}",
+        f"- Key concern: {primary_pattern}",
+    ]
+    if baseline_summary:
+        lines.append(f"- Customer baseline: {baseline_summary}")
+    lines.append(f"- Immediate next action: {first_action}")
+
+    return "\n".join(lines)
 
 
 def _build_documents_followup_prompt() -> str:
@@ -1568,6 +1841,20 @@ def _build_report_case_query(state: dict[str, Any], customer: dict[str, Any]) ->
         parts.append(f"Reviewed window: {start_datetime} to {end_datetime}")
 
     return ". ".join(part for part in parts if part).strip() or "Customer fraud investigation case"
+
+
+def _build_report_export_title(state: dict[str, Any], customer: dict[str, Any]) -> str:
+    customer_name = re.sub(r"[^A-Za-z0-9]+", "_", str(customer.get("name") or "").strip()).strip("_")
+    cif_id = re.sub(r"[^A-Za-z0-9]+", "_", str(customer.get("cif_id") or "").strip()).strip("_")
+    timestamp = _now().strftime("%Y%m%d_%H%M%S")
+
+    parts = ["AXIS_Investigation_Report"]
+    if cif_id:
+        parts.append(cif_id)
+    elif customer_name:
+        parts.append(customer_name)
+    parts.append(timestamp)
+    return "_".join(parts)
 
 
 def run_integrated_fraud_chat(user_context: dict[str, Any], query: str, state: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -1640,6 +1927,9 @@ def run_integrated_fraud_chat(user_context: dict[str, Any], query: str, state: d
         }
 
     if current_step == "generate_report":
+        documents: list[dict[str, Any]] = []
+        documents_title = ""
+
         if choice == "yes":
             if (user_context.get("permissions") or {}).get("canGenerateReport"):
                 analysis = normalized_state.get("latest_analysis") if isinstance(normalized_state.get("latest_analysis"), dict) else {}
@@ -1649,7 +1939,27 @@ def run_integrated_fraud_chat(user_context: dict[str, Any], query: str, state: d
                     or query
                 )
                 report = generate_investigation_report(report_query, user_context["bankId"], analysis)
-                response = f"Generated Investigation Report:\n\n{report}\n\n{_build_history_followup_prompt()}"
+                export_note = ""
+                try:
+                    report_export = export_investigation_report_pdf(
+                        report,
+                        report_title=_build_report_export_title(normalized_state, normalized_state.get("resolved_customer") or {}),
+                    )
+                    documents = [
+                        {
+                            "name": report_export["fileName"],
+                            "path": "",
+                            "fileId": "",
+                            "downloadUrl": report_export["downloadUrl"],
+                            "kind": "report_export",
+                            "buttonLabel": "Download Investigation Report PDF",
+                        }
+                    ]
+                    documents_title = "Investigation Report Export"
+                except Exception:
+                    export_note = "\n\nNote: The report was generated, but the downloadable PDF could not be prepared right now."
+
+                response = f"Generated Investigation Report:\n\n{report}{export_note}\n\n{_build_history_followup_prompt()}"
             else:
                 response = f"Automated investigation reports are not available for your role.\n\n{_build_history_followup_prompt()}"
             normalized_state["step"] = "historical_docs"
@@ -1669,8 +1979,8 @@ def run_integrated_fraud_chat(user_context: dict[str, Any], query: str, state: d
             "next_step": normalized_state.get("step"),
             "sessionId": session_id,
             "fraud_category": latest_analysis.get("fraud_category") or "",
-            "documents": [],
-            "documents_title": "",
+            "documents": documents,
+            "documents_title": documents_title,
             "conversation_state": {**normalized_state, "sessionId": session_id},
         }
 

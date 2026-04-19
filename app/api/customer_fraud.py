@@ -79,6 +79,21 @@ class FraudPatternPayload(BaseModel):
     transaction_ids: list[str] = Field(default_factory=list)
 
 
+class TransactionTimelineItemPayload(BaseModel):
+    txn_id: str
+    timestamp: str
+    amount: float
+    type: str
+    channel: str
+    beneficiary: str
+    account_id: str
+    status: str
+    severity: str
+    title: str
+    details: str
+    reasons: list[str] = Field(default_factory=list)
+
+
 class TransactionSummaryPayload(BaseModel):
     total_transactions: int
     debit_transactions: int
@@ -90,6 +105,24 @@ class TransactionSummaryPayload(BaseModel):
     high_value_debits: int
 
 
+class CustomerBaselinePayload(BaseModel):
+    available: bool
+    lookback_days: int
+    dominant_channel: str
+    historical_debit_count: int
+    same_channel_history_count: int
+    typical_debit_amount: float
+    average_debit_amount: float
+    prior_max_debit: float
+    average_daily_debit_count: float
+    average_daily_debit_outflow: float
+    review_window_debit_count: int
+    review_window_debit_outflow: float
+    review_window_max_debit: float
+    comparison_summary: str
+    anomalies: list[str] = Field(default_factory=list)
+
+
 class CustomerFraudAnalysisPayload(BaseModel):
     customer: CustomerRecordPayload
     query_window: QueryWindowPayload
@@ -98,8 +131,10 @@ class CustomerFraudAnalysisPayload(BaseModel):
     fraud_classification: str
     suspicious_patterns: list[FraudPatternPayload] = Field(default_factory=list)
     flagged_transactions: list[FlaggedTransactionPayload] = Field(default_factory=list)
+    transaction_timeline: list[TransactionTimelineItemPayload] = Field(default_factory=list)
     reviewed_transactions: list[ReviewedTransactionPayload] = Field(default_factory=list)
     transaction_summary: TransactionSummaryPayload
+    customer_baseline: CustomerBaselinePayload | dict[str, Any] = Field(default_factory=dict)
     reasoning_summary: str
     recommended_actions: list[str] = Field(default_factory=list)
 
