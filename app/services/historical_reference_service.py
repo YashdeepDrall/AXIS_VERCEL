@@ -27,6 +27,16 @@ def _clean_list(value: Any) -> list[str]:
     return []
 
 
+def _clean_amount(value: Any, default: float = 0.0) -> float:
+    if value is None:
+        return default
+    try:
+        amount = float(value)
+    except (TypeError, ValueError):
+        return default
+    return round(amount, 2)
+
+
 def _slugify(value: str) -> str:
     normalized = re.sub(r"[^a-z0-9]+", "-", _clean_text(value).lower())
     return normalized.strip("-") or "historical-case"
@@ -56,6 +66,9 @@ def _normalize_case_record(raw_case: dict[str, Any]) -> dict[str, Any]:
         "referenceTag": _clean_text(raw_case.get("referenceTag"), case_id),
         "category": _clean_text(raw_case.get("category"), "General Fraud Reference"),
         "channel": _clean_text(raw_case.get("channel"), "Multiple"),
+        "victimName": _clean_text(raw_case.get("victimName")),
+        "disputedAmount": _clean_amount(raw_case.get("disputedAmount")),
+        "amountSecured": _clean_amount(raw_case.get("amountSecured")),
         "caseWindow": _clean_text(raw_case.get("caseWindow")),
         "customerProfile": _clean_text(raw_case.get("customerProfile")),
         "incidentSummary": _clean_text(raw_case.get("incidentSummary")),
@@ -108,6 +121,9 @@ def list_historical_reference_cards(limit: int | None = None) -> list[dict[str, 
                 "referenceTag": _clean_text(raw_case.get("referenceTag")),
                 "category": _clean_text(raw_case.get("category"), "General Fraud Reference"),
                 "channel": _clean_text(raw_case.get("channel"), "Multiple"),
+                "victimName": _clean_text(raw_case.get("victimName")),
+                "disputedAmount": _clean_amount(raw_case.get("disputedAmount")),
+                "amountSecured": _clean_amount(raw_case.get("amountSecured")),
                 "caseWindow": _clean_text(raw_case.get("caseWindow")),
                 "customerProfile": _clean_text(raw_case.get("customerProfile")),
                 "incidentSummary": _clean_text(raw_case.get("incidentSummary")),
