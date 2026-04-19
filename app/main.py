@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from app.api import customer_fraud, fraud, seed
 from app.db.banking import ensure_banking_indexes
 from app.ml.vector_store import load_axis_documents, rebuild_vector_index
+from app.services.historical_reference_service import seed_historical_reference_cases
 
 
 app = FastAPI(title="AXIS Bank Fraud Investigation Assistant")
@@ -28,6 +29,12 @@ def startup_event():
         print("MongoDB banking indexes ready.")
     except Exception as exc:
         print(f"Banking seed setup warning: {exc}")
+
+    try:
+        historical_case_count = seed_historical_reference_cases()
+        print(f"Historical fraud reference cards ready: {historical_case_count}")
+    except Exception as exc:
+        print(f"Historical reference seed warning: {exc}")
 
 
 app.include_router(fraud.router)

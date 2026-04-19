@@ -16,6 +16,8 @@ class CustomerFraudConversationState(BaseModel):
     step: str | None = None
     sessionId: str | None = None
     cif_id: str | None = None
+    account_id: str | None = None
+    pan: str | None = None
     customer_name: str | None = None
     mobile: str | None = None
     start_datetime: str | None = None
@@ -45,6 +47,7 @@ class CustomerRecordPayload(BaseModel):
     cif_id: str
     name: str
     mobile: str
+    pan: str | None = None
     accounts: list[str] = Field(default_factory=list)
 
 

@@ -23,7 +23,7 @@ ROLE_PERMISSIONS = {
         "canDeleteChat": True,
         "canManageMembers": False,
         "canGenerateReport": True,
-        "canViewHistoricalCases": False,
+        "canViewHistoricalCases": True,
         "canDownloadDocuments": True,
         "canManageUsers": False,
     },

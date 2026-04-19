@@ -162,19 +162,25 @@ def _normalize_chat_history(items):
         if "content" in item and item.get("content") is not None:
             entry["content"] = str(item.get("content"))
 
+        if "title" in item and item.get("title") is not None:
+            entry["title"] = str(item.get("title"))
+
         if role == "documents":
             documents = []
             for document in item.get("items") or []:
                 if not isinstance(document, dict):
                     continue
-                doc = {
-                    "name": str(document.get("name") or "Document"),
-                    "path": str(document.get("path") or ""),
-                    "fileId": str(document.get("fileId") or ""),
-                    "downloadUrl": str(document.get("downloadUrl") or ""),
-                }
+                doc = deepcopy(document)
+                doc["name"] = str(document.get("name") or "Document")
+                doc["path"] = ""
+                doc["fileId"] = str(document.get("fileId") or "")
+                doc["downloadUrl"] = str(document.get("downloadUrl") or "")
+                doc["suspiciousIndicators"] = [str(item).strip() for item in document.get("suspiciousIndicators") or [] if str(item).strip()]
+                doc["investigationHighlights"] = [str(item).strip() for item in document.get("investigationHighlights") or [] if str(item).strip()]
                 documents.append(doc)
             entry["items"] = documents
+        elif role == "analysis" and isinstance(item.get("analysis"), dict):
+            entry["analysis"] = deepcopy(item.get("analysis"))
 
         normalized.append(entry)
 
@@ -185,12 +191,7 @@ def _normalize_conversation_state(state):
     if not isinstance(state, dict):
         return {}
 
-    return {
-        "step": state.get("step"),
-        "analysis": state.get("analysis") if isinstance(state.get("analysis"), dict) else {},
-        "case_query": state.get("case_query"),
-        "sessionId": state.get("sessionId"),
-    }
+    return deepcopy(state)
 
 
 def _conversation_member_ids(conversation):
@@ -349,6 +350,7 @@ def _prepare_conversation_for_store(user_context, payload, existing=None):
     chat_history_source = payload.get("chatHistory") if can_update_content else existing.get("chatHistory")
     fraud_category_source = payload.get("fraudCategory") if can_update_content else existing.get("fraudCategory")
     conversation_state_source = payload.get("conversationState") if can_update_content else existing.get("conversationState")
+    workflow_mode_source = payload.get("workflowMode") if can_update_content else existing.get("workflowMode")
 
     return {
         "id": str(payload.get("id") or existing.get("id") or "").strip(),
@@ -365,6 +367,7 @@ def _prepare_conversation_for_store(user_context, payload, existing=None):
         "chatHistory": _normalize_chat_history(chat_history_source or existing.get("chatHistory") or []),
         "fraudCategory": str(fraud_category_source or existing.get("fraudCategory") or ""),
         "conversationState": _normalize_conversation_state(conversation_state_source or existing.get("conversationState") or {}),
+        "workflowMode": str(workflow_mode_source or existing.get("workflowMode") or "blueprint").strip() or "blueprint",
     }
 
 

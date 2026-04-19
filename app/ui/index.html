@@ -162,15 +162,16 @@
     }
 
     .chat-history {
-      min-height: 360px;
-      max-height: 62vh;
-      overflow-y: auto;
-      padding-right: 6px;
+      width: min(860px, 100%);
+      min-height: 0;
+      margin: 0 auto;
+      display: grid;
+      gap: 12px;
     }
 
     .chat-row {
       display: flex;
-      margin: 10px 0;
+      margin: 0;
     }
 
     .chat-row.left {
@@ -182,7 +183,7 @@
     }
 
     .bubble {
-      max-width: min(72ch, 76%);
+      max-width: min(74ch, 100%);
       padding: 12px 14px;
       border-radius: 8px;
       line-height: 1.5;
@@ -208,12 +209,14 @@
     }
 
     .documents-card {
-      width: min(72ch, 76%);
+      width: min(74ch, 100%);
       padding: 14px 16px;
       border-radius: 8px;
       background: var(--panel-solid);
       border: 1px solid var(--line);
       box-shadow: 0 8px 20px rgba(34, 21, 27, 0.08);
+      display: grid;
+      gap: 10px;
     }
 
     .documents-title {
@@ -228,6 +231,114 @@
     .document-name {
       margin-bottom: 6px;
       font-weight: 600;
+    }
+
+    .reference-item {
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.88);
+      display: grid;
+      gap: 10px;
+    }
+
+    .reference-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .reference-title {
+      margin: 0;
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .reference-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(165, 0, 52, 0.08);
+      color: var(--primary);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .reference-meta,
+    .reference-copy,
+    .reference-section li {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.86rem;
+    }
+
+    .reference-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .reference-metric {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.84);
+      display: grid;
+      gap: 4px;
+    }
+
+    .reference-metric span {
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    .reference-metric strong {
+      font-size: 0.88rem;
+      color: var(--ink);
+    }
+
+    .reference-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .reference-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(52, 84, 209, 0.08);
+      color: #3454d1;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .reference-section {
+      display: grid;
+      gap: 6px;
+    }
+
+    .reference-section strong {
+      font-size: 0.82rem;
+      color: var(--ink);
+    }
+
+    .reference-section ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 4px;
     }
 
     .download-link {
@@ -247,7 +358,8 @@
 
     .status,
     .error {
-      margin-top: 14px;
+      width: min(860px, 100%);
+      margin: 12px auto 0;
       border-radius: 8px;
       padding: 12px 14px;
       font-size: 0.92rem;
@@ -837,14 +949,81 @@
     .content-shell {
       min-height: 0;
       overflow-y: auto;
-      padding: 0 22px 150px;
+      padding: 0 22px 108px;
     }
 
     .welcome {
       width: min(860px, 100%);
-      margin: 34px auto 18px;
+      margin: 28px auto 16px;
       display: grid;
       gap: 16px;
+    }
+
+    .welcome-board {
+      padding: 22px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 247, 249, 0.92) 52%, rgba(238, 248, 246, 0.86) 100%);
+      box-shadow: 0 20px 44px rgba(34, 21, 27, 0.1);
+      display: grid;
+      gap: 16px;
+    }
+
+    .welcome-copy {
+      display: grid;
+      gap: 8px;
+    }
+
+    .welcome-title {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .welcome-card {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.82);
+      display: grid;
+      gap: 6px;
+    }
+
+    .welcome-card strong {
+      font-size: 0.92rem;
+    }
+
+    .welcome-card span,
+    .welcome-note {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .welcome-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .welcome-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 700;
     }
 
     .suggestions {
@@ -876,8 +1055,242 @@
       position: sticky;
       bottom: 0;
       z-index: 6;
-      padding: 14px 22px 22px;
+      padding: 10px 22px 16px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.88) 35%, rgba(255, 255, 255, 0.98) 100%);
+    }
+
+    .workflow-strip {
+      width: min(860px, 100%);
+      margin: 0 auto 12px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 14px 28px rgba(34, 21, 27, 0.08);
+      display: grid;
+      gap: 10px;
+    }
+
+    .workflow-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .workflow-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    .workflow-switcher {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .workflow-chip {
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.96);
+      color: var(--ink);
+      box-shadow: none;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .workflow-chip:hover:not(:disabled) {
+      transform: none;
+      box-shadow: 0 8px 18px rgba(34, 21, 27, 0.08);
+    }
+
+    .workflow-chip.is-active {
+      color: #ffffff;
+      border-color: transparent;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 100%);
+      box-shadow: 0 10px 22px rgba(165, 0, 52, 0.22);
+    }
+
+    .workflow-copy {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .customer-analysis-panel {
+      width: min(860px, 100%);
+      margin: 0 auto 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .analysis-card {
+      width: min(860px, 100%);
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 247, 249, 0.94) 100%);
+      box-shadow: 0 18px 36px rgba(34, 21, 27, 0.1);
+      display: grid;
+      gap: 16px;
+    }
+
+    .analysis-row {
+      justify-content: flex-start;
+    }
+
+    .analysis-top,
+    .analysis-meta {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .analysis-eyebrow {
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    .analysis-title {
+      margin: 6px 0 0;
+      font-size: 1.22rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .analysis-meta-copy,
+    .analysis-summary,
+    .analysis-empty,
+    .analysis-transaction-meta,
+    .analysis-section li {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .analysis-risk {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      border: 1px solid transparent;
+    }
+
+    .analysis-risk-high {
+      background: rgba(180, 35, 24, 0.12);
+      color: var(--danger);
+      border-color: rgba(180, 35, 24, 0.16);
+    }
+
+    .analysis-risk-medium {
+      background: rgba(153, 108, 0, 0.12);
+      color: #996c00;
+      border-color: rgba(153, 108, 0, 0.18);
+    }
+
+    .analysis-risk-low {
+      background: rgba(15, 118, 110, 0.12);
+      color: #0f766e;
+      border-color: rgba(15, 118, 110, 0.16);
+    }
+
+    .analysis-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+      gap: 10px;
+    }
+
+    .analysis-metric {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.84);
+      display: grid;
+      gap: 4px;
+    }
+
+    .analysis-metric-label {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .analysis-metric-value {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .analysis-section {
+      display: grid;
+      gap: 10px;
+    }
+
+    .analysis-section-title {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .analysis-section ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .analysis-transactions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .analysis-transaction {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.86);
+      display: grid;
+      gap: 6px;
+    }
+
+    .analysis-transaction strong {
+      display: block;
+      font-size: 0.92rem;
+    }
+
+    .analysis-reasons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .analysis-reason {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(165, 0, 52, 0.08);
+      color: var(--primary);
+      font-size: 0.75rem;
+      font-weight: 700;
     }
 
     .composer-shell {
@@ -917,13 +1330,21 @@
       min-height: 42px;
       max-height: 150px;
       resize: none;
-      padding: 10px 0;
+      padding: 10px 4px;
       border-radius: 0;
       border: 0;
       background: transparent;
       font-family: inherit;
       font-size: 0.95rem;
-      line-height: 1.5;
+      line-height: 1.45;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+    }
+
+    .composer-shell textarea::placeholder {
+      color: rgba(96, 84, 90, 0.92);
+      opacity: 1;
     }
 
     .composer-aux {
@@ -1029,6 +1450,15 @@
         grid-template-columns: 1fr;
       }
 
+      .welcome-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .analysis-top,
+      .analysis-meta {
+        flex-direction: column;
+      }
+
       .user-form-grid {
         grid-template-columns: 1fr;
       }
@@ -1124,17 +1554,69 @@
           </div>
         </div>
 
-        <div class="content-shell">
+        <div id="contentShell" class="content-shell">
           <div id="welcomeState" class="welcome">
-            <p class="subtitle">Start a case from the bottom composer. Every new thread stays in Recent chats on the left.</p>
+            <div class="welcome-board">
+              <div class="welcome-copy">
+                <span class="workflow-label">Unified Fraud Review</span>
+                <h2 class="welcome-title">One assistant for customer verification, transaction review, and SOP-grounded fraud reasoning.</h2>
+                <p class="subtitle">Start with the case summary, then give one unique customer identifier. Name alone is not enough for confirmation.</p>
+              </div>
+              <div class="welcome-grid">
+                <div class="welcome-card">
+                  <strong>1. Describe The Case</strong>
+                  <span>Explain what happened: repeated debits, new beneficiary transfer, unusual withdrawal, phishing complaint, or unauthorized UPI activity.</span>
+                </div>
+                <div class="welcome-card">
+                  <strong>2. Add One Unique Identifier</strong>
+                  <span>Use CIF ID, account number, PAN, or registered mobile number. If only a name is entered, the chatbot will ask for a unique identifier first.</span>
+                </div>
+                <div class="welcome-card">
+                  <strong>3. Add Review Window</strong>
+                  <span>Share the date-time range to inspect. Example: <code>2026-04-17 00:00 to 2026-04-18 23:59</code> or <code>last 3 days</code>.</span>
+                </div>
+              </div>
+              <div class="welcome-chips">
+                <span class="welcome-chip">CIF ID</span>
+                <span class="welcome-chip">Account Number</span>
+                <span class="welcome-chip">PAN</span>
+                <span class="welcome-chip">Registered Mobile</span>
+              </div>
+              <div class="welcome-note">After the review, the assistant can also fetch relevant blueprint documents, generate an investigation report, and show historical fraud references in the same conversation.</div>
+              <div class="suggestions">
+                <button class="suggestion" type="button" data-suggestion="Customer reported repeated UPI debits without approval. CIF1001 from 2026-04-17 00:00 to 2026-04-18 23:59.">
+                  Full Case Example
+                  <span>Starts the complete review with case summary, unique identifier, and date-time window.</span>
+                </button>
+                <button class="suggestion" type="button" data-suggestion="Rahul S">
+                  Name Only Example
+                  <span>Shows the strict flow where the chatbot asks for a unique identifier before continuing.</span>
+                </button>
+                <button class="suggestion" type="button" data-suggestion="Customer says money moved to a new beneficiary without approval. Account 918020000000001 from 2026-04-17 00:00 to 2026-04-18 23:59.">
+                  Account Lookup Example
+                  <span>Demonstrates account-number-based customer confirmation with fraud reasoning and SOP grounding.</span>
+                </button>
+              </div>
+            </div>
           </div>
 
+          <div id="customerFraudPanel" class="customer-analysis-panel hidden"></div>
           <div id="chatHistory" class="chat-history hidden"></div>
           <div id="chatStatus" class="status hidden"></div>
           <div id="chatError" class="error hidden"></div>
         </div>
 
         <div class="composer-dock">
+          <div class="workflow-strip hidden">
+            <div class="workflow-header">
+              <span class="workflow-label">Workflow</span>
+              <div class="workflow-switcher" role="group" aria-label="Choose chat workflow">
+                <button id="workflowBlueprintButton" class="workflow-chip" type="button" aria-pressed="false">Blueprint Assistant</button>
+                <button id="workflowCustomerFraudButton" class="workflow-chip" type="button" aria-pressed="false">Customer Fraud Review</button>
+              </div>
+            </div>
+            <div id="workflowCopy" class="workflow-copy">This assistant combines customer confirmation, transaction review, suspicious-pattern reasoning, and SOP-grounded guidance in one conversation.</div>
+          </div>
           <form id="composerForm" class="composer-shell">
             <div class="composer-tools-wrap">
               <button id="composerMenuButton" class="ghost-action" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="composerToolsMenu">+</button>
@@ -1142,12 +1624,12 @@
                 <button id="composerNewChatButton" class="menu-btn" type="button">New chat</button>
               </div>
             </div>
-            <textarea id="chatInput" rows="1" placeholder="Ask anything about an AXIS Bank fraud case"></textarea>
+            <textarea id="chatInput" rows="1" placeholder="Describe the case, add CIF/account/PAN/mobile, and review dates"></textarea>
             <button id="sendButton" type="submit">Send</button>
           </form>
           <div class="composer-aux">
-            <span id="composerHint">Every new thread stays in Recent chats until deleted.</span>
-            <span id="composerMeta">AXIS Blueprint grounded responses</span>
+            <span id="composerHint">Start with the case summary, then add one unique identifier: CIF ID, account number, PAN, or registered mobile.</span>
+            <span id="composerMeta">Customer + transaction + SOP combined analysis</span>
           </div>
         </div>
       </section>
@@ -1236,6 +1718,28 @@
     const API_RETRY_BACKOFF_MS = 3000;
     const TRANSIENT_STATUS_CODES = new Set([429, 502, 503, 504]);
     const FOLLOWUP_ANSWERS = new Set(["yes", "y", "yeah", "yep", "sure", "ok", "okay", "no", "n", "nope", "nah", "nothing"]);
+    const WORKFLOW_MODES = Object.freeze({
+      blueprint: {
+        key: "blueprint",
+        label: "Case Assistant",
+        shortLabel: "Case Review",
+        endpoint: "/chat",
+        initialPrompt: "Hello. Please describe the case, then share one unique customer identifier such as CIF ID, account number, PAN, or registered mobile number, and the review date-time range if you know it.",
+        placeholder: "Describe the case, add CIF/account/PAN/mobile, and review dates",
+        meta: "Customer + transaction + SOP combined analysis",
+        hint: "This assistant combines customer confirmation, transaction review, suspicious-pattern reasoning, SOP grounding, blueprint documents, report generation, and historical references in one conversation."
+      },
+      customer_fraud: {
+        key: "customer_fraud",
+        label: "Case Assistant",
+        shortLabel: "Case Review",
+        endpoint: "/chat",
+        initialPrompt: "Hello. Please describe the case, then share one unique customer identifier such as CIF ID, account number, PAN, or registered mobile number, and the review date-time range if you know it.",
+        placeholder: "Describe the case, add CIF/account/PAN/mobile, and review dates",
+        meta: "Customer + transaction + SOP combined analysis",
+        hint: "This assistant combines customer confirmation, transaction review, suspicious-pattern reasoning, SOP grounding, blueprint documents, report generation, and historical references in one conversation."
+      }
+    });
     const MEMBER_COLORS = ["#a50034", "#0f766e", "#3454d1", "#996c00"];
     const ROLE_LABELS = {
       investigator: "Investigator",
@@ -1285,12 +1789,17 @@
       profileDeleteChatButton: document.getElementById("profileDeleteChatButton"),
       quickThemeButton: document.getElementById("quickThemeButton"),
       logoutButton: document.getElementById("logoutButton"),
+      contentShell: document.getElementById("contentShell"),
       welcomeState: document.getElementById("welcomeState"),
+      customerFraudPanel: document.getElementById("customerFraudPanel"),
       chatHistory: document.getElementById("chatHistory"),
       chatStatus: document.getElementById("chatStatus"),
       chatError: document.getElementById("chatError"),
       composerForm: document.getElementById("composerForm"),
       composerMenuButton: document.getElementById("composerMenuButton"),
+      workflowBlueprintButton: document.getElementById("workflowBlueprintButton"),
+      workflowCustomerFraudButton: document.getElementById("workflowCustomerFraudButton"),
+      workflowCopy: document.getElementById("workflowCopy"),
       chatInput: document.getElementById("chatInput"),
       sendButton: document.getElementById("sendButton"),
       composerMeta: document.getElementById("composerMeta"),
@@ -1349,8 +1858,37 @@
       activityActorFilter: []
     };
 
-    function defaultConversationState() {
-      return { step: null, analysis: {}, case_query: null, sessionId: "" };
+    function normalizeWorkflowMode(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      return Object.prototype.hasOwnProperty.call(WORKFLOW_MODES, normalized) ? normalized : "blueprint";
+    }
+
+    function workflowConfig(mode) {
+      return WORKFLOW_MODES[normalizeWorkflowMode(mode)];
+    }
+
+    function currentWorkflowMode(conversation = activeConversation()) {
+      return "customer_fraud";
+    }
+
+    function defaultConversationState(mode = "blueprint") {
+      return {
+        step: null,
+        sessionId: "",
+        case_query: null,
+        case_description: null,
+        cif_id: null,
+        account_id: null,
+        pan: null,
+        customer_name: null,
+        mobile: null,
+        start_datetime: null,
+        end_datetime: null,
+        resolved_customer: {},
+        missing_fields: [],
+        latest_analysis: {},
+        sop_analysis: {}
+      };
     }
 
     function emptyPermissions() {
@@ -1386,9 +1924,9 @@
       return items.length ? items.join(", ") : "read-only workspace access";
     }
 
-    function defaultChatInputPlaceholder() {
+    function defaultChatInputPlaceholder(conversation) {
       return can("canChat")
-        ? "Ask anything about an AXIS Bank fraud case"
+        ? workflowConfig(currentWorkflowMode(conversation)).placeholder
         : `${roleLabel(state.role)} access is read-only for chat input`;
     }
 
@@ -1441,7 +1979,23 @@
       };
     }
 
+    function normalizeChatHistoryItems(items) {
+      if (!Array.isArray(items)) return [];
+      return items.map((item) => {
+        if (!item || typeof item !== "object") return item;
+        const normalized = { ...item };
+        if (normalized.role === "documents" && Array.isArray(normalized.items)) {
+          normalized.items = normalized.items.map((doc) => ({
+            ...doc,
+            path: ""
+          }));
+        }
+        return normalized;
+      });
+    }
+
     function createConversation(seed = {}) {
+      const workflowMode = normalizeWorkflowMode(seed.workflowMode);
       return {
         id: seed.id || makeId(),
         title: seed.title || "New chat",
@@ -1452,9 +2006,10 @@
         ownerRole: seed.ownerRole || "",
         ownerRoleLabel: seed.ownerRoleLabel || "",
         members: Array.isArray(seed.members) ? seed.members : [],
-        chatHistory: Array.isArray(seed.chatHistory) ? seed.chatHistory : [],
+        chatHistory: normalizeChatHistoryItems(seed.chatHistory),
         fraudCategory: seed.fraudCategory || "",
-        conversationState: { ...defaultConversationState(), ...(seed.conversationState || {}) },
+        workflowMode,
+        conversationState: { ...defaultConversationState(workflowMode), ...(seed.conversationState || {}) },
         capabilities: { ...(seed.capabilities || {}) }
       };
     }
@@ -1529,7 +2084,7 @@
         members: (rawConversation && rawConversation.members ? rawConversation.members : []).map(normalizeConversationMember).filter(Boolean),
         chatHistory: Array.isArray(rawConversation && rawConversation.chatHistory) ? rawConversation.chatHistory : [],
         conversationState: {
-          ...defaultConversationState(),
+          ...defaultConversationState(normalizeWorkflowMode(rawConversation && rawConversation.workflowMode)),
           ...((rawConversation && rawConversation.conversationState) || {})
         }
       });
@@ -1652,6 +2207,17 @@
       });
     }
 
+    function formatCurrency(value) {
+      const amount = Number(value || 0);
+      if (!Number.isFinite(amount)) return "Rs. 0.00";
+      return amount.toLocaleString("en-IN", {
+        style: "currency",
+        currency: "INR",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
     function selectedCheckboxValues(container) {
       if (!container) return [];
       return Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
@@ -1765,6 +2331,7 @@
       const capabilities = conversationCapabilities(conversation);
       const ownerName = conversationOwnerName(conversation);
       const parts = [];
+      parts.push(workflowConfig(currentWorkflowMode(conversation)).shortLabel);
 
       if (conversation.fraudCategory) {
         parts.push(conversation.fraudCategory);
@@ -1836,8 +2403,47 @@
     function ensureInitialPrompt() {
       const conversation = activeConversation();
       if (!state.loggedIn || !conversation || conversation.chatHistory.length) return;
-      conversation.chatHistory.push({ role: "prompt", content: "Hello. Please provide details about the AXIS Bank fraud case." });
+      conversation.chatHistory.push({ role: "prompt", content: workflowConfig(currentWorkflowMode(conversation)).initialPrompt });
       saveState();
+    }
+
+    function hasMeaningfulConversationHistory(conversation) {
+      return Boolean((conversation && conversation.chatHistory || []).some((item) => item.role !== "prompt"));
+    }
+
+    async function setConversationWorkflow(nextMode) {
+      const conversation = activeConversation();
+      if (!conversation) return;
+
+      const normalizedMode = normalizeWorkflowMode(nextMode);
+      if (currentWorkflowMode(conversation) === normalizedMode) return;
+
+      if (hasMeaningfulConversationHistory(conversation)) {
+        const confirmed = window.confirm("Switching workflow will clear the current thread so the new assistant can start fresh. Continue?");
+        if (!confirmed) return;
+      }
+
+      const previousConversation = JSON.parse(JSON.stringify(conversation));
+      updateConversation(conversation.id, (current) => ({
+        ...current,
+        workflowMode: normalizedMode,
+        fraudCategory: "",
+        chatHistory: [],
+        conversationState: defaultConversationState(normalizedMode),
+        updatedAt: new Date().toISOString()
+      }));
+
+      setError("");
+      setStatus("");
+
+      try {
+        await syncConversation(conversation.id);
+      } catch (error) {
+        updateConversation(conversation.id, () => previousConversation);
+        setError(`Workflow Switch Error: ${error.message}`);
+      }
+
+      render();
     }
 
     function setHidden(element, hidden) {
@@ -1929,31 +2535,399 @@
       setHidden(els.chatStatus, !message);
     }
 
-    function renderDocuments(items) {
+    function renderDocuments(items, titleText = "Relevant Blueprint Documentation") {
       const row = document.createElement("div");
       row.className = "chat-row left";
       const card = document.createElement("div");
       card.className = "documents-card";
       const title = document.createElement("div");
       title.className = "documents-title";
-      title.textContent = "Relevant Blueprint Documentation";
+      title.textContent = titleText;
       card.appendChild(title);
       for (const doc of items) {
-        const item = document.createElement("div");
-        item.className = "document-item";
-        item.innerHTML = `<div class="document-name">${doc.name || "Document"}</div>`;
-        if (doc.fileId) {
+        const hasDownload = Boolean(doc.fileId || doc.downloadUrl);
+        const isRichReference = Boolean(
+          doc.incidentSummary
+          || doc.transactionPattern
+          || (Array.isArray(doc.suspiciousIndicators) && doc.suspiciousIndicators.length)
+          || (Array.isArray(doc.investigationHighlights) && doc.investigationHighlights.length)
+          || doc.sopRelevance
+        );
+        if (hasDownload) {
           const link = document.createElement("a");
           link.className = "download-link";
           link.href = doc.downloadUrl || `/documents/${encodeURIComponent(doc.fileId)}`;
-          link.textContent = `Download ${doc.name || "Document"}`;
+          const docName = String(doc.name || "").trim().toLowerCase();
+          link.textContent = docName.includes("blueprint") || docName.includes("sop")
+            ? "Download AXIS SOP PDF"
+            : `Download ${doc.name || "Document"}`;
           link.setAttribute("download", "");
-          item.appendChild(link);
+          card.appendChild(link);
+        } else if (isRichReference) {
+          const item = document.createElement("article");
+          item.className = "reference-item";
+
+          const top = document.createElement("div");
+          top.className = "reference-top";
+
+          const heading = document.createElement("h4");
+          heading.className = "reference-title";
+          heading.textContent = doc.name || "Historical Fraud Reference";
+          top.appendChild(heading);
+
+          if (doc.referenceTag) {
+            const tag = document.createElement("span");
+            tag.className = "reference-tag";
+            tag.textContent = doc.referenceTag;
+            top.appendChild(tag);
+          }
+
+          item.appendChild(top);
+
+          const metrics = document.createElement("div");
+          metrics.className = "reference-grid";
+
+          const categoryMetric = document.createElement("div");
+          categoryMetric.className = "reference-metric";
+          categoryMetric.innerHTML = `<span>Fraud Type</span><strong>${doc.category || "General Fraud Reference"}</strong>`;
+          metrics.appendChild(categoryMetric);
+
+          const channelMetric = document.createElement("div");
+          channelMetric.className = "reference-metric";
+          channelMetric.innerHTML = `<span>Channel</span><strong>${doc.channel || "Multiple"}</strong>`;
+          metrics.appendChild(channelMetric);
+
+          if (doc.caseWindow) {
+            const windowMetric = document.createElement("div");
+            windowMetric.className = "reference-metric";
+            windowMetric.innerHTML = `<span>Incident Window</span><strong>${doc.caseWindow}</strong>`;
+            metrics.appendChild(windowMetric);
+          }
+
+          item.appendChild(metrics);
+
+          if (doc.customerProfile) {
+            const profile = document.createElement("div");
+            profile.className = "reference-copy";
+            profile.textContent = `Profile: ${doc.customerProfile}`;
+            item.appendChild(profile);
+          }
+
+          if (doc.incidentSummary) {
+            const summary = document.createElement("div");
+            summary.className = "reference-section";
+            summary.innerHTML = `<strong>Incident Summary</strong><div class="reference-copy">${doc.incidentSummary}</div>`;
+            item.appendChild(summary);
+          }
+
+          if (doc.transactionPattern) {
+            const pattern = document.createElement("div");
+            pattern.className = "reference-section";
+            pattern.innerHTML = `<strong>Pattern Observed</strong><div class="reference-copy">${doc.transactionPattern}</div>`;
+            item.appendChild(pattern);
+          }
+
+          if (Array.isArray(doc.suspiciousIndicators) && doc.suspiciousIndicators.length) {
+            const indicators = document.createElement("div");
+            indicators.className = "reference-section";
+            const label = document.createElement("strong");
+            label.textContent = "Suspicious Indicators";
+            indicators.appendChild(label);
+            const chipRow = document.createElement("div");
+            chipRow.className = "reference-chip-row";
+            for (const indicator of doc.suspiciousIndicators.slice(0, 5)) {
+              const chip = document.createElement("span");
+              chip.className = "reference-chip";
+              chip.textContent = indicator;
+              chipRow.appendChild(chip);
+            }
+            indicators.appendChild(chipRow);
+            item.appendChild(indicators);
+          }
+
+          if (Array.isArray(doc.investigationHighlights) && doc.investigationHighlights.length) {
+            const highlights = document.createElement("div");
+            highlights.className = "reference-section";
+            const label = document.createElement("strong");
+            label.textContent = "Investigation Highlights";
+            highlights.appendChild(label);
+            const list = document.createElement("ul");
+            for (const highlight of doc.investigationHighlights.slice(0, 4)) {
+              const li = document.createElement("li");
+              li.textContent = highlight;
+              list.appendChild(li);
+            }
+            highlights.appendChild(list);
+            item.appendChild(highlights);
+          }
+
+          for (const [labelText, value] of [
+            ["Action Taken", doc.actionTaken],
+            ["Outcome", doc.outcome],
+            ["SOP Relevance", doc.sopRelevance],
+            ["Investigator Learning", doc.learning]
+          ]) {
+            if (!value) continue;
+            const section = document.createElement("div");
+            section.className = "reference-section";
+            section.innerHTML = `<strong>${labelText}</strong><div class="reference-copy">${value}</div>`;
+            item.appendChild(section);
+          }
+
+          card.appendChild(item);
+        } else if (doc.name) {
+          const item = document.createElement("div");
+          item.className = "document-item";
+          item.textContent = doc.name;
+          card.appendChild(item);
         }
-        card.appendChild(item);
       }
       row.appendChild(card);
       els.chatHistory.appendChild(row);
+    }
+
+    function latestCustomerFraudAnalysis(conversation) {
+      if (!conversation) return null;
+      const analysis = conversation.conversationState && typeof conversation.conversationState.latest_analysis === "object"
+        ? conversation.conversationState.latest_analysis
+        : null;
+      return analysis && Object.keys(analysis).length ? analysis : null;
+    }
+
+    function buildAnalysisMetric(label, value) {
+      const metric = document.createElement("div");
+      metric.className = "analysis-metric";
+
+      const metricLabel = document.createElement("span");
+      metricLabel.className = "analysis-metric-label";
+      metricLabel.textContent = label;
+
+      const metricValue = document.createElement("strong");
+      metricValue.className = "analysis-metric-value";
+      metricValue.textContent = value;
+
+      metric.appendChild(metricLabel);
+      metric.appendChild(metricValue);
+      return metric;
+    }
+
+    function buildCustomerFraudCard(analysis) {
+      const card = document.createElement("section");
+      card.className = "analysis-card";
+
+      const customer = analysis.customer || {};
+      const queryWindow = analysis.query_window || {};
+      const summary = analysis.transaction_summary || {};
+      const patterns = Array.isArray(analysis.suspicious_patterns) ? analysis.suspicious_patterns : [];
+      const flaggedTransactions = Array.isArray(analysis.flagged_transactions) ? analysis.flagged_transactions : [];
+      const actions = Array.isArray(analysis.recommended_actions) ? analysis.recommended_actions : [];
+      const riskLevel = String(analysis.risk_level || "Low").trim() || "Low";
+
+      const top = document.createElement("div");
+      top.className = "analysis-top";
+
+      const topCopy = document.createElement("div");
+
+      const eyebrow = document.createElement("div");
+      eyebrow.className = "analysis-eyebrow";
+      eyebrow.textContent = "Structured Fraud Review";
+
+      const title = document.createElement("h3");
+      title.className = "analysis-title";
+      title.textContent = customer.name
+        ? `${customer.name} (${customer.cif_id || "CIF Pending"})`
+        : "Customer fraud review";
+
+      const meta = document.createElement("div");
+      meta.className = "analysis-meta-copy";
+      meta.textContent = [
+        customer.mobile ? `Mobile: ${customer.mobile}` : "",
+        customer.pan ? `PAN: ${customer.pan}` : "",
+        Array.isArray(customer.accounts) && customer.accounts.length ? `Accounts: ${customer.accounts.join(", ")}` : "",
+        queryWindow.start_datetime && queryWindow.end_datetime
+          ? `Window: ${formatDateTime(queryWindow.start_datetime)} to ${formatDateTime(queryWindow.end_datetime)}`
+          : ""
+      ].filter(Boolean).join(" | ");
+
+      topCopy.appendChild(eyebrow);
+      topCopy.appendChild(title);
+      if (meta.textContent) topCopy.appendChild(meta);
+
+      const riskBadge = document.createElement("span");
+      riskBadge.className = `analysis-risk analysis-risk-${String(riskLevel).toLowerCase()}`;
+      riskBadge.textContent = `${riskLevel} Risk`;
+
+      top.appendChild(topCopy);
+      top.appendChild(riskBadge);
+      card.appendChild(top);
+
+      const metrics = document.createElement("div");
+      metrics.className = "analysis-metrics";
+      metrics.appendChild(buildAnalysisMetric("Risk Score", String(analysis.risk_score || 0)));
+      metrics.appendChild(buildAnalysisMetric("Transactions", String(summary.total_transactions || 0)));
+      metrics.appendChild(buildAnalysisMetric("Debit Outflow", formatCurrency(summary.total_debit_amount)));
+      metrics.appendChild(buildAnalysisMetric("Flagged", String(flaggedTransactions.length)));
+      metrics.appendChild(buildAnalysisMetric("New Beneficiaries", String(summary.new_beneficiary_transactions || 0)));
+      metrics.appendChild(buildAnalysisMetric("High-Value Debits", String(summary.high_value_debits || 0)));
+      card.appendChild(metrics);
+
+      if (analysis.case_description) {
+        const caseSection = document.createElement("div");
+        caseSection.className = "analysis-section";
+        const caseTitle = document.createElement("h4");
+        caseTitle.className = "analysis-section-title";
+        caseTitle.textContent = "Case Narrative";
+        const caseBody = document.createElement("div");
+        caseBody.className = "analysis-summary";
+        caseBody.textContent = analysis.case_description;
+        caseSection.appendChild(caseTitle);
+        caseSection.appendChild(caseBody);
+        card.appendChild(caseSection);
+      }
+
+      const reasoningSection = document.createElement("div");
+      reasoningSection.className = "analysis-section";
+      const reasoningTitle = document.createElement("h4");
+      reasoningTitle.className = "analysis-section-title";
+      reasoningTitle.textContent = analysis.fraud_classification || "Fraud assessment";
+      const reasoningSummary = document.createElement("div");
+      reasoningSummary.className = "analysis-summary";
+      reasoningSummary.textContent = analysis.reasoning_summary || "No reasoning summary available.";
+      reasoningSection.appendChild(reasoningTitle);
+      reasoningSection.appendChild(reasoningSummary);
+      card.appendChild(reasoningSection);
+
+      const patternsSection = document.createElement("div");
+      patternsSection.className = "analysis-section";
+      const patternsTitle = document.createElement("h4");
+      patternsTitle.className = "analysis-section-title";
+      patternsTitle.textContent = "Suspicious Patterns";
+      patternsSection.appendChild(patternsTitle);
+      if (patterns.length) {
+        const patternList = document.createElement("ul");
+        for (const pattern of patterns) {
+          const item = document.createElement("li");
+          item.textContent = `${pattern.pattern || "Pattern"}: ${pattern.details || "Details unavailable."}`;
+          patternList.appendChild(item);
+        }
+        patternsSection.appendChild(patternList);
+      } else {
+        const emptyPatterns = document.createElement("div");
+        emptyPatterns.className = "analysis-empty";
+        emptyPatterns.textContent = "No suspicious pattern was triggered in the selected review window.";
+        patternsSection.appendChild(emptyPatterns);
+      }
+      card.appendChild(patternsSection);
+
+      const flaggedSection = document.createElement("div");
+      flaggedSection.className = "analysis-section";
+      const flaggedTitle = document.createElement("h4");
+      flaggedTitle.className = "analysis-section-title";
+      flaggedTitle.textContent = "Flagged Transactions";
+      flaggedSection.appendChild(flaggedTitle);
+      if (flaggedTransactions.length) {
+        const transactionList = document.createElement("div");
+        transactionList.className = "analysis-transactions";
+        for (const transaction of flaggedTransactions.slice(0, 5)) {
+          const item = document.createElement("div");
+          item.className = "analysis-transaction";
+
+          const heading = document.createElement("strong");
+          heading.textContent = `${transaction.txn_id || "Transaction"} | ${formatCurrency(transaction.amount)} | ${transaction.channel || "Channel N/A"}`;
+
+          const metaLine = document.createElement("div");
+          metaLine.className = "analysis-transaction-meta";
+          metaLine.textContent = [
+            formatDateTime(transaction.timestamp),
+            transaction.beneficiary ? `Beneficiary: ${transaction.beneficiary}` : "",
+            transaction.account_id ? `Account: ${transaction.account_id}` : ""
+          ].filter(Boolean).join(" | ");
+
+          item.appendChild(heading);
+          if (metaLine.textContent) item.appendChild(metaLine);
+
+          if (Array.isArray(transaction.reasons) && transaction.reasons.length) {
+            const reasons = document.createElement("div");
+            reasons.className = "analysis-reasons";
+            for (const reason of transaction.reasons) {
+              const chip = document.createElement("span");
+              chip.className = "analysis-reason";
+              chip.textContent = reason;
+              reasons.appendChild(chip);
+            }
+            item.appendChild(reasons);
+          }
+
+          transactionList.appendChild(item);
+        }
+        flaggedSection.appendChild(transactionList);
+      } else {
+        const emptyFlagged = document.createElement("div");
+        emptyFlagged.className = "analysis-empty";
+        emptyFlagged.textContent = "No individual transactions were flagged in this review window.";
+        flaggedSection.appendChild(emptyFlagged);
+      }
+      card.appendChild(flaggedSection);
+
+      if (analysis.sop_summary || analysis.fraud_category || analysis.recommended_action || (Array.isArray(analysis.references) && analysis.references.length)) {
+        const sopSection = document.createElement("div");
+        sopSection.className = "analysis-section";
+        const sopTitle = document.createElement("h4");
+        sopTitle.className = "analysis-section-title";
+        sopTitle.textContent = `SOP Grounding${analysis.fraud_category ? ` - ${analysis.fraud_category}` : ""}`;
+        sopSection.appendChild(sopTitle);
+
+        if (analysis.sop_summary) {
+          const sopBody = document.createElement("div");
+          sopBody.className = "analysis-summary";
+          sopBody.textContent = analysis.sop_summary;
+          sopSection.appendChild(sopBody);
+        }
+
+        if (analysis.recommended_action) {
+          const sopAction = document.createElement("div");
+          sopAction.className = "analysis-meta-copy";
+          sopAction.textContent = `Immediate SOP Action: ${analysis.recommended_action}`;
+          sopSection.appendChild(sopAction);
+        }
+
+        if (Array.isArray(analysis.references) && analysis.references.length) {
+          const sopRefs = document.createElement("div");
+          sopRefs.className = "analysis-meta-copy";
+          sopRefs.textContent = `Sources: ${analysis.references.join(", ")}`;
+          sopSection.appendChild(sopRefs);
+        }
+
+        card.appendChild(sopSection);
+      }
+
+      const actionsSection = document.createElement("div");
+      actionsSection.className = "analysis-section";
+      const actionsTitle = document.createElement("h4");
+      actionsTitle.className = "analysis-section-title";
+      actionsTitle.textContent = "Recommended Actions";
+      actionsSection.appendChild(actionsTitle);
+      if (actions.length) {
+        const actionList = document.createElement("ul");
+        for (const action of actions) {
+          const item = document.createElement("li");
+          item.textContent = action;
+          actionList.appendChild(item);
+        }
+        actionsSection.appendChild(actionList);
+      } else {
+        const emptyActions = document.createElement("div");
+        emptyActions.className = "analysis-empty";
+        emptyActions.textContent = "No additional actions were suggested.";
+        actionsSection.appendChild(emptyActions);
+      }
+      card.appendChild(actionsSection);
+      return card;
+    }
+
+    function renderCustomerFraudPanel(_conversation) {
+      els.customerFraudPanel.innerHTML = "";
+      setHidden(els.customerFraudPanel, true);
     }
 
     function conversationPreview(conversation) {
@@ -2088,9 +3062,20 @@
       const conversation = activeConversation();
       els.chatHistory.innerHTML = "";
       if (!conversation) return;
+      let hasInlineAnalysis = false;
       for (const item of conversation.chatHistory) {
         if (item.role === "documents") {
-          renderDocuments(item.items || []);
+          renderDocuments(item.items || [], item.title || "Relevant Blueprint Documentation");
+          continue;
+        }
+        if (item.role === "analysis") {
+          const analysis = item.analysis && typeof item.analysis === "object" ? item.analysis : null;
+          if (!analysis || !Object.keys(analysis).length) continue;
+          const row = document.createElement("div");
+          row.className = "chat-row analysis-row";
+          row.appendChild(buildCustomerFraudCard(analysis));
+          els.chatHistory.appendChild(row);
+          hasInlineAnalysis = true;
           continue;
         }
         const row = document.createElement("div");
@@ -2101,7 +3086,18 @@
         row.appendChild(bubble);
         els.chatHistory.appendChild(row);
       }
-      els.chatHistory.scrollTop = els.chatHistory.scrollHeight;
+      if (!hasInlineAnalysis) {
+        const fallbackAnalysis = latestCustomerFraudAnalysis(conversation);
+        if (fallbackAnalysis) {
+          const row = document.createElement("div");
+          row.className = "chat-row analysis-row";
+          row.appendChild(buildCustomerFraudCard(fallbackAnalysis));
+          els.chatHistory.appendChild(row);
+        }
+      }
+      if (els.contentShell) {
+        els.contentShell.scrollTop = els.contentShell.scrollHeight;
+      }
     }
 
     function renderMembersModal() {
@@ -2322,6 +3318,7 @@
       const hasChatMenuActions = menuCapabilities.canRename || menuCapabilities.canDelete;
       const chatAllowed = can("canChat");
       const isComposerBusy = ui.busyConversationId === state.activeConversationId;
+      const activeWorkflow = workflowConfig(currentWorkflowMode(conversation));
 
       if (ui.activeMenuId && !hasChatMenuActions) {
         ui.activeMenuId = "";
@@ -2336,8 +3333,9 @@
       els.userId.value = state.userId || "";
       renderSidebarFilters();
       renderChatList();
+      setHidden(els.customerFraudPanel, true);
       renderHistory();
-      setHidden(els.welcomeState, Boolean(conversation));
+      setHidden(els.welcomeState, Boolean(conversation && hasMeaningfulConversationHistory(conversation)));
       setHidden(els.chatHistory, !conversation);
       els.conversationTitle.textContent = conversation ? conversation.title : "New chat";
       els.conversationMeta.textContent = conversationHeaderMeta(conversation);
@@ -2349,6 +3347,7 @@
       els.profileMenuMeta.textContent = state.bankId ? `${String(state.bankId).toUpperCase()} workspace - ${activeRoleLabel}` : `AXIS Bank workspace - ${activeRoleLabel}`;
       els.settingsCopy.textContent = `${activeRoleLabel} access with ${state.conversations.length} saved chat${state.conversations.length === 1 ? "" : "s"} in this workspace.`;
       els.roleAccessCopy.textContent = `${activeRoleLabel} permissions: ${permissionSummaryText()}.`;
+      els.workflowCopy.textContent = activeWorkflow.hint;
       els.activityCopy.textContent = workspaceFilterVisible() || can("canManageUsers")
         ? "Recent workspace actions across chats, users, and sharing appear here. All logs are preserved, and filters help narrow the view."
         : "Your activity view shows only events relevant to your role and conversations.";
@@ -2357,21 +3356,21 @@
         : activeConversationCapabilities.isShared
           ? `${activeRoleLabel} access can review shared members, but only supervisors and admins can change them.`
           : `${activeRoleLabel} access can review members, but only supervisors and admins can change them.`;
-      els.composerHint.textContent = activeConversationCapabilities.canDelete
-        ? "Every new thread stays in Recent chats until deleted."
-        : activeConversationCapabilities.isShared
-          ? "Shared conversation access lets you work in the thread, while rename and delete stay with the owner or workspace leads."
-          : `${activeRoleLabel} access keeps chat history protected from rename and delete actions.`;
+      els.composerHint.textContent = "Start with the case summary, then add one unique identifier: CIF ID, account number, PAN, or registered mobile.";
       els.composerMeta.textContent = conversation && conversation.fraudCategory
         ? conversation.fraudCategory
-        : can("canGenerateReport")
-          ? "AXIS Blueprint grounded responses"
-          : `${activeRoleLabel} access: blueprint review and chat guidance`;
-      els.chatInput.placeholder = defaultChatInputPlaceholder();
+        : activeWorkflow.meta;
+      els.chatInput.placeholder = defaultChatInputPlaceholder(conversation);
       els.chatInput.disabled = !chatAllowed || isComposerBusy;
       els.chatInput.readOnly = !chatAllowed;
       els.sendButton.disabled = !chatAllowed || isComposerBusy;
       els.sendButton.textContent = !chatAllowed ? "Locked" : isComposerBusy ? "..." : "Send";
+      els.workflowBlueprintButton.classList.toggle("is-active", currentWorkflowMode(conversation) === "blueprint");
+      els.workflowCustomerFraudButton.classList.toggle("is-active", currentWorkflowMode(conversation) === "customer_fraud");
+      els.workflowBlueprintButton.setAttribute("aria-pressed", currentWorkflowMode(conversation) === "blueprint" ? "true" : "false");
+      els.workflowCustomerFraudButton.setAttribute("aria-pressed", currentWorkflowMode(conversation) === "customer_fraud" ? "true" : "false");
+      els.workflowBlueprintButton.disabled = !chatAllowed || isComposerBusy;
+      els.workflowCustomerFraudButton.disabled = !chatAllowed || isComposerBusy;
       els.themeLightButton.disabled = state.theme === "light";
       els.themeDarkButton.disabled = state.theme === "dark";
       els.memberInput.disabled = !canManageMembers;
@@ -2756,17 +3755,19 @@
       els.chatInput.style.height = `${Math.min(els.chatInput.scrollHeight, 150)}px`;
     }
 
-    async function createNewChat() {
+    async function createNewChat(mode) {
       if (!can("canCreateChat")) {
         setError(`${roleLabel(state.role)} access cannot create new chats.`);
         return;
       }
+      const selectedMode = normalizeWorkflowMode(mode || currentWorkflowMode(activeConversation()));
       const conversation = createConversation({
         ownerUserId: state.userId,
         ownerDisplayName: currentDisplayName(),
         ownerRole: state.role,
         ownerRoleLabel: roleLabel(state.role),
-        members: state.userId ? [createMember(state.userId)] : []
+        members: state.userId ? [createMember(state.userId)] : [],
+        workflowMode: selectedMode
       });
       conversation.createdAt = conversation.createdAt || new Date().toISOString();
       conversation.ownerUserId = state.userId;
@@ -2871,28 +3872,42 @@
       setStatus("Working on your request...");
       try {
         const current = activeConversation();
-        const response = await requestBackend("POST", "/chat", {
+        const currentWorkflow = workflowConfig(currentWorkflowMode(current));
+        const response = await requestBackend("POST", currentWorkflow.endpoint, {
           body: JSON.stringify({ userId: state.userId, query: trimmed, state: current.conversationState })
         });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.detail || payload.chatbot_response || `Backend returned status ${response.status}.`);
         updateConversation(conversation.id, (currentConversation) => {
+          const workflowMode = currentWorkflowMode(currentConversation);
           const documents = Array.isArray(payload.documents) ? payload.documents : [];
+          const documentsTitle = String(payload.documents_title || "").trim() || "Relevant Blueprint Documentation";
           const rawResponse = payload.chatbot_response || "";
-          const promptParts = extractPrompt(rawResponse);
-          let fullResponse = promptParts.prompt ? promptParts.cleaned : rawResponse;
-          if (documents.length) {
-            fullResponse = fullResponse.replace("Relevant Blueprint Documentation:", "").trim();
-            for (const doc of documents) if (doc.name) fullResponse = fullResponse.replace(doc.name, "").trim();
-          }
           const nextHistory = [...currentConversation.chatHistory];
-          if (documents.length) nextHistory.push({ role: "documents", items: documents });
+          const promptParts = extractPrompt(rawResponse);
+          const fullResponse = promptParts.prompt ? promptParts.cleaned : rawResponse;
+          const analysisPayload = payload.fraud_analysis && typeof payload.fraud_analysis === "object" && Object.keys(payload.fraud_analysis).length
+            ? payload.fraud_analysis
+            : null;
+          const shouldAppendAnalysis = Boolean(analysisPayload);
+          if (shouldAppendAnalysis) {
+            nextHistory.push({ role: "analysis", analysis: analysisPayload });
+          }
           if (fullResponse.trim()) nextHistory.push({ role: "bot", content: fullResponse.trim() });
+          if (documents.length) nextHistory.push({ role: "documents", title: documentsTitle, items: documents });
           if (promptParts.prompt) nextHistory.push({ role: "prompt", content: promptParts.prompt });
+          const latestAnalysis = analysisPayload
+            || (payload.conversation_state && payload.conversation_state.latest_analysis)
+            || (currentConversation.conversationState && currentConversation.conversationState.latest_analysis)
+            || null;
+          const nextFraudCategory = latestAnalysis && latestAnalysis.risk_level
+            ? `${latestAnalysis.risk_level} Risk`
+            : (FOLLOWUP_ANSWERS.has(normalized) ? (payload.fraud_category || currentConversation.fraudCategory) : (payload.fraud_category || currentConversation.fraudCategory || ""));
           return {
             ...currentConversation,
-            fraudCategory: FOLLOWUP_ANSWERS.has(normalized) ? (payload.fraud_category || currentConversation.fraudCategory) : (payload.fraud_category || ""),
-            conversationState: payload.conversation_state || defaultConversationState(),
+            fraudCategory: nextFraudCategory,
+            workflowMode,
+            conversationState: payload.conversation_state || defaultConversationState(workflowMode),
             chatHistory: nextHistory,
             updatedAt: new Date().toISOString()
           };
@@ -2968,6 +3983,12 @@
 
     els.newChatButton.addEventListener("click", async () => {
       await createNewChat();
+    });
+    els.workflowBlueprintButton.addEventListener("click", async () => {
+      await setConversationWorkflow("blueprint");
+    });
+    els.workflowCustomerFraudButton.addEventListener("click", async () => {
+      await setConversationWorkflow("customer_fraud");
     });
     els.chatSearch.addEventListener("input", () => { ui.chatSearch = els.chatSearch.value; renderChatList(); });
     els.ownerFilter.addEventListener("change", (event) => {

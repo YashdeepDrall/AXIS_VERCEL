@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BANK_NAME, AXIS_BLUEPRINT_FILE, BASE_DIR
 from app.db.mongodb import cases_collection, chat_logs_collection, documents_collection, fs
@@ -16,7 +16,9 @@ from app.services.conversation_service import (
     upsert_conversation_for_user,
 )
 from app.services.auth_service import get_user_context, list_workspace_users, require_permission, verify_user_credentials
+from app.services.customer_fraud_chat_service import run_integrated_fraud_chat
 from app.services.fraud_service import detect_fraud, generate_investigation_report
+from app.services.historical_reference_service import list_historical_reference_cards
 from app.services.user_service import create_workspace_user, update_workspace_user
 
 
@@ -28,6 +30,20 @@ class ConversationState(BaseModel):
     analysis: dict[str, Any] = Field(default_factory=dict)
     case_query: str | None = None
     sessionId: str | None = None
+    case_description: str | None = None
+    cif_id: str | None = None
+    account_id: str | None = None
+    pan: str | None = None
+    customer_name: str | None = None
+    mobile: str | None = None
+    start_datetime: str | None = None
+    end_datetime: str | None = None
+    resolved_customer: dict[str, Any] = Field(default_factory=dict)
+    missing_fields: list[str] = Field(default_factory=list)
+    latest_analysis: dict[str, Any] = Field(default_factory=dict)
+    sop_analysis: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = ConfigDict(extra="allow")
 
 
 class ChatTurnRequest(BaseModel):
@@ -45,7 +61,9 @@ class ConversationMemberPayload(BaseModel):
 class ConversationHistoryItemPayload(BaseModel):
     role: str
     content: str | None = None
+    title: str | None = None
     items: list[dict[str, Any]] = Field(default_factory=list)
+    analysis: dict[str, Any] = Field(default_factory=dict)
 
 
 class ConversationPayload(BaseModel):
@@ -59,6 +77,7 @@ class ConversationPayload(BaseModel):
     chatHistory: list[ConversationHistoryItemPayload] = Field(default_factory=list)
     fraudCategory: str | None = None
     conversationState: dict[str, Any] = Field(default_factory=dict)
+    workflowMode: str | None = "blueprint"
 
 
 class ConversationSyncRequest(BaseModel):
@@ -146,7 +165,7 @@ def fetch_relevant_documents(bank_id):
         return [
             {
                 "name": AXIS_BLUEPRINT_FILE,
-                "path": target_path,
+                "path": "",
                 "fileId": str(grid_file._id) if grid_file else "",
                 "downloadUrl": f"/documents/{grid_file._id}" if grid_file else "",
             }
@@ -156,16 +175,7 @@ def fetch_relevant_documents(bank_id):
 
     for doc in docs:
         file_name = doc.get("fileName", "")
-        file_path = doc.get("filePath", "")
         file_id = doc.get("fileId", "")
-
-        if file_path and not os.path.isabs(file_path):
-            file_path = os.path.abspath(os.path.join(BASE_DIR, file_path))
-
-        if not file_path and file_name:
-            candidate_path = os.path.join(AXIS_BANK_DIR, file_name)
-            if os.path.exists(candidate_path):
-                file_path = candidate_path
 
         if not file_id and file_name:
             grid_file = fs.find_one({"filename": file_name, "bankId": bank_id})
@@ -175,7 +185,7 @@ def fetch_relevant_documents(bank_id):
         results.append(
             {
                 "name": file_name,
-                "path": file_path,
+                "path": "",
                 "fileId": file_id,
                 "downloadUrl": f"/documents/{file_id}" if file_id else "",
             }
@@ -197,15 +207,7 @@ def download_document(file_id: str):
 
 
 def fetch_historical_docs():
-    docs = list(cases_collection.find({}))
-
-    return [
-        {
-            "name": doc.get("fileName"),
-            "path": doc.get("filePath", ""),
-        }
-        for doc in docs
-    ]
+    return list_historical_reference_cards(limit=6)
 
 
 def _normalize_choice(text):
@@ -684,15 +686,12 @@ def fraud_chat_turn(request: ChatTurnRequest):
     except Exception as exc:
         raise HTTPException(status_code=403, detail=str(exc))
 
-    state = request.state or ConversationState()
+    state = request.state.model_dump() if request.state else None
 
-    return _run_chat_turn(
+    return run_integrated_fraud_chat(
         user_context=user_context,
         query=query,
-        step=state.step,
-        analysis=state.analysis,
-        case_query=state.case_query,
-        session_id=state.sessionId,
+        state=state,
     )
 
 

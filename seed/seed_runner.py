@@ -187,6 +187,14 @@ def _generate_accounts(index: int, rng: random.Random) -> list[str]:
     return [primary]
 
 
+def _generate_pan_number(name: str, index: int, rng: random.Random) -> str:
+    clean_name = "".join(char for char in name.upper() if char.isalpha()) or "AXISX"
+    letters = (clean_name + "AXISX")[:5]
+    serial = f"{1000 + index:04d}"[-4:]
+    suffix = chr(ord("A") + ((index + rng.randint(0, 25)) % 26))
+    return f"{letters}{serial}{suffix}"
+
+
 def _generate_customer_records(rng: random.Random, now: datetime) -> list[dict[str, Any]]:
     shuffled_names = CUSTOMER_NAME_POOL[:]
     rng.shuffle(shuffled_names)
@@ -204,6 +212,7 @@ def _generate_customer_records(rng: random.Random, now: datetime) -> list[dict[s
                 "cif_id": f"CIF{1000 + index}",
                 "name": name,
                 "mobile": _generate_mobile_number(index),
+                "pan": _generate_pan_number(name, index, rng),
                 "accounts": _generate_accounts(index, rng),
                 "created_at": _format_datetime(created_at),
                 "updated_at": _format_datetime(updated_at),
@@ -623,10 +632,14 @@ def _generate_transaction_records(customers: list[dict[str, Any]], rng: random.R
 
 def _validate_seed_payload(customers: list[dict[str, Any]], transactions: list[dict[str, Any]]) -> None:
     cif_ids = {customer["cif_id"] for customer in customers}
+    pan_values = {customer["pan"] for customer in customers}
     txn_ids = {transaction["txn_id"] for transaction in transactions}
 
     if len(cif_ids) != len(customers):
         raise ValueError("Duplicate CIF IDs generated in customer seed data.")
+
+    if len(pan_values) != len(customers):
+        raise ValueError("Duplicate PAN values generated in customer seed data.")
 
     if len(txn_ids) != len(transactions):
         raise ValueError("Duplicate transaction IDs generated in transaction seed data.")
@@ -668,6 +681,7 @@ def _prepare_customer_documents(rows: list[dict[str, Any]]) -> list[dict[str, An
                 "cif_id": row["cif_id"],
                 "name": row["name"],
                 "mobile": row["mobile"],
+                "pan": row["pan"],
                 "accounts": row["accounts"],
                 "created_at": _parse_datetime(row["created_at"]),
                 "updated_at": _parse_datetime(row["updated_at"]),

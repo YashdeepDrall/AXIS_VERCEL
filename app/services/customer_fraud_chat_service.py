@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 import re
 import uuid
 from collections import Counter
 from typing import Any
 
+from app.core.config import AXIS_BANK_DIR, AXIS_BANK_ID, AXIS_BLUEPRINT_FILE, BASE_DIR
 from app.db.banking import get_customers_collection, get_transactions_collection
+from app.db.mongodb import cases_collection, documents_collection, fs
+from app.services.fraud_service import detect_fraud, generate_investigation_report
+from app.services.historical_reference_service import list_historical_reference_cards
 from app.services.llm_service import GeminiServiceError, generate_text
 
 
@@ -22,6 +27,7 @@ SUSPICIOUS_BENEFICIARY_KEYWORDS = (
 )
 HIGH_VALUE_THRESHOLD = 50000.0
 RAPID_DEBIT_WINDOW_MINUTES = 5
+FOLLOWUP_STEPS = {"fetch_documentation", "generate_report", "historical_docs", "final_assistance"}
 
 
 def _format_datetime(value: dt.datetime | None) -> str | None:
@@ -42,11 +48,83 @@ def _now() -> dt.datetime:
     return dt.datetime.now().replace(microsecond=0)
 
 
+def _normalize_choice(text: str) -> str | None:
+    cleaned = (text or "").strip().lower()
+    if not cleaned:
+        return None
+
+    head = cleaned.split()[0]
+    if head in {"yes", "y", "yeah", "yep", "sure", "ok", "okay"}:
+        return "yes"
+    if head in {"no", "n", "nope", "nah", "nothing"}:
+        return "no"
+    return None
+
+
+def _fetch_relevant_documents(bank_id: str) -> list[dict[str, Any]]:
+    if bank_id != AXIS_BANK_ID:
+        return []
+
+    target_path = os.path.join(AXIS_BANK_DIR, AXIS_BLUEPRINT_FILE)
+    docs = list(
+        documents_collection.find(
+            {
+                "bankId": bank_id,
+                "fileName": AXIS_BLUEPRINT_FILE,
+                "$or": [
+                    {"filePath": {"$exists": True}},
+                    {"isPDF": True},
+                    {"documentType": "SOP"},
+                ],
+            }
+        )
+    )
+
+    if not docs and os.path.exists(target_path):
+        grid_file = fs.find_one({"filename": AXIS_BLUEPRINT_FILE, "bankId": bank_id})
+        return [
+            {
+                "name": AXIS_BLUEPRINT_FILE,
+                "path": "",
+                "fileId": str(grid_file._id) if grid_file else "",
+                "downloadUrl": f"/documents/{grid_file._id}" if grid_file else "",
+            }
+        ]
+
+    results: list[dict[str, Any]] = []
+
+    for doc in docs:
+        file_name = str(doc.get("fileName") or "").strip()
+        file_id = str(doc.get("fileId") or "").strip()
+
+        if not file_id and file_name:
+            grid_file = fs.find_one({"filename": file_name, "bankId": bank_id})
+            if grid_file:
+                file_id = str(grid_file._id)
+
+        results.append(
+            {
+                "name": file_name or "Document",
+                "path": "",
+                "fileId": file_id,
+                "downloadUrl": f"/documents/{file_id}" if file_id else "",
+            }
+        )
+
+    return results
+
+
+def _fetch_historical_references() -> list[dict[str, Any]]:
+    return list_historical_reference_cards(limit=6)
+
+
 def _empty_state(session_id: str | None = None) -> dict[str, Any]:
     return {
         "step": "collect_customer",
         "sessionId": session_id,
         "cif_id": None,
+        "account_id": None,
+        "pan": None,
         "customer_name": None,
         "mobile": None,
         "start_datetime": None,
@@ -67,6 +145,8 @@ def _normalize_state(raw_state: dict[str, Any] | None) -> dict[str, Any]:
         "step",
         "sessionId",
         "cif_id",
+        "account_id",
+        "pan",
         "customer_name",
         "mobile",
         "start_datetime",
@@ -84,6 +164,7 @@ def _normalize_state(raw_state: dict[str, Any] | None) -> dict[str, Any]:
             "cif_id": str(resolved_customer.get("cif_id") or "").strip(),
             "name": str(resolved_customer.get("name") or "").strip(),
             "mobile": str(resolved_customer.get("mobile") or "").strip(),
+            "pan": str(resolved_customer.get("pan") or "").strip(),
             "accounts": [str(item).strip() for item in resolved_customer.get("accounts") or [] if str(item).strip()],
         }
 
@@ -126,6 +207,68 @@ def _extract_mobile(query: str) -> str | None:
     if not match:
         return None
     return match.group(1)
+
+
+def _extract_account_id(query: str) -> str | None:
+    match = re.search(r"\b(?:ACC\d{4,}|[1-9]\d{11,17})\b", query or "", flags=re.IGNORECASE)
+    if not match:
+        return None
+    value = match.group(0).strip()
+    return value.upper() if value.lower().startswith("acc") else value
+
+
+def _extract_pan(query: str) -> str | None:
+    match = re.search(r"\b([A-Z]{5}\d{4}[A-Z])\b", query or "", flags=re.IGNORECASE)
+    if not match:
+        return None
+    return match.group(1).upper()
+
+
+def _extract_name_fragment(query: str) -> str | None:
+    cleaned = re.sub(r"\bCIF\d{4,}\b", " ", query or "", flags=re.IGNORECASE)
+    cleaned = re.sub(r"\b(?:ACC\d{4,}|[1-9]\d{11,17})\b", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\b[A-Z]{5}\d{4}[A-Z]\b", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"(?<!\d)([6-9]\d{9})(?!\d)", " ", cleaned)
+    cleaned = re.sub(r"\b\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?\b", " ", cleaned)
+    cleaned = re.sub(r"\b\d{1,2}[-/]\d{1,2}[-/]\d{4}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?\b", " ", cleaned)
+    cleaned = re.sub(r"\b(?:today|yesterday|last|past|days?|debit|debits|upi|imps|atm|pos|netbanking|transaction|transactions|reported|report|review|check|analyse|analyze|inspect|fraud|scam|case|customer|from|to|between|range|without|approval|money|withdrawal|withdrawals|unauthorised|unauthorized)\b", " ", cleaned, flags=re.IGNORECASE)
+    tokens = [token for token in re.findall(r"[A-Za-z]+", cleaned) if len(token) >= 1]
+    if 1 <= len(tokens) <= 4:
+        return " ".join(token.title() for token in tokens)
+
+    action_match = re.search(
+        r"^\s*([A-Za-z]+(?:\s+[A-Za-z]+){0,2})\s+"
+        r"(?:clicked|clicks|received|got|lost|shared|entered|used|opened|reported|faced|saw|noticed|sent|transferred|made|paid|withdrew|withdrawn|complained)\b",
+        query or "",
+        flags=re.IGNORECASE,
+    )
+    if action_match:
+        candidate = " ".join(token.title() for token in re.findall(r"[A-Za-z]+", action_match.group(1)))
+        if candidate.lower() not in {"customer", "user", "victim", "account", "he", "she", "they"}:
+            return candidate
+
+    leading_name = re.match(r"^\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2})\b", query or "")
+    if leading_name:
+        candidate = " ".join(token.title() for token in re.findall(r"[A-Za-z]+", leading_name.group(1)))
+        if candidate.lower() not in {"customer", "user", "victim", "account"}:
+            return candidate
+
+    return None
+
+
+def _name_tokens(value: str) -> list[str]:
+    return [token for token in re.findall(r"[a-z]+", (value or "").lower()) if token]
+
+
+def _matches_name_fragment(fragment: str, customer_name: str) -> bool:
+    fragment_tokens = _name_tokens(fragment)
+    customer_tokens = _name_tokens(customer_name)
+    if not fragment_tokens or len(fragment_tokens) > len(customer_tokens):
+        return False
+    for index, token in enumerate(fragment_tokens):
+        if not customer_tokens[index].startswith(token):
+            return False
+    return True
 
 
 def _parse_explicit_datetime(raw_value: str) -> tuple[dt.datetime, bool] | None:
@@ -288,6 +431,7 @@ def _serialize_customer(customer: dict[str, Any] | None) -> dict[str, Any]:
         "cif_id": str(customer.get("cif_id") or "").strip(),
         "name": str(customer.get("name") or "").strip(),
         "mobile": str(customer.get("mobile") or "").strip(),
+        "pan": str(customer.get("pan") or "").strip(),
         "accounts": [str(item).strip() for item in customer.get("accounts") or [] if str(item).strip()],
     }
 
@@ -295,31 +439,35 @@ def _serialize_customer(customer: dict[str, Any] | None) -> dict[str, Any]:
 def _resolve_customer(query: str, state: dict[str, Any]) -> tuple[dict[str, Any] | None, list[dict[str, Any]], str | None]:
     customers_collection = get_customers_collection()
     cif_id = _extract_cif_id(query) or state.get("cif_id")
+    account_id = _extract_account_id(query) or state.get("account_id")
+    pan = _extract_pan(query) or state.get("pan")
     mobile = _extract_mobile(query) or state.get("mobile")
-    query_lower = (query or "").lower()
+    name_fragment = _extract_name_fragment(query) or state.get("customer_name")
 
     if cif_id:
         customer = customers_collection.find_one({"cif_id": cif_id}, {"_id": 0})
         return customer, [customer] if customer else [], cif_id
 
+    if account_id:
+        customer = customers_collection.find_one({"accounts": account_id}, {"_id": 0})
+        return customer, [customer] if customer else [], account_id
+
+    if pan:
+        customer = customers_collection.find_one({"pan": pan}, {"_id": 0})
+        return customer, [customer] if customer else [], pan
+
     if mobile:
         customer = customers_collection.find_one({"mobile": mobile}, {"_id": 0})
         return customer, [customer] if customer else [], mobile
 
-    existing_name = str(state.get("customer_name") or "").strip().lower()
     matches = []
-    for customer in _all_customers():
-        name = str(customer.get("name") or "").strip()
-        if not name:
-            continue
-        normalized_name = name.lower()
-        if normalized_name and (normalized_name in query_lower or (existing_name and normalized_name == existing_name)):
-            matches.append(customer)
+    if name_fragment:
+        for customer in _all_customers():
+            name = str(customer.get("name") or "").strip()
+            if name and _matches_name_fragment(name_fragment, name):
+                matches.append(customer)
 
-    if len(matches) == 1:
-        return matches[0], matches, matches[0].get("name")
-
-    return None, matches, existing_name or None
+    return None, matches, name_fragment or None
 
 
 def _parse_state_datetime(value: str | None) -> dt.datetime | None:
@@ -348,6 +496,8 @@ def _merge_state(state: dict[str, Any], customer: dict[str, Any] | None, query: 
     if customer:
         serialized_customer = _serialize_customer(customer)
         merged["cif_id"] = serialized_customer.get("cif_id")
+        merged["account_id"] = (state.get("account_id") or (serialized_customer.get("accounts") or [None])[0])
+        merged["pan"] = serialized_customer.get("pan")
         merged["customer_name"] = serialized_customer.get("name")
         merged["mobile"] = serialized_customer.get("mobile")
         merged["resolved_customer"] = serialized_customer
@@ -385,8 +535,8 @@ def _fallback_followup_question(state: dict[str, Any], customer_matches: list[di
             for item in customer_matches[:5]
         )
         return (
-            "I found multiple customers matching that input. "
-            f"Please share the exact CIF ID or mobile number. Matches: {options}."
+            "I found multiple customers matching that name. "
+            f"Please share a unique identifier such as CIF ID, account number, PAN, or registered mobile number. Matches: {options}."
         )
 
     if "customer_id" in missing and {"start_datetime", "end_datetime"}.issubset(set(missing)):
@@ -396,7 +546,7 @@ def _fallback_followup_question(state: dict[str, Any], customer_matches: list[di
         )
 
     if "customer_id" in missing:
-        return "Please share the customer CIF ID or registered mobile number so I can identify the customer uniquely."
+        return "Please share a unique customer identifier such as CIF ID, account number, PAN, or registered mobile number so I can identify the customer uniquely."
 
     if "start_datetime" in missing and "end_datetime" in missing:
         return (
@@ -611,6 +761,8 @@ Fraud analysis:
 def _clear_resolved_customer(state: dict[str, Any]) -> None:
     state["resolved_customer"] = {}
     state["cif_id"] = None
+    state["account_id"] = None
+    state["pan"] = None
     state["customer_name"] = None
     state["mobile"] = None
 
@@ -637,6 +789,7 @@ def _build_chat_response(customer: dict[str, Any], analysis: dict[str, Any]) -> 
         f"Customer Identified:\n"
         f"- {customer.get('name')} ({customer.get('cif_id')})\n"
         f"- Mobile: {customer.get('mobile')}\n"
+        f"- PAN: {customer.get('pan') or 'Not available'}\n"
         f"- Accounts: {', '.join(customer.get('accounts') or [])}\n\n"
         f"Fraud Analysis Summary:\n"
         f"- Risk Level: {analysis.get('risk_level')}\n"
@@ -877,13 +1030,30 @@ def run_customer_fraud_chat(user_context: dict[str, Any], query: str, state: dic
     has_customer = bool(merged_state.get("resolved_customer"))
     merged_state["missing_fields"] = _build_missing_fields(merged_state, has_customer)
 
+    if attempted_identifier and not resolved_customer and customer_matches:
+        merged_state["customer_name"] = merged_state.get("customer_name") or attempted_identifier
+        merged_state["missing_fields"] = _build_missing_fields(merged_state, False)
+        merged_state["step"] = "collect_customer"
+        response = _build_identifier_requirement_message(attempted_identifier, customer_matches)
+        return {
+            "user": user_context["userId"],
+            "query": query,
+            "chatbot_response": response,
+            "next_step": "collect_customer",
+            "sessionId": session_id,
+            "customer_identified": False,
+            "customer": None,
+            "fraud_analysis": None,
+            "conversation_state": {**merged_state, "sessionId": session_id},
+        }
+
     if attempted_identifier and not resolved_customer and not customer_matches:
         _clear_resolved_customer(merged_state)
         merged_state["missing_fields"] = _build_missing_fields(merged_state, False)
         merged_state["step"] = "collect_customer"
         response = (
             f"I could not find a customer for `{attempted_identifier}`. "
-            "Please share a valid CIF ID or registered mobile number."
+            "Please share a valid CIF ID, account number, PAN, or registered mobile number."
         )
         return {
             "user": user_context["userId"],
@@ -964,5 +1134,763 @@ def run_customer_fraud_chat(user_context: dict[str, Any], query: str, state: dic
         "customer_identified": True,
         "customer": customer,
         "fraud_analysis": analysis,
+        "conversation_state": {**merged_state, "sessionId": session_id},
+    }
+
+
+def _empty_integrated_state(session_id: str | None = None) -> dict[str, Any]:
+    return {
+        "step": "collect_case_details",
+        "sessionId": session_id,
+        "case_query": None,
+        "case_description": None,
+        "cif_id": None,
+        "account_id": None,
+        "pan": None,
+        "customer_name": None,
+        "mobile": None,
+        "start_datetime": None,
+        "end_datetime": None,
+        "resolved_customer": {},
+        "missing_fields": [],
+        "latest_analysis": {},
+        "sop_analysis": {},
+    }
+
+
+def _normalize_integrated_state(raw_state: dict[str, Any] | None) -> dict[str, Any]:
+    state = _empty_integrated_state((raw_state or {}).get("sessionId"))
+
+    if not isinstance(raw_state, dict):
+        return state
+
+    for key in [
+        "step",
+        "sessionId",
+        "case_query",
+        "case_description",
+        "cif_id",
+        "account_id",
+        "pan",
+        "customer_name",
+        "mobile",
+        "start_datetime",
+        "end_datetime",
+    ]:
+        value = raw_state.get(key)
+        if isinstance(value, str) and value.strip():
+            state[key] = value.strip()
+        elif value is not None and key in {"step", "sessionId"}:
+            state[key] = str(value).strip() or state[key]
+
+    resolved_customer = raw_state.get("resolved_customer")
+    if isinstance(resolved_customer, dict):
+        state["resolved_customer"] = {
+            "cif_id": str(resolved_customer.get("cif_id") or "").strip(),
+            "name": str(resolved_customer.get("name") or "").strip(),
+            "mobile": str(resolved_customer.get("mobile") or "").strip(),
+            "pan": str(resolved_customer.get("pan") or "").strip(),
+            "accounts": [str(item).strip() for item in resolved_customer.get("accounts") or [] if str(item).strip()],
+        }
+
+    missing_fields = raw_state.get("missing_fields")
+    if isinstance(missing_fields, list):
+        state["missing_fields"] = [str(item).strip() for item in missing_fields if str(item).strip()]
+
+    latest_analysis = raw_state.get("latest_analysis")
+    if isinstance(latest_analysis, dict):
+        state["latest_analysis"] = latest_analysis
+
+    sop_analysis = raw_state.get("sop_analysis")
+    if isinstance(sop_analysis, dict):
+        state["sop_analysis"] = sop_analysis
+
+    return state
+
+
+def _extract_case_description(query: str, existing_description: str | None = None) -> str | None:
+    normalized = _normalize_query(query)
+    if not normalized:
+        return existing_description
+
+    candidate = normalized
+    candidate = re.sub(r"\bCIF\d{4,}\b", " ", candidate, flags=re.IGNORECASE)
+    candidate = re.sub(r"(?<!\d)([6-9]\d{9})(?!\d)", " ", candidate)
+    candidate = re.sub(r"\b\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?\b", " ", candidate)
+    candidate = re.sub(r"\b\d{1,2}[-/]\d{1,2}[-/]\d{4}(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?\b", " ", candidate)
+    candidate = re.sub(r"\b(?:last|past)\s+\d{1,2}\s+days?\b", " ", candidate, flags=re.IGNORECASE)
+    candidate = re.sub(r"\b(?:today|yesterday)\b", " ", candidate, flags=re.IGNORECASE)
+    candidate = re.sub(
+        r"\b(?:check|review|analyse|analyze|inspect|see|look|please|customer|cif|id|mobile|phone|number|registered|for|from|to|between|and|range|account|accounts)\b",
+        " ",
+        candidate,
+        flags=re.IGNORECASE,
+    )
+    candidate = " ".join(candidate.split())
+
+    if len(candidate.split()) >= 4:
+        return candidate
+
+    if existing_description:
+        return existing_description
+
+    lowered = normalized.lower()
+    if len(normalized.split()) >= 5 and any(
+        keyword in lowered
+        for keyword in [
+            "debit",
+            "withdraw",
+            "withdrawal",
+            "upi",
+            "imps",
+            "atm",
+            "netbanking",
+            "beneficiary",
+            "transaction",
+            "suspicious",
+            "scam",
+            "fraud",
+            "unauthorised",
+            "unauthorized",
+            "phishing",
+            "money",
+        ]
+    ):
+        return normalized
+
+    return existing_description
+
+
+def _merge_integrated_state(state: dict[str, Any], customer: dict[str, Any] | None, query: str) -> dict[str, Any]:
+    merged = _merge_state(state, customer, query)
+    extracted_account_id = _extract_account_id(query)
+    extracted_pan = _extract_pan(query)
+    extracted_name = _extract_name_fragment(query)
+
+    if extracted_account_id:
+        merged["account_id"] = extracted_account_id
+    if extracted_pan:
+        merged["pan"] = extracted_pan
+    if extracted_name and not merged.get("customer_name"):
+        merged["customer_name"] = extracted_name
+
+    case_description = _extract_case_description(query, merged.get("case_description"))
+    if case_description:
+        merged["case_description"] = case_description
+    return merged
+
+
+def _build_integrated_missing_fields(state: dict[str, Any], has_customer: bool) -> list[str]:
+    missing_fields: list[str] = []
+
+    if not state.get("case_description"):
+        missing_fields.append("case_description")
+    if not has_customer:
+        missing_fields.append("customer_id")
+    if not state.get("start_datetime"):
+        missing_fields.append("start_datetime")
+    if not state.get("end_datetime"):
+        missing_fields.append("end_datetime")
+
+    return missing_fields
+
+
+def _build_integrated_followup_question(state: dict[str, Any], customer_matches: list[dict[str, Any]]) -> str:
+    missing = state.get("missing_fields") or []
+
+    if customer_matches and len(customer_matches) > 1:
+        options = ", ".join(
+            f"{item.get('name')} ({item.get('cif_id')})"
+            for item in customer_matches[:5]
+        )
+        return (
+            "I found multiple customers with that name. "
+            f"Please share a unique identifier such as CIF ID, account number, PAN, or registered mobile number. Matches: {options}."
+        )
+
+    if {"case_description", "customer_id", "start_datetime", "end_datetime"}.issubset(set(missing)):
+        return (
+            "Please describe what happened in the case, share a unique customer identifier such as CIF ID, account number, PAN, or registered mobile number, "
+            "and mention the date-time range to review in `YYYY-MM-DD HH:MM` format."
+        )
+
+    if "case_description" in missing and "customer_id" in missing:
+        return (
+            "Please describe what happened in the case and share a unique customer identifier such as CIF ID, account number, PAN, or registered mobile number."
+        )
+
+    if "case_description" in missing:
+        return (
+            "Please describe what happened in the case, for example repeated debits, unusual withdrawals, "
+            "new beneficiary transfer, or suspicious UPI activity."
+        )
+
+    if "customer_id" in missing:
+        customer_name = str(state.get("customer_name") or "").strip()
+        if customer_name:
+            return (
+                f"I noted the customer name `{customer_name}`, but before I continue I need one unique identifier "
+                "such as CIF ID, account number, PAN, or registered mobile number."
+            )
+        return "Please share one unique customer identifier such as CIF ID, account number, PAN, or registered mobile number so I can confirm the customer."
+
+    if "start_datetime" in missing and "end_datetime" in missing:
+        return (
+            "Please share the date-time range to review in `YYYY-MM-DD HH:MM` format. "
+            "Example: `2026-04-17 00:00 to 2026-04-18 23:59` or `last 3 days`."
+        )
+
+    if "start_datetime" in missing:
+        return "Please share the start date/time for the transaction review window in `YYYY-MM-DD HH:MM` format."
+
+    if "end_datetime" in missing:
+        return "Please share the end date/time for the transaction review window in `YYYY-MM-DD HH:MM` format."
+
+    return "Please share the missing case, customer, or date-range details so I can continue."
+
+
+def _build_identifier_requirement_message(name_fragment: str | None, customer_matches: list[dict[str, Any]]) -> str:
+    cleaned_name = str(name_fragment or "").strip()
+
+    if customer_matches and len(customer_matches) > 1:
+        options = ", ".join(
+            f"{item.get('name')} ({item.get('cif_id')})"
+            for item in customer_matches[:5]
+        )
+        return (
+            f"I found multiple possible matches for `{cleaned_name}`. "
+            "Before I continue, please share one unique identifier such as CIF ID, account number, PAN, or registered mobile number. "
+            f"Possible matches: {options}."
+        )
+
+    if customer_matches and len(customer_matches) == 1:
+        matched_customer = customer_matches[0]
+        return (
+            f"I found a likely customer match for `{cleaned_name}`: {matched_customer.get('name')} ({matched_customer.get('cif_id')}). "
+            "Before I continue, please share one unique identifier such as CIF ID, account number, PAN, or registered mobile number."
+        )
+
+    if cleaned_name:
+        return (
+            f"`{cleaned_name}` alone is not enough to confirm the customer. "
+            "Please share one unique identifier such as CIF ID, account number, PAN, or registered mobile number."
+        )
+
+    return "Before I continue, please share one unique identifier such as CIF ID, account number, PAN, or registered mobile number."
+
+
+def _build_sop_grounding_query(case_description: str, customer: dict[str, Any], analysis: dict[str, Any]) -> str:
+    suspicious_patterns = analysis.get("suspicious_patterns") or []
+    flagged_transactions = analysis.get("flagged_transactions") or []
+    transaction_summary = analysis.get("transaction_summary") or {}
+
+    pattern_text = "; ".join(
+        f"{item.get('pattern')}: {item.get('details')}"
+        for item in suspicious_patterns[:4]
+        if item.get("pattern")
+    ) or "No suspicious pattern was triggered in the reviewed window."
+
+    flagged_text = "; ".join(
+        (
+            f"{item.get('txn_id')} on {item.get('timestamp')} | {item.get('channel')} | "
+            f"Rs. {float(item.get('amount') or 0.0):,.2f} | beneficiary {item.get('beneficiary')}"
+        )
+        for item in flagged_transactions[:5]
+    ) or "No specific transaction IDs were flagged."
+
+    channels = ", ".join(transaction_summary.get("channels") or []) or "No channels recorded"
+
+    return f"""
+Customer-reported case:
+{case_description}
+
+Customer verified:
+- Name: {customer.get("name")}
+- CIF ID: {customer.get("cif_id")}
+- PAN: {customer.get("pan") or "Not available"}
+- Mobile: {customer.get("mobile")}
+- Accounts: {", ".join(customer.get("accounts") or [])}
+
+Reviewed transaction window:
+- Start: {analysis.get("query_window", {}).get("start_datetime")}
+- End: {analysis.get("query_window", {}).get("end_datetime")}
+- Risk level from transaction review: {analysis.get("risk_level")}
+- Transaction-led classification: {analysis.get("fraud_classification")}
+- Transaction reasoning summary: {analysis.get("reasoning_summary")}
+- Channels involved: {channels}
+- Suspicious patterns: {pattern_text}
+- Flagged transactions: {flagged_text}
+
+Based on the AXIS Bank SOP, identify the closest fraud category, explain what likely happened, list the suspicious indicators, and provide the immediate SOP-grounded action.
+""".strip()
+
+
+def _risk_rank(value: str | None) -> int:
+    normalized = str(value or "").strip().lower()
+    return {"low": 1, "medium": 2, "high": 3}.get(normalized, 2)
+
+
+def _combine_transaction_and_sop_analysis(
+    case_description: str,
+    transaction_analysis: dict[str, Any],
+    sop_analysis: dict[str, Any],
+) -> dict[str, Any]:
+    combined = dict(transaction_analysis)
+    sop_supported = bool(sop_analysis.get("supported")) if isinstance(sop_analysis, dict) else False
+    tx_risk = str(transaction_analysis.get("risk_level") or "Medium").strip() or "Medium"
+    sop_risk = str((sop_analysis or {}).get("risk_level") or tx_risk).strip() or tx_risk
+    tx_classification = str(transaction_analysis.get("fraud_classification") or "").strip()
+    sop_category = str((sop_analysis or {}).get("fraud_category") or "").strip()
+    sop_classification = str((sop_analysis or {}).get("fraud_classification") or "").strip()
+    sop_has_specific_category = sop_supported and sop_category and sop_category.lower() not in {"unknown"}
+    sop_has_specific_classification = sop_supported and sop_classification and sop_classification.lower() not in {
+        "unknown",
+        "manual review required",
+        "no transactions found in the selected window",
+    }
+
+    combined["case_description"] = case_description
+    combined["supported"] = True
+    combined["transaction_classification"] = transaction_analysis.get("fraud_classification")
+    combined["fraud_category"] = sop_category if sop_has_specific_category else "Transaction-Led Review"
+    combined["fraud_classification"] = (
+        sop_classification
+        if sop_has_specific_classification
+        else tx_classification
+    )
+    combined["risk_level"] = sop_risk if _risk_rank(sop_risk) > _risk_rank(tx_risk) else tx_risk
+    combined["sop_supported"] = sop_supported
+    combined["suspicious_indicators"] = (
+        (sop_analysis or {}).get("suspicious_indicators")
+        or [item.get("pattern") for item in transaction_analysis.get("suspicious_patterns") or [] if item.get("pattern")]
+    )
+    combined["relevant_information"] = (
+        (
+            str((sop_analysis or {}).get("relevant_information") or "").strip()
+            if sop_has_specific_classification or sop_has_specific_category
+            else ""
+        )
+        or str(transaction_analysis.get("reasoning_summary") or "").strip()
+    )
+    combined["sop_summary"] = (
+        str((sop_analysis or {}).get("sop_summary") or "").strip()
+        or str((sop_analysis or {}).get("reason") or "").strip()
+    )
+    combined["recommended_action"] = (
+        str((sop_analysis or {}).get("recommended_action") or "").strip()
+        or (
+            (transaction_analysis.get("recommended_actions") or [None])[0]
+            if isinstance(transaction_analysis.get("recommended_actions"), list)
+            else ""
+        )
+        or ""
+    )
+    combined["references"] = list((sop_analysis or {}).get("references") or [])
+    combined["sop_reason"] = str((sop_analysis or {}).get("reason") or "").strip()
+
+    recommended_actions: list[str] = []
+    for candidate in [
+        combined.get("recommended_action"),
+        *((transaction_analysis.get("recommended_actions") or []) if isinstance(transaction_analysis.get("recommended_actions"), list) else []),
+    ]:
+        text = str(candidate or "").strip()
+        if text and text not in recommended_actions:
+            recommended_actions.append(text)
+    combined["recommended_actions"] = recommended_actions[:5]
+
+    return combined
+
+
+def _build_combined_chat_response(customer: dict[str, Any], analysis: dict[str, Any]) -> str:
+    patterns = analysis.get("suspicious_patterns") or []
+    actions = analysis.get("recommended_actions") or []
+    query_window = analysis.get("query_window") or {}
+    primary_pattern = next(
+        (
+            f"{item.get('pattern')}: {item.get('details')}"
+            for item in patterns
+            if item.get("pattern")
+        ),
+        "No strong suspicious transaction pattern was triggered in the selected review window.",
+    )
+    first_action = next((str(item).strip() for item in actions if str(item).strip()), "Proceed with manual review and safeguard the impacted customer account.")
+    review_window = " to ".join(
+        item
+        for item in [
+            query_window.get("start_datetime"),
+            query_window.get("end_datetime"),
+        ]
+        if item
+    ) or "The supplied transaction review window"
+
+    return (
+        "Executive Summary:\n"
+        f"- Customer confirmed: {customer.get('name')} ({customer.get('cif_id')})\n"
+        f"- Review window: {review_window}\n"
+        f"- Risk level: {analysis.get('risk_level') or 'Medium'}\n"
+        f"- Likely fraud type: {analysis.get('fraud_classification') or 'Manual review required'}\n"
+        f"- Key concern: {primary_pattern}\n"
+        f"- Immediate next action: {first_action}"
+    )
+
+
+def _build_documents_followup_prompt() -> str:
+    return "Do you want the relevant blueprint documents for this case? (Yes/No)"
+
+
+def _build_report_followup_prompt() -> str:
+    return "Do you want an automated investigation report generated? (Yes/No)"
+
+
+def _build_history_followup_prompt() -> str:
+    return "Do you want historical fraud case references? (Yes/No)"
+
+
+def _build_final_assistance_prompt() -> str:
+    return "Is there anything else I can help you with? (Yes/No)"
+
+
+def _build_report_case_query(state: dict[str, Any], customer: dict[str, Any]) -> str:
+    case_description = str(state.get("case_description") or "").strip()
+    customer_name = str(customer.get("name") or "").strip()
+    cif_id = str(customer.get("cif_id") or "").strip()
+    start_datetime = str(state.get("start_datetime") or "").strip()
+    end_datetime = str(state.get("end_datetime") or "").strip()
+
+    parts = []
+    if case_description:
+        parts.append(f"Case summary: {case_description}")
+    if customer_name or cif_id:
+        label = customer_name or "Customer"
+        suffix = f" ({cif_id})" if cif_id else ""
+        parts.append(f"Customer verified: {label}{suffix}")
+    if start_datetime and end_datetime:
+        parts.append(f"Reviewed window: {start_datetime} to {end_datetime}")
+
+    return ". ".join(part for part in parts if part).strip() or "Customer fraud investigation case"
+
+
+def run_integrated_fraud_chat(user_context: dict[str, Any], query: str, state: dict[str, Any] | None = None) -> dict[str, Any]:
+    normalized_query = _normalize_query(query)
+    normalized_state = _normalize_integrated_state(state)
+    session_id = normalized_state.get("sessionId") or f"{user_context['userId']}_{uuid.uuid4().hex}"
+
+    if normalized_state.get("step") == "analysis_complete" and normalized_state.get("latest_analysis"):
+        normalized_state["step"] = "fetch_documentation"
+
+    if _is_reset_query(normalized_query):
+        reset_state = _empty_integrated_state(session_id)
+        reset_state["missing_fields"] = ["case_description", "customer_id", "start_datetime", "end_datetime"]
+        response = _build_integrated_followup_question(reset_state, [])
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": "collect_case_details",
+            "sessionId": session_id,
+            "fraud_category": "",
+            "documents": [],
+            "documents_title": "",
+            "conversation_state": reset_state,
+        }
+
+    current_step = str(normalized_state.get("step") or "").strip()
+    choice = _normalize_choice(normalized_query)
+
+    if current_step in FOLLOWUP_STEPS and choice is None:
+        normalized_state = _empty_integrated_state(session_id)
+        current_step = str(normalized_state.get("step") or "").strip()
+
+    if current_step == "fetch_documentation":
+        documents: list[dict[str, Any]] = []
+        documents_title = ""
+
+        if choice == "yes":
+            if (user_context.get("permissions") or {}).get("canDownloadDocuments"):
+                documents = _fetch_relevant_documents(user_context["bankId"])
+                documents_title = "Relevant Blueprint Documentation"
+                if documents:
+                    response = f"I have attached the relevant blueprint documents for this case.\n\n{_build_report_followup_prompt()}"
+                else:
+                    response = f"I could not find a matching blueprint document right now.\n\n{_build_report_followup_prompt()}"
+            else:
+                response = f"Document downloads are not available for your role.\n\n{_build_report_followup_prompt()}"
+            normalized_state["step"] = "generate_report"
+        elif choice == "no":
+            response = f"Skipping blueprint documents.\n\n{_build_report_followup_prompt()}"
+            normalized_state["step"] = "generate_report"
+        else:
+            response = "Please reply Yes or No so I know whether to fetch the relevant blueprint documents."
+
+        latest_analysis = normalized_state.get("latest_analysis") if isinstance(normalized_state.get("latest_analysis"), dict) else {}
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": normalized_state.get("step"),
+            "sessionId": session_id,
+            "fraud_category": latest_analysis.get("fraud_category") or "",
+            "documents": documents,
+            "documents_title": documents_title,
+            "conversation_state": {**normalized_state, "sessionId": session_id},
+        }
+
+    if current_step == "generate_report":
+        if choice == "yes":
+            if (user_context.get("permissions") or {}).get("canGenerateReport"):
+                analysis = normalized_state.get("latest_analysis") if isinstance(normalized_state.get("latest_analysis"), dict) else {}
+                report_query = (
+                    str(normalized_state.get("case_query") or "").strip()
+                    or str(normalized_state.get("case_description") or "").strip()
+                    or query
+                )
+                report = generate_investigation_report(report_query, user_context["bankId"], analysis)
+                response = f"Generated Investigation Report:\n\n{report}\n\n{_build_history_followup_prompt()}"
+            else:
+                response = f"Automated investigation reports are not available for your role.\n\n{_build_history_followup_prompt()}"
+            normalized_state["step"] = "historical_docs"
+        elif choice == "no":
+            response = f"Skipping report generation.\n\n{_build_history_followup_prompt()}"
+            normalized_state["step"] = "historical_docs"
+        else:
+            response = "Please reply Yes or No so I know whether to generate the investigation report."
+
+        latest_analysis = normalized_state.get("latest_analysis") if isinstance(normalized_state.get("latest_analysis"), dict) else {}
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": normalized_state.get("step"),
+            "sessionId": session_id,
+            "fraud_category": latest_analysis.get("fraud_category") or "",
+            "documents": [],
+            "documents_title": "",
+            "conversation_state": {**normalized_state, "sessionId": session_id},
+        }
+
+    if current_step == "historical_docs":
+        documents = []
+        documents_title = ""
+
+        if choice == "yes":
+            if (user_context.get("permissions") or {}).get("canViewHistoricalCases"):
+                documents = _fetch_historical_references()
+                documents_title = "Historical Fraud Case References"
+                if documents:
+                    response = f"I have added comparable historical fraud case references below.\n\n{_build_final_assistance_prompt()}"
+                else:
+                    response = f"I could not find historical case references right now.\n\n{_build_final_assistance_prompt()}"
+            else:
+                response = f"Historical fraud case references are not available for your role.\n\n{_build_final_assistance_prompt()}"
+            normalized_state["step"] = "final_assistance"
+        elif choice == "no":
+            response = f"Skipping historical case references.\n\n{_build_final_assistance_prompt()}"
+            normalized_state["step"] = "final_assistance"
+        else:
+            response = "Please reply Yes or No so I know whether to fetch the historical fraud case references."
+
+        latest_analysis = normalized_state.get("latest_analysis") if isinstance(normalized_state.get("latest_analysis"), dict) else {}
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": normalized_state.get("step"),
+            "sessionId": session_id,
+            "fraud_category": latest_analysis.get("fraud_category") or "",
+            "documents": documents,
+            "documents_title": documents_title,
+            "conversation_state": {**normalized_state, "sessionId": session_id},
+        }
+
+    if current_step == "final_assistance":
+        if choice == "yes":
+            reset_state = _empty_integrated_state(session_id)
+            reset_state["missing_fields"] = ["case_description", "customer_id", "start_datetime", "end_datetime"]
+            response = "Okay. Please describe the next case, then share one unique customer identifier and the review date-time range."
+            return {
+                "user": user_context["userId"],
+                "bank": user_context["bankId"],
+                "query": query,
+                "fraud_analysis": None,
+                "chatbot_response": response,
+                "next_step": "collect_case_details",
+                "sessionId": session_id,
+                "fraud_category": "",
+                "documents": [],
+                "documents_title": "",
+                "conversation_state": reset_state,
+            }
+
+        if choice == "no":
+            reset_state = _empty_integrated_state(session_id)
+            response = "Thank you. When you have another case, just describe it and I will continue from there."
+            return {
+                "user": user_context["userId"],
+                "bank": user_context["bankId"],
+                "query": query,
+                "fraud_analysis": None,
+                "chatbot_response": response,
+                "next_step": "conversation_end",
+                "sessionId": session_id,
+                "fraud_category": "",
+                "documents": [],
+                "documents_title": "",
+                "conversation_state": {**reset_state, "step": "conversation_end"},
+            }
+
+        latest_analysis = normalized_state.get("latest_analysis") if isinstance(normalized_state.get("latest_analysis"), dict) else {}
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": "Please reply Yes or No so I know whether you want to continue with another case.",
+            "next_step": "final_assistance",
+            "sessionId": session_id,
+            "fraud_category": latest_analysis.get("fraud_category") or "",
+            "documents": [],
+            "documents_title": "",
+            "conversation_state": {**normalized_state, "sessionId": session_id},
+        }
+
+    resolved_customer, customer_matches, attempted_identifier = _resolve_customer(normalized_query, normalized_state)
+    merged_state = _merge_integrated_state(normalized_state, resolved_customer, normalized_query)
+    has_customer = bool(merged_state.get("resolved_customer"))
+    merged_state["missing_fields"] = _build_integrated_missing_fields(merged_state, has_customer)
+
+    if attempted_identifier and not resolved_customer and customer_matches:
+        merged_state["customer_name"] = merged_state.get("customer_name") or attempted_identifier
+        merged_state["missing_fields"] = _build_integrated_missing_fields(merged_state, False)
+        merged_state["step"] = "collect_customer"
+        response = _build_identifier_requirement_message(attempted_identifier, customer_matches)
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": "collect_customer",
+            "sessionId": session_id,
+            "fraud_category": "",
+            "documents": [],
+            "documents_title": "",
+            "conversation_state": {**merged_state, "sessionId": session_id},
+        }
+
+    if attempted_identifier and not resolved_customer and not customer_matches:
+        _clear_resolved_customer(merged_state)
+        merged_state["missing_fields"] = _build_integrated_missing_fields(merged_state, False)
+        merged_state["step"] = "collect_customer"
+        response = (
+            f"I could not find a customer for `{attempted_identifier}`. "
+            "Please share a valid CIF ID, account number, PAN, or registered mobile number."
+        )
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": "collect_customer",
+            "sessionId": session_id,
+            "fraud_category": "",
+            "documents": [],
+            "documents_title": "",
+            "conversation_state": {**merged_state, "sessionId": session_id},
+        }
+
+    if customer_matches and len(customer_matches) > 1 and not resolved_customer:
+        _clear_resolved_customer(merged_state)
+        merged_state["missing_fields"] = _build_integrated_missing_fields(merged_state, False)
+        merged_state["step"] = "collect_customer"
+        response = _build_integrated_followup_question(merged_state, customer_matches)
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": "collect_customer",
+            "sessionId": session_id,
+            "fraud_category": "",
+            "documents": [],
+            "documents_title": "",
+            "conversation_state": {**merged_state, "sessionId": session_id},
+        }
+
+    if merged_state["missing_fields"]:
+        merged_state["step"] = "collect_inputs"
+        response = _build_integrated_followup_question(merged_state, [])
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": "collect_inputs",
+            "sessionId": session_id,
+            "fraud_category": "",
+            "documents": [],
+            "documents_title": "",
+            "conversation_state": {**merged_state, "sessionId": session_id},
+        }
+
+    start_datetime = _parse_state_datetime(merged_state.get("start_datetime"))
+    end_datetime = _parse_state_datetime(merged_state.get("end_datetime"))
+    customer = merged_state.get("resolved_customer") or {}
+
+    if not start_datetime or not end_datetime:
+        merged_state["missing_fields"] = _build_integrated_missing_fields(merged_state, True)
+        merged_state["step"] = "collect_inputs"
+        response = _build_integrated_followup_question(merged_state, [])
+        return {
+            "user": user_context["userId"],
+            "bank": user_context["bankId"],
+            "query": query,
+            "fraud_analysis": None,
+            "chatbot_response": response,
+            "next_step": "collect_inputs",
+            "sessionId": session_id,
+            "fraud_category": "",
+            "documents": [],
+            "documents_title": "",
+            "conversation_state": {**merged_state, "sessionId": session_id},
+        }
+
+    transactions = _fetch_transactions(str(customer.get("cif_id") or ""), start_datetime, end_datetime)
+    transaction_analysis = _analyze_transactions(customer, transactions, start_datetime, end_datetime)
+    sop_query = _build_sop_grounding_query(str(merged_state.get("case_description") or "").strip(), customer, transaction_analysis)
+    sop_analysis = detect_fraud(sop_query, user_context["bankId"])
+    combined_analysis = _combine_transaction_and_sop_analysis(
+        str(merged_state.get("case_description") or "").strip(),
+        transaction_analysis,
+        sop_analysis if isinstance(sop_analysis, dict) else {},
+    )
+
+    merged_state["step"] = "fetch_documentation"
+    merged_state["case_query"] = _build_report_case_query(merged_state, customer)
+    merged_state["missing_fields"] = []
+    merged_state["latest_analysis"] = combined_analysis
+    merged_state["sop_analysis"] = sop_analysis if isinstance(sop_analysis, dict) else {}
+
+    return {
+        "user": user_context["userId"],
+        "bank": user_context["bankId"],
+        "query": query,
+        "fraud_analysis": combined_analysis,
+        "chatbot_response": f"{_build_combined_chat_response(customer, combined_analysis)}\n\n{_build_documents_followup_prompt()}",
+        "next_step": "fetch_documentation",
+        "sessionId": session_id,
+        "fraud_category": combined_analysis.get("fraud_category") or "",
+        "documents": [],
+        "documents_title": "",
         "conversation_state": {**merged_state, "sessionId": session_id},
     }

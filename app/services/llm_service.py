@@ -1,6 +1,7 @@
 import json
 import math
 import re
+import time
 from copy import deepcopy
 
 import requests
@@ -24,6 +25,8 @@ class GeminiServiceError(RuntimeError):
 
 
 _resolved_models = {}
+TRANSIENT_STATUS_CODES = {429, 500, 502, 503, 504}
+TRANSIENT_RETRY_DELAYS_SECONDS = [1.2, 2.4]
 
 
 def is_gemini_configured():
@@ -40,32 +43,50 @@ def _post_to_gemini(model_name, action, payload):
             "GEMINI_API_KEY is not set. Add it to your environment or .env before using Gemini RAG."
         )
 
-    try:
-        response = requests.post(
-            _build_model_url(model_name, action),
-            headers={
-                "Content-Type": "application/json",
-                "x-goog-api-key": GEMINI_API_KEY,
-            },
-            json=payload,
-            timeout=GEMINI_REQUEST_TIMEOUT_SECONDS,
+    last_error = None
+
+    for attempt_index in range(len(TRANSIENT_RETRY_DELAYS_SECONDS) + 1):
+        try:
+            response = requests.post(
+                _build_model_url(model_name, action),
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": GEMINI_API_KEY,
+                },
+                json=payload,
+                timeout=GEMINI_REQUEST_TIMEOUT_SECONDS,
+            )
+        except requests.RequestException as exc:
+            last_error = GeminiServiceError(f"Gemini API request failed before a response was received: {exc}")
+            if attempt_index < len(TRANSIENT_RETRY_DELAYS_SECONDS):
+                time.sleep(TRANSIENT_RETRY_DELAYS_SECONDS[attempt_index])
+                continue
+            raise last_error from exc
+
+        if response.ok:
+            return response.json()
+
+        try:
+            error_payload = response.json()
+            error_message = error_payload.get("error", {}).get("message") or response.text
+        except Exception:
+            error_message = response.text
+
+        last_error = GeminiServiceError(
+            f"Gemini API request failed ({response.status_code}): {error_message.strip()}",
+            status_code=response.status_code,
         )
-    except requests.RequestException as exc:
-        raise GeminiServiceError(f"Gemini API request failed before a response was received: {exc}") from exc
 
-    if response.ok:
-        return response.json()
+        if response.status_code in TRANSIENT_STATUS_CODES and attempt_index < len(TRANSIENT_RETRY_DELAYS_SECONDS):
+            time.sleep(TRANSIENT_RETRY_DELAYS_SECONDS[attempt_index])
+            continue
 
-    try:
-        error_payload = response.json()
-        error_message = error_payload.get("error", {}).get("message") or response.text
-    except Exception:
-        error_message = response.text
+        raise last_error
 
-    raise GeminiServiceError(
-        f"Gemini API request failed ({response.status_code}): {error_message.strip()}",
-        status_code=response.status_code,
-    )
+    if last_error:
+        raise last_error
+
+    raise GeminiServiceError("Gemini request failed unexpectedly.")
 
 
 def _dedupe_models(primary_model, fallback_models):

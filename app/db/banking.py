@@ -57,6 +57,16 @@ def ensure_banking_indexes(database: Database | None = None) -> None:
         [("mobile", ASCENDING)],
         name="idx_customers_mobile",
     )
+    customers_collection.create_index(
+        [("pan", ASCENDING)],
+        name="uq_customers_pan",
+        unique=True,
+        sparse=True,
+    )
+    customers_collection.create_index(
+        [("accounts", ASCENDING)],
+        name="idx_customers_accounts",
+    )
 
     transactions_collection.create_index(
         [("txn_id", ASCENDING)],

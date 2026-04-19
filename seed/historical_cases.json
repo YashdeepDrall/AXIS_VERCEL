@@ -1,0 +1,158 @@
+[
+  {
+    "caseId": "HIST-AX-001",
+    "referenceTag": "AXIS-HR-001",
+    "title": "Fake Payment Link Followed by Rapid UPI Debits",
+    "category": "Account Takeover / Beneficiary Fraud",
+    "channel": "UPI",
+    "caseWindow": "05 Jan 2026 07:14 pm to 05 Jan 2026 07:33 pm",
+    "customerProfile": "Retail salaried customer with low normal-value UPI usage and no prior high-value beneficiary additions.",
+    "incidentSummary": "Customer reported clicking a spoofed payment/refund link received over SMS. Within minutes, multiple UPI debits were processed to newly added VPA beneficiaries that the customer denied approving.",
+    "transactionPattern": "Three UPI debits were posted in a short burst after the link interaction, with fresh beneficiary creation and sharply higher value than the customer's normal digital spend.",
+    "suspiciousIndicators": [
+      "Fresh VPA additions immediately before outward debit flow",
+      "Rapid successive UPI debits within a narrow time window",
+      "Customer denial of authorization after link click event",
+      "Transaction values materially above customer's prior UPI pattern"
+    ],
+    "investigationHighlights": [
+      "Device and channel activity showed a sudden beneficiary setup event just before the disputed transfers.",
+      "Prior 90-day review showed no comparable merchant or peer-to-peer payments of similar value.",
+      "Fraud operations placed an immediate watch on linked beneficiaries for mule-account review."
+    ],
+    "actionTaken": "Customer debit rail was restricted, disputed beneficiaries were marked for block/hold review, and urgent callback verification plus evidence capture was initiated.",
+    "outcome": "A portion of the outward amount was placed on hold downstream, and the case was escalated under urgent beneficiary-fraud handling.",
+    "sopRelevance": "Useful when a customer reports link-click compromise followed by rapid UPI outflow, especially where new beneficiaries appear just before the disputed transactions.",
+    "learning": "Treat payment-link complaints with immediate post-click debit activity as time-sensitive beneficiary-fraud cases requiring fast containment."
+  },
+  {
+    "caseId": "HIST-AX-002",
+    "referenceTag": "AXIS-HR-002",
+    "title": "Remote Access App Misuse and Netbanking Takeover",
+    "category": "Remote Access / Netbanking Compromise",
+    "channel": "NETBANKING",
+    "caseWindow": "18 Dec 2025 11:42 am to 18 Dec 2025 12:18 pm",
+    "customerProfile": "Mass affluent retail customer with regular bill-pay and occasional scheduled transfers, but no history of same-day beneficiary onboarding and immediate high-value outflow.",
+    "incidentSummary": "Customer installed a screen-sharing or remote-support application after speaking to a caller posing as bank support. Soon after, new beneficiary transfers were processed through netbanking.",
+    "transactionPattern": "Beneficiary registration, limit activation, and outward netbanking transfers happened in a compressed sequence not aligned with the customer's usual channel behavior.",
+    "suspiciousIndicators": [
+      "New netbanking beneficiary created shortly before high-value transfer",
+      "Channel usage inconsistent with customer's normal behavior",
+      "Customer reports remote-control or screen-share interaction",
+      "High-value transfer attempted immediately after beneficiary activation"
+    ],
+    "investigationHighlights": [
+      "Channel logs showed unusual session activity concentrated around the disputed period.",
+      "The customer stated that banking credentials and on-screen OTP prompts may have been exposed during the remote-support call.",
+      "The outflow destination was not part of the customer's historic payee set."
+    ],
+    "actionTaken": "Netbanking access was locked, beneficiary review was escalated, customer credentials were reset, and session/log review was initiated.",
+    "outcome": "Further outward activity was contained after access restriction, and the case moved into detailed fraud-operations review.",
+    "sopRelevance": "Relevant where social engineering plus remote-access software appears to have enabled unauthorized beneficiary setup and transfer activity.",
+    "learning": "When remote-access exposure is reported, treat every same-session beneficiary and transfer event as potentially unauthorized until validated."
+  },
+  {
+    "caseId": "HIST-AX-003",
+    "referenceTag": "AXIS-HR-003",
+    "title": "SIM Swap Suspicion with OTP-Led IMPS Outflow",
+    "category": "SIM Swap / OTP Compromise",
+    "channel": "IMPS",
+    "caseWindow": "02 Nov 2025 09:06 am to 02 Nov 2025 09:29 am",
+    "customerProfile": "Self-employed customer with moderate IMPS usage, but almost always to known stored beneficiaries and during regular business hours only.",
+    "incidentSummary": "Customer reported sudden mobile network loss followed by disputed IMPS debits. The timing suggested unauthorized OTP interception or SIM-related compromise before the outflow.",
+    "transactionPattern": "Two higher-value IMPS debits were sent to an unrecognized beneficiary shortly after the customer lost telecom service, without a matching prior payment pattern.",
+    "suspiciousIndicators": [
+      "Temporary telecom loss immediately before disputed debits",
+      "Repeated IMPS debits to unknown beneficiary",
+      "Transaction values above the customer's recent IMPS baseline",
+      "Customer denies receiving or acting on OTP prompts"
+    ],
+    "investigationHighlights": [
+      "The beneficiary account was absent from historical transfer activity.",
+      "The customer's narrative aligned with possible OTP interception or SIM replacement timing.",
+      "Review focus shifted toward telecom-event correlation and urgent beneficiary containment."
+    ],
+    "actionTaken": "Immediate debit containment review, mobile/email alert validation, and beneficiary escalation were initiated while the customer was advised to secure telecom access.",
+    "outcome": "Case was classified for urgent manual review with emphasis on telecom compromise and beneficiary tracing.",
+    "sopRelevance": "Helpful where mobile-network disruption and OTP compromise are suspected immediately before unauthorized IMPS activity.",
+    "learning": "If a customer reports signal loss before sudden IMPS outflow, prioritize SIM-swap or OTP-diversion indicators in the first review pass."
+  },
+  {
+    "caseId": "HIST-AX-004",
+    "referenceTag": "AXIS-HR-004",
+    "title": "KYC Update Phishing Escalating into Mule-Account Transfer",
+    "category": "Phishing / Mule Transfer",
+    "channel": "IMPS",
+    "caseWindow": "27 Sep 2025 03:21 pm to 27 Sep 2025 03:49 pm",
+    "customerProfile": "Senior-citizen retail profile with limited digital transaction history and small-value routine spends.",
+    "incidentSummary": "Customer entered credentials or card details on a fake KYC-update page after receiving a phishing message. High-value transfer activity followed to an unrecognized beneficiary account.",
+    "transactionPattern": "A large IMPS transfer and follow-on debit attempts were posted to a new beneficiary with no historical relationship to the customer.",
+    "suspiciousIndicators": [
+      "Phishing/KYC update narrative from customer",
+      "High-value transfer outside customer's regular behavior band",
+      "New beneficiary with no prior relationship markers",
+      "Follow-on debit attempts after the main disputed transfer"
+    ],
+    "investigationHighlights": [
+      "Historical review showed no prior use of the recipient beneficiary or similar transaction sizes.",
+      "Customer profile and digital habits did not align with the disputed transfer complexity or value.",
+      "Case pattern matched mule-account routing concerns requiring rapid downstream coordination."
+    ],
+    "actionTaken": "Fraud hold review, customer contact validation, beneficiary escalation, and phishing evidence collection were initiated.",
+    "outcome": "Primary transfer was escalated for downstream recovery support and the case was documented as phishing-led beneficiary fraud.",
+    "sopRelevance": "Applicable when a phishing complaint is immediately followed by high-value transfers to a new beneficiary or mule-account destination.",
+    "learning": "For low-digital-habit profiles, sudden complex transfer behavior after a phishing narrative should be treated as high-risk by default."
+  },
+  {
+    "caseId": "HIST-AX-005",
+    "referenceTag": "AXIS-HR-005",
+    "title": "Repeated ATM Cash-Out After Mobile Banking Credential Exposure",
+    "category": "Cash-Out / Credential Compromise",
+    "channel": "ATM",
+    "caseWindow": "12 Aug 2025 06:02 am to 12 Aug 2025 06:41 am",
+    "customerProfile": "Savings-account customer with occasional ATM withdrawals, usually small and geographically close to the home branch area.",
+    "incidentSummary": "Customer reported possible mobile banking credential exposure one evening earlier. The next morning, multiple ATM cash withdrawals were posted in quick succession from unfamiliar withdrawal behavior.",
+    "transactionPattern": "Several ATM withdrawals occurred in a short period with aggregate outflow materially above the customer's ordinary ATM pattern.",
+    "suspiciousIndicators": [
+      "Repeated ATM withdrawals within a compressed time window",
+      "Cash-out amount above normal customer withdrawal behavior",
+      "Customer reports earlier credential exposure concern",
+      "Withdrawal sequence inconsistent with prior routine usage"
+    ],
+    "investigationHighlights": [
+      "Aggregate cash-out exceeded the customer's recent ATM baseline by a wide margin.",
+      "The customer disputed both timing and intent of the withdrawal sequence.",
+      "Review emphasized linkage between prior channel exposure and the morning cash-out run."
+    ],
+    "actionTaken": "Card and channel controls were reviewed urgently, customer verification was completed, and disputed ATM events were logged for deeper operational assessment.",
+    "outcome": "Further withdrawals were prevented after control actions, and the case moved into structured fraud review with ATM-event focus.",
+    "sopRelevance": "Relevant where credential exposure may have preceded repeated ATM cash-out behavior inconsistent with the customer's normal pattern.",
+    "learning": "Even without a beneficiary trail, repeated early-morning ATM cash-out can be a strong post-compromise indicator when combined with prior channel exposure."
+  },
+  {
+    "caseId": "HIST-AX-006",
+    "referenceTag": "AXIS-HR-006",
+    "title": "Merchant Refund Scam Triggering UPI Collect and Follow-On Debits",
+    "category": "Collect Request / Social Engineering Fraud",
+    "channel": "UPI",
+    "caseWindow": "21 Jul 2025 08:11 pm to 21 Jul 2025 08:26 pm",
+    "customerProfile": "Frequent UPI user with many low-value merchant spends but no history of approving unusually large collect requests late in the evening.",
+    "incidentSummary": "Customer contacted a fake merchant support number for a refund. During the call, the customer was induced to approve UPI collect requests and subsequent debits were observed.",
+    "transactionPattern": "The disputed window showed approval-like activity inconsistent with the customer's normal merchant refund behavior, followed by higher-value outflow than typical spends.",
+    "suspiciousIndicators": [
+      "Refund/support-call narrative preceding disputed debits",
+      "Collect-style authorization confusion reported by customer",
+      "Outflow higher than customer's routine merchant payment sizes",
+      "Late-evening transaction burst inconsistent with usual pattern"
+    ],
+    "investigationHighlights": [
+      "Customer believed they were receiving money, not authorizing a debit-related action.",
+      "Transaction sequencing suggested social engineering rather than routine merchant activity.",
+      "Historical spend pattern showed many small merchant debits but no comparable collect-driven outflow."
+    ],
+    "actionTaken": "Customer education and fraud containment were initiated alongside beneficiary/VPA review and disputed transaction capture.",
+    "outcome": "Case was tagged for social-engineering-led UPI fraud review with immediate awareness and containment measures.",
+    "sopRelevance": "Useful when customers describe refund scams, collect-request confusion, or support-call manipulation before disputed UPI outflow.",
+    "learning": "Refund and collect-request scams often rely on customer confusion; the pattern becomes stronger when the value is well above normal merchant usage."
+  }
+]
