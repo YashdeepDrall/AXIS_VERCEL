@@ -658,7 +658,106 @@
     }
 
     .sidebar-filters {
-      margin-top: 2px;
+      margin-top: 1px;
+      gap: 6px;
+    }
+
+    #chatSearch + .sidebar-filters {
+      margin-top: -4px;
+    }
+
+    .sidebar-filter-toolbar,
+    .sidebar-filter-copy,
+    .sidebar-filter-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-filter-toolbar {
+      justify-content: space-between;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: 0 10px 24px rgba(34, 21, 27, 0.05);
+    }
+
+    .sidebar-filter-copy {
+      min-width: 0;
+      flex: 1 1 auto;
+      gap: 4px;
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .sidebar-filter-summary {
+      display: block;
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.35;
+    }
+
+    .sidebar-filter-actions {
+      flex: 0 0 auto;
+      justify-content: flex-end;
+    }
+
+    .sidebar-filter-toggle,
+    .sidebar-filter-clear {
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--ink);
+      font-size: 0.76rem;
+      font-weight: 700;
+      box-shadow: none;
+    }
+
+    .sidebar-filter-toggle:hover:not(:disabled),
+    .sidebar-filter-clear:hover:not(:disabled) {
+      transform: none;
+      box-shadow: 0 8px 20px rgba(34, 21, 27, 0.08);
+    }
+
+    .sidebar-filter-clear {
+      color: var(--muted);
+    }
+
+    .sidebar-filter-panels {
+      display: grid;
+      gap: 6px;
+    }
+
+    .sidebar-filter-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .sidebar-filter-tab {
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      box-shadow: none;
+    }
+
+    .sidebar-filter-tab:hover:not(:disabled) {
+      transform: none;
+      box-shadow: 0 8px 20px rgba(34, 21, 27, 0.08);
+    }
+
+    .sidebar-filter-tab.is-active {
+      background: rgba(165, 0, 52, 0.08);
+      border-color: rgba(165, 0, 52, 0.18);
+      color: var(--primary);
     }
 
     .filter-label,
@@ -683,6 +782,50 @@
       letter-spacing: 0.03em;
       text-transform: uppercase;
       color: var(--muted);
+    }
+
+    .sidebar-filters .checkbox-filter-panel {
+      gap: 6px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .sidebar-filters .checkbox-filter-heading {
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+    }
+
+    .sidebar-filters .checkbox-filter-list {
+      gap: 4px;
+      max-height: 112px;
+    }
+
+    .sidebar-filters .checkbox-filter-option {
+      min-height: 28px;
+      padding: 4px 6px;
+    }
+
+    .sidebar-filters .checkbox-filter-copy strong {
+      font-size: 0.82rem;
+    }
+
+    .sidebar-filters .checkbox-filter-copy span,
+    .sidebar-filters .checkbox-filter-empty {
+      font-size: 0.72rem;
+    }
+
+    #roleFilter.checkbox-filter-list {
+      gap: 2px;
+      max-height: 98px;
+    }
+
+    #roleFilter .checkbox-filter-option {
+      min-height: 22px;
+      padding: 2px 6px;
+    }
+
+    #roleFilter .checkbox-filter-copy {
+      gap: 0;
     }
 
     .checkbox-filter-list {
@@ -824,6 +967,28 @@
       align-content: start;
       gap: 8px;
       min-height: 0;
+    }
+
+    body[data-workspace-filters="true"] .sidebar-section {
+      overflow-y: auto;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(34, 21, 27, 0.18) transparent;
+    }
+
+    body[data-workspace-filters="true"] .sidebar-section::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    body[data-workspace-filters="true"] .sidebar-section::-webkit-scrollbar-thumb {
+      background: rgba(34, 21, 27, 0.18);
+      border-radius: 999px;
+    }
+
+    body[data-workspace-filters="true"] .chat-list {
+      overflow-y: visible;
+      min-height: auto;
+      padding-bottom: 8px;
     }
 
     .chat-list {
@@ -1896,14 +2061,29 @@
           <label for="chatSearch">Recent chats</label>
           <input id="chatSearch" class="sidebar-search-input" type="text" placeholder="Search chats" autocomplete="off">
           <div id="sidebarFilters" class="sidebar-filters hidden">
-            <span class="filter-label">Workspace filters</span>
-            <div class="checkbox-filter-panel">
-              <span class="checkbox-filter-heading">Owners</span>
-              <div id="ownerFilter" class="checkbox-filter-list" role="group" aria-label="Filter chats by owner"></div>
+            <div class="sidebar-filter-toolbar">
+              <div class="sidebar-filter-copy">
+                <span class="filter-label">Workspace filters</span>
+                <span id="sidebarFilterSummary" class="sidebar-filter-summary">Show only the chats you want to review.</span>
+              </div>
+              <div class="sidebar-filter-actions">
+                <button id="clearSidebarFiltersButton" class="sidebar-filter-clear" type="button">Clear</button>
+                <button id="toggleSidebarFiltersButton" class="sidebar-filter-toggle" type="button" aria-expanded="false">Show</button>
+              </div>
             </div>
-            <div class="checkbox-filter-panel">
-              <span class="checkbox-filter-heading">Roles</span>
-              <div id="roleFilter" class="checkbox-filter-list" role="group" aria-label="Filter chats by role"></div>
+            <div id="sidebarFilterPanels" class="sidebar-filter-panels hidden">
+              <div class="sidebar-filter-tabs" role="tablist" aria-label="Workspace filter categories">
+                <button id="sidebarOwnersTab" class="sidebar-filter-tab is-active" type="button" role="tab" aria-selected="true">Owners</button>
+                <button id="sidebarRolesTab" class="sidebar-filter-tab" type="button" role="tab" aria-selected="false">Roles</button>
+              </div>
+              <div id="ownerFilterPanel" class="checkbox-filter-panel">
+                <span class="checkbox-filter-heading">Owners</span>
+                <div id="ownerFilter" class="checkbox-filter-list" role="group" aria-label="Filter chats by owner"></div>
+              </div>
+              <div id="roleFilterPanel" class="checkbox-filter-panel hidden">
+                <span class="checkbox-filter-heading">Roles</span>
+                <div id="roleFilter" class="checkbox-filter-list" role="group" aria-label="Filter chats by role"></div>
+              </div>
             </div>
           </div>
           <div id="chatList" class="chat-list"></div>
@@ -2168,6 +2348,14 @@
       newChatButton: document.getElementById("newChatButton"),
       chatSearch: document.getElementById("chatSearch"),
       sidebarFilters: document.getElementById("sidebarFilters"),
+      sidebarFilterSummary: document.getElementById("sidebarFilterSummary"),
+      sidebarFilterPanels: document.getElementById("sidebarFilterPanels"),
+      toggleSidebarFiltersButton: document.getElementById("toggleSidebarFiltersButton"),
+      clearSidebarFiltersButton: document.getElementById("clearSidebarFiltersButton"),
+      sidebarOwnersTab: document.getElementById("sidebarOwnersTab"),
+      sidebarRolesTab: document.getElementById("sidebarRolesTab"),
+      ownerFilterPanel: document.getElementById("ownerFilterPanel"),
+      roleFilterPanel: document.getElementById("roleFilterPanel"),
       ownerFilter: document.getElementById("ownerFilter"),
       roleFilter: document.getElementById("roleFilter"),
       chatList: document.getElementById("chatList"),
@@ -2249,6 +2437,8 @@
       historyHydrating: false,
       busyConversationId: "",
       chatSearch: "",
+      sidebarFiltersExpanded: false,
+      sidebarFilterTab: "owners",
       ownerFilter: [],
       roleFilter: [],
       activitySearch: "",
@@ -4027,6 +4217,28 @@
         previousRole,
         "No roles available."
       );
+
+      const ownerCount = ui.ownerFilter.length;
+      const roleCount = ui.roleFilter.length;
+      const activeCount = ownerCount + roleCount;
+      const ownerSummary = ownerCount ? `${ownerCount} owner${ownerCount === 1 ? "" : "s"}` : "all owners";
+      const roleSummary = roleCount ? `${roleCount} role${roleCount === 1 ? "" : "s"}` : "all roles";
+      const activeTab = ui.sidebarFilterTab === "roles" ? "roles" : "owners";
+      els.sidebarFilterSummary.textContent = activeCount
+        ? `Showing chats for ${ownerSummary} and ${roleSummary}.`
+        : "Show only the chats you want to review.";
+      els.toggleSidebarFiltersButton.textContent = ui.sidebarFiltersExpanded ? "Hide" : "Show";
+      els.toggleSidebarFiltersButton.setAttribute("aria-expanded", ui.sidebarFiltersExpanded ? "true" : "false");
+      els.clearSidebarFiltersButton.disabled = !activeCount;
+      els.sidebarOwnersTab.textContent = ownerCount ? `Owners (${ownerCount})` : "Owners";
+      els.sidebarRolesTab.textContent = roleCount ? `Roles (${roleCount})` : "Roles";
+      els.sidebarOwnersTab.classList.toggle("is-active", activeTab === "owners");
+      els.sidebarRolesTab.classList.toggle("is-active", activeTab === "roles");
+      els.sidebarOwnersTab.setAttribute("aria-selected", activeTab === "owners" ? "true" : "false");
+      els.sidebarRolesTab.setAttribute("aria-selected", activeTab === "roles" ? "true" : "false");
+      setHidden(els.sidebarFilterPanels, !ui.sidebarFiltersExpanded);
+      setHidden(els.ownerFilterPanel, activeTab !== "owners");
+      setHidden(els.roleFilterPanel, activeTab !== "roles");
     }
 
     function renderHistory() {
@@ -4311,6 +4523,7 @@
       }
 
       document.body.dataset.theme = state.theme || "light";
+      document.body.dataset.workspaceFilters = workspaceFilterVisible() ? "true" : "false";
       document.body.style.overflow = ui.settingsOpen || ui.membersOpen ? "hidden" : "";
       setHidden(els.loginView, state.loggedIn);
       setHidden(els.appView, !state.loggedIn);
@@ -5003,16 +5216,38 @@
       await setConversationWorkflow("customer_fraud");
     });
     els.chatSearch.addEventListener("input", () => { ui.chatSearch = els.chatSearch.value; renderChatList(); });
+    els.toggleSidebarFiltersButton.addEventListener("click", () => {
+      ui.sidebarFiltersExpanded = !ui.sidebarFiltersExpanded;
+      renderSidebarFilters();
+    });
+    els.sidebarOwnersTab.addEventListener("click", () => {
+      ui.sidebarFilterTab = "owners";
+      renderSidebarFilters();
+    });
+    els.sidebarRolesTab.addEventListener("click", () => {
+      ui.sidebarFilterTab = "roles";
+      renderSidebarFilters();
+    });
+    els.clearSidebarFiltersButton.addEventListener("click", () => {
+      ui.ownerFilter = [];
+      ui.roleFilter = [];
+      renderSidebarFilters();
+      renderChatList();
+    });
     els.ownerFilter.addEventListener("change", (event) => {
       if (!(event.target instanceof HTMLInputElement) || event.target.type !== "checkbox") return;
+      ui.sidebarFilterTab = "owners";
       ui.ownerFilter = selectedCheckboxValues(els.ownerFilter);
       syncCheckboxOptionStyles(els.ownerFilter);
+      renderSidebarFilters();
       renderChatList();
     });
     els.roleFilter.addEventListener("change", (event) => {
       if (!(event.target instanceof HTMLInputElement) || event.target.type !== "checkbox") return;
+      ui.sidebarFilterTab = "roles";
       ui.roleFilter = selectedCheckboxValues(els.roleFilter);
       syncCheckboxOptionStyles(els.roleFilter);
+      renderSidebarFilters();
       renderChatList();
     });
     els.activitySearch.addEventListener("input", () => {
