@@ -1781,6 +1781,13 @@
       border-top: 1px dashed rgba(34, 21, 27, 0.1);
     }
 
+    .case-note-entry.is-edit-target {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(165, 0, 52, 0.05);
+      box-shadow: inset 0 0 0 1px rgba(165, 0, 52, 0.08);
+    }
+
     .case-note-entry-signature {
       color: rgba(99, 81, 90, 0.86);
       font-size: 0.8rem;
@@ -2675,6 +2682,7 @@
       activityActorFilter: [],
       caseDeskBusyConversationId: "",
       caseNotesDrafts: {},
+      caseNoteModes: {},
       preserveHistoryScroll: false
     };
 
@@ -3798,6 +3806,10 @@
       return entries.map((entry) => `${entry.content} (${entry.authorDisplayName} - ${entry.authorRoleLabel})`).join("\n").trim();
     }
 
+    function normalizeNoteDraft(value) {
+      return String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    }
+
     function noteSignatureLabel(displayName, roleText) {
       return `${displayName || "AXIS User"} - ${roleText || "Investigator"}`;
     }
@@ -4520,9 +4532,17 @@
       );
     }
 
-    async function saveInvestigatorNotes(conversationId, notesValue) {
-      const normalizedNotes = String(notesValue || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    async function saveInvestigatorNotes(conversationId, notesValue, options = {}) {
+      const requestedMode = options && options.mode === "correct" ? "correct" : "add";
+      const normalizedNotes = normalizeNoteDraft(notesValue);
       if (!normalizedNotes) return;
+      const currentConversation = state.conversations.find((item) => item.id === conversationId);
+      const currentEntries = noteEntriesForConversation(currentConversation);
+      const isCorrection = requestedMode === "correct" && currentEntries.length > 0;
+      if (isCorrection) {
+        const latestEntry = currentEntries[currentEntries.length - 1];
+        if (latestEntry && latestEntry.content === normalizedNotes) return;
+      }
       const noteEditorName = currentDisplayName();
       const noteEditorUserId = String(state.userId || "").trim().toLowerCase();
       const noteEditorRoleLabel = roleLabel(state.role);
@@ -4532,16 +4552,16 @@
         conversationId,
         (current) => {
           const existingEntries = noteEntriesForConversation(current);
-          const nextEntries = [
-            ...existingEntries,
-            {
-              content: normalizedNotes,
-              authorUserId: noteEditorUserId,
-              authorDisplayName: noteEditorName,
-              authorRoleLabel: noteEditorRoleLabel,
-              createdAt: noteCreatedAt
-            }
-          ];
+          const nextEntry = {
+            content: normalizedNotes,
+            authorUserId: noteEditorUserId,
+            authorDisplayName: noteEditorName,
+            authorRoleLabel: noteEditorRoleLabel,
+            createdAt: noteCreatedAt
+          };
+          const nextEntries = requestedMode === "correct" && existingEntries.length
+            ? [...existingEntries.slice(0, -1), nextEntry]
+            : [...existingEntries, nextEntry];
           return {
             ...current,
             investigatorNotes: noteEntriesAsText(nextEntries),
@@ -4555,7 +4575,8 @@
         "Investigator Notes Save Error",
         () => {
           delete ui.caseNotesDrafts[conversationId];
-          setStatus("Investigation note added.");
+          delete ui.caseNoteModes[conversationId];
+          setStatus(isCorrection ? "Latest investigation note corrected." : "Investigation note added.");
         }
       );
     }
@@ -4571,15 +4592,22 @@
       const analysis = latestCustomerFraudAnalysis(conversation);
       const currentStatus = normalizeCaseStatus(conversation.caseStatus);
       const noteEntries = noteEntriesForConversation(conversation);
+      const latestNoteEntry = noteEntries.length ? noteEntries[noteEntries.length - 1] : null;
+      const requestedNoteMode = ui.caseNoteModes[conversation.id] === "correct" ? "correct" : "add";
+      const noteMode = requestedNoteMode === "correct" && latestNoteEntry ? "correct" : "add";
       const notesDraft = Object.prototype.hasOwnProperty.call(ui.caseNotesDrafts, conversation.id)
         ? ui.caseNotesDrafts[conversation.id]
-        : "";
-      const notesDirty = Boolean(String(notesDraft || "").trim());
+        : (noteMode === "correct" && latestNoteEntry ? latestNoteEntry.content : "");
+      const normalizedDraft = normalizeNoteDraft(notesDraft);
+      const latestNoteContent = latestNoteEntry ? latestNoteEntry.content : "";
+      const draftHasText = Boolean(normalizedDraft);
+      const notesDirty = noteMode === "correct"
+        ? Boolean(draftHasText && normalizedDraft !== latestNoteContent)
+        : draftHasText;
       const isBusy = ui.caseDeskBusyConversationId === conversation.id;
       const canEdit = capabilities.canChat && !isBusy;
       const noteEditor = noteEditorDisplay(conversation, { withRole: true });
       const noteUpdatedText = conversation.notesUpdatedAt ? formatDateTime(conversation.notesUpdatedAt) : "";
-
       const panel = document.createElement("section");
       panel.className = "case-desk";
 
@@ -4666,7 +4694,9 @@
       notesHeader.innerHTML = `
         <div>
           <h4 class="case-note-title">Investigator Notes</h4>
-          <div class="case-note-helper">Capture callback outcomes, containment steps, branch coordination, and supervisor instructions as a running investigation trail.</div>
+          <div class="case-note-helper">${noteMode === "correct"
+            ? "Correct the latest saved investigation note below. Saving will replace only the most recent trail entry."
+            : "Capture callback outcomes, containment steps, branch coordination, and supervisor instructions as a running investigation trail."}</div>
         </div>
       `;
 
@@ -4681,9 +4711,13 @@
       noteLog.className = `case-note-log${noteEntries.length ? "" : " empty"}`;
 
       if (noteEntries.length) {
-        for (const entry of noteEntries) {
+        for (let entryIndex = 0; entryIndex < noteEntries.length; entryIndex += 1) {
+          const entry = noteEntries[entryIndex];
           const entryLine = document.createElement("div");
           entryLine.className = "case-note-entry";
+          if (noteMode === "correct" && entryIndex === noteEntries.length - 1) {
+            entryLine.classList.add("is-edit-target");
+          }
 
           const signature = document.createElement("span");
           signature.className = "case-note-entry-signature";
@@ -4699,7 +4733,9 @@
 
       const noteTextarea = document.createElement("textarea");
       noteTextarea.className = "case-note-textarea";
-      noteTextarea.placeholder = "Add the next investigation update for this case...";
+      noteTextarea.placeholder = noteMode === "correct"
+        ? "Correct the latest saved investigation note..."
+        : "Add the next investigation update for this case...";
       noteTextarea.value = notesDraft;
       noteTextarea.disabled = !capabilities.canChat || isBusy;
 
@@ -4712,30 +4748,60 @@
       const actions = document.createElement("div");
       actions.className = "case-note-actions";
 
+      const correctionButton = document.createElement("button");
+      correctionButton.type = "button";
+      correctionButton.className = "case-note-button secondary";
+      correctionButton.textContent = noteMode === "correct" ? "Cancel Correction" : "Correct Last Note";
+      correctionButton.disabled = !noteEntries.length || !capabilities.canChat || isBusy || (noteMode !== "correct" && draftHasText);
+      correctionButton.title = noteMode !== "correct" && draftHasText
+        ? "Save or discard the current draft before correcting the latest note."
+        : "";
+
       const discardButton = document.createElement("button");
       discardButton.type = "button";
       discardButton.className = "case-note-button secondary";
-      discardButton.textContent = "Discard Changes";
-      discardButton.disabled = !notesDirty || !capabilities.canChat || isBusy;
+      discardButton.textContent = noteMode === "correct" ? "Reset Draft" : "Discard Changes";
+      discardButton.disabled = noteMode === "correct"
+        ? !capabilities.canChat || isBusy || normalizedDraft === latestNoteContent
+        : !notesDirty || !capabilities.canChat || isBusy;
 
       const saveButton = document.createElement("button");
       saveButton.type = "button";
       saveButton.className = "case-note-button";
-      saveButton.textContent = isBusy ? "Adding..." : "Add Note";
+      saveButton.textContent = isBusy
+        ? (noteMode === "correct" ? "Saving..." : "Adding...")
+        : (noteMode === "correct" ? "Save Correction" : "Add Note");
       saveButton.disabled = !notesDirty || !capabilities.canChat || isBusy;
 
       const syncNoteMeta = () => {
-        const nextDirty = Boolean(String(noteTextarea.value || "").trim());
+        const nextNormalizedDraft = normalizeNoteDraft(noteTextarea.value);
+        const nextHasText = Boolean(nextNormalizedDraft);
+        const nextDirty = noteMode === "correct"
+          ? Boolean(nextHasText && nextNormalizedDraft !== latestNoteContent)
+          : nextHasText;
+        const nextCorrectionBlockedByDraft = noteMode !== "correct" && nextHasText;
         saveButton.disabled = !nextDirty || !capabilities.canChat || isBusy;
-        discardButton.disabled = !nextDirty || !capabilities.canChat || isBusy;
+        correctionButton.disabled = !noteEntries.length || !capabilities.canChat || isBusy || nextCorrectionBlockedByDraft;
+        correctionButton.title = nextCorrectionBlockedByDraft
+          ? "Save or discard the current draft before correcting the latest note."
+          : "";
+        discardButton.disabled = noteMode === "correct"
+          ? !capabilities.canChat || isBusy || nextNormalizedDraft === latestNoteContent
+          : !nextDirty || !capabilities.canChat || isBusy;
         if (!capabilities.canChat) {
           noteMeta.textContent = "Your role can view notes, but only chat-enabled roles can update them.";
         } else if (isBusy) {
-          noteMeta.textContent = "Saving the latest investigation note...";
+          noteMeta.textContent = noteMode === "correct"
+            ? "Saving the corrected investigation note..."
+            : "Saving the latest investigation note...";
+        } else if (noteMode === "correct" && nextDirty) {
+          noteMeta.textContent = "Ready to replace the latest investigation note.";
+        } else if (noteMode === "correct") {
+          noteMeta.textContent = "Edit the latest saved note, then save the correction or cancel it.";
         } else if (nextDirty) {
           noteMeta.textContent = "Ready to add this note to the investigation trail.";
         } else if (noteEntries.length) {
-          noteMeta.textContent = "Add another note to continue the investigation trail.";
+          noteMeta.textContent = "Add another note to continue the investigation trail, or correct the latest note.";
         } else {
           noteMeta.textContent = "Add the first note for this case.";
         }
@@ -4746,18 +4812,36 @@
         syncNoteMeta();
       });
 
+      correctionButton.addEventListener("click", () => {
+        if (correctionButton.disabled) return;
+        if (noteMode === "correct") {
+          delete ui.caseNoteModes[conversation.id];
+          delete ui.caseNotesDrafts[conversation.id];
+        } else if (latestNoteEntry) {
+          ui.caseNoteModes[conversation.id] = "correct";
+          ui.caseNotesDrafts[conversation.id] = latestNoteEntry.content;
+        }
+        ui.preserveHistoryScroll = true;
+        render();
+      });
+
       discardButton.addEventListener("click", () => {
-        delete ui.caseNotesDrafts[conversation.id];
+        if (noteMode === "correct" && latestNoteEntry) {
+          ui.caseNotesDrafts[conversation.id] = latestNoteEntry.content;
+        } else {
+          delete ui.caseNotesDrafts[conversation.id];
+        }
         ui.preserveHistoryScroll = true;
         render();
       });
 
       saveButton.addEventListener("click", async () => {
-        await saveInvestigatorNotes(conversation.id, noteTextarea.value);
+        await saveInvestigatorNotes(conversation.id, noteTextarea.value, { mode: noteMode });
       });
 
       syncNoteMeta();
 
+      actions.appendChild(correctionButton);
       actions.appendChild(discardButton);
       actions.appendChild(saveButton);
       footer.appendChild(noteMeta);
@@ -5688,6 +5772,7 @@
       }
       state.conversations = state.conversations.filter((item) => item.id !== conversationId);
       delete ui.caseNotesDrafts[conversationId];
+      delete ui.caseNoteModes[conversationId];
       state.activeConversationId = state.conversations.length ? state.conversations[0].id : "";
       closeTransientUi();
       saveState();
@@ -5843,6 +5928,7 @@
     function logout() {
       ui.caseDeskBusyConversationId = "";
       ui.caseNotesDrafts = {};
+      ui.caseNoteModes = {};
       state = defaultState();
       saveState();
       closeTransientUi();
