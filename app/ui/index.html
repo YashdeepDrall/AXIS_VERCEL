@@ -525,12 +525,18 @@
     }
 
     .sidebar-shell {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      max-height: 100vh;
       border-right: 1px solid var(--line);
       background: rgba(250, 247, 249, 0.92);
       padding: 16px 14px;
       display: grid;
       grid-template-rows: auto auto 1fr;
       gap: 12px;
+      overflow: hidden;
     }
 
     .sidebar-head,
@@ -1620,6 +1626,11 @@
       }
 
       .sidebar-shell {
+        position: static;
+        top: auto;
+        align-self: stretch;
+        height: auto;
+        max-height: none;
         border-right: 0;
         border-bottom: 1px solid var(--line);
       }
