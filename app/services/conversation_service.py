@@ -211,6 +211,77 @@ def _normalize_investigator_notes(value):
     return normalized[:6000]
 
 
+def _normalize_note_entry(entry):
+    if not isinstance(entry, dict):
+        return None
+
+    content = _normalize_investigator_notes(entry.get("content"))
+    if not content:
+        return None
+
+    author_user_id = str(entry.get("authorUserId") or "").strip().lower()
+    author_display_name = str(entry.get("authorDisplayName") or author_user_id or "AXIS User").strip() or author_user_id or "AXIS User"
+    author_role_label = str(entry.get("authorRoleLabel") or "Investigator").strip() or "Investigator"
+    created_at = str(entry.get("createdAt") or _now_iso()).strip() or _now_iso()
+
+    return {
+        "content": content[:1200],
+        "authorUserId": author_user_id,
+        "authorDisplayName": author_display_name,
+        "authorRoleLabel": author_role_label,
+        "createdAt": created_at,
+    }
+
+
+def _legacy_note_entries(existing):
+    existing = existing if isinstance(existing, dict) else {}
+    legacy_notes = _normalize_investigator_notes(existing.get("investigatorNotes"))
+    if not legacy_notes:
+        return []
+
+    fallback_entry = _normalize_note_entry({
+        "content": legacy_notes,
+        "authorUserId": existing.get("notesUpdatedByUserId") or existing.get("ownerUserId") or "",
+        "authorDisplayName": existing.get("notesUpdatedByDisplayName") or existing.get("ownerDisplayName") or existing.get("ownerUserId") or "AXIS User",
+        "authorRoleLabel": existing.get("notesUpdatedByRoleLabel") or existing.get("ownerRoleLabel") or "Investigator",
+        "createdAt": existing.get("notesUpdatedAt") or existing.get("updatedAt") or existing.get("createdAt") or _now_iso(),
+    })
+    return [fallback_entry] if fallback_entry else []
+
+
+def _normalize_note_entries(entries, existing=None):
+    normalized = []
+
+    if isinstance(entries, list):
+        for raw_entry in entries:
+            entry = _normalize_note_entry(raw_entry)
+            if entry:
+                normalized.append(entry)
+
+    if normalized:
+        return normalized[-60:]
+
+    existing = existing if isinstance(existing, dict) else {}
+    existing_entries = existing.get("noteEntries")
+    if isinstance(existing_entries, list):
+        for raw_entry in existing_entries:
+            entry = _normalize_note_entry(raw_entry)
+            if entry:
+                normalized.append(entry)
+        if normalized:
+            return normalized[-60:]
+
+    return _legacy_note_entries(existing)
+
+
+def _note_entries_as_text(entries):
+    lines = []
+    for entry in _normalize_note_entries(entries):
+        signature = f'{entry.get("authorDisplayName") or "AXIS User"} - {entry.get("authorRoleLabel") or "Investigator"}'
+        lines.append(f'{entry.get("content")} ({signature})')
+    return _normalize_investigator_notes("\n".join(lines))
+
+
 def _conversation_member_ids(conversation):
     return {
         str(member.get("id") or "").strip().lower()
@@ -368,26 +439,36 @@ def _prepare_conversation_for_store(user_context, payload, existing=None):
     fraud_category_source = payload.get("fraudCategory") if can_update_content else existing.get("fraudCategory")
     case_status_source = payload.get("caseStatus") if can_update_content else existing.get("caseStatus")
     notes_source = payload.get("investigatorNotes") if can_update_content else existing.get("investigatorNotes")
+    note_entries_source = payload.get("noteEntries") if can_update_content else existing.get("noteEntries")
     conversation_state_source = payload.get("conversationState") if can_update_content else existing.get("conversationState")
     workflow_mode_source = payload.get("workflowMode") if can_update_content else existing.get("workflowMode")
 
     existing_case_status = _normalize_case_status(existing.get("caseStatus"))
     prepared_case_status = _normalize_case_status(case_status_source or existing.get("caseStatus"))
-    existing_notes = _normalize_investigator_notes(existing.get("investigatorNotes"))
-    prepared_notes = _normalize_investigator_notes(notes_source if notes_source is not None else existing.get("investigatorNotes"))
+    existing_note_entries = _normalize_note_entries(existing.get("noteEntries"), existing=existing)
+    prepared_note_entries = _normalize_note_entries(note_entries_source, existing=existing)
+    existing_notes = _note_entries_as_text(existing_note_entries) or _normalize_investigator_notes(existing.get("investigatorNotes"))
+    prepared_notes = _note_entries_as_text(prepared_note_entries)
+    latest_note_entry = prepared_note_entries[-1] if prepared_note_entries else None
+    notes_updated_by_user_id = str((latest_note_entry or {}).get("authorUserId") or "").strip().lower()
+    notes_updated_by_display_name = str((latest_note_entry or {}).get("authorDisplayName") or "").strip()
+    notes_updated_by_role_label = str((latest_note_entry or {}).get("authorRoleLabel") or "").strip()
 
     case_status_updated_at = str(existing.get("caseStatusUpdatedAt") or payload.get("caseStatusUpdatedAt") or created_at or now)
     if not existing or prepared_case_status != existing_case_status:
         case_status_updated_at = now
 
     notes_updated_at = str(existing.get("notesUpdatedAt") or payload.get("notesUpdatedAt") or "")
-    if prepared_notes:
+    if prepared_note_entries:
         if not existing_notes or prepared_notes != existing_notes:
-            notes_updated_at = now
+            notes_updated_at = str((latest_note_entry or {}).get("createdAt") or now)
         elif not notes_updated_at:
-            notes_updated_at = created_at or now
+            notes_updated_at = str((latest_note_entry or {}).get("createdAt") or created_at or now)
     else:
         notes_updated_at = ""
+        notes_updated_by_user_id = ""
+        notes_updated_by_display_name = ""
+        notes_updated_by_role_label = ""
 
     return {
         "id": str(payload.get("id") or existing.get("id") or "").strip(),
@@ -406,7 +487,11 @@ def _prepare_conversation_for_store(user_context, payload, existing=None):
         "caseStatus": prepared_case_status,
         "caseStatusUpdatedAt": case_status_updated_at,
         "investigatorNotes": prepared_notes,
+        "noteEntries": prepared_note_entries,
         "notesUpdatedAt": notes_updated_at,
+        "notesUpdatedByUserId": notes_updated_by_user_id,
+        "notesUpdatedByDisplayName": notes_updated_by_display_name,
+        "notesUpdatedByRoleLabel": notes_updated_by_role_label,
         "conversationState": _normalize_conversation_state(conversation_state_source or existing.get("conversationState") or {}),
         "workflowMode": str(workflow_mode_source or existing.get("workflowMode") or "blueprint").strip() or "blueprint",
     }
@@ -529,6 +614,9 @@ def upsert_conversation_for_user(user_context, payload):
                 summary=f'{user_context.get("displayName") or user_context.get("userId")} {note_summary} on "{prepared_title}".',
                 details={
                     "notesLength": len(prepared_notes),
+                    "notesUpdatedByUserId": prepared.get("notesUpdatedByUserId"),
+                    "notesUpdatedByDisplayName": prepared.get("notesUpdatedByDisplayName"),
+                    "notesUpdatedByRoleLabel": prepared.get("notesUpdatedByRoleLabel"),
                     "ownerUserId": prepared.get("ownerUserId"),
                     "relatedUserIds": _member_id_list(prepared),
                 },

@@ -1250,6 +1250,170 @@
       padding: 0 24px 96px;
     }
 
+    .dashboard-strip {
+      width: min(var(--workspace-content-max), 100%);
+      margin: 16px auto 12px;
+    }
+
+    .dashboard-board {
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 247, 249, 0.92) 48%, rgba(238, 248, 246, 0.9) 100%);
+      box-shadow: 0 20px 44px rgba(34, 21, 27, 0.1);
+      display: grid;
+      gap: 16px;
+    }
+
+    .dashboard-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .dashboard-copy {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .dashboard-title {
+      margin: 0;
+      font-size: 1.18rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .dashboard-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      max-width: 78ch;
+    }
+
+    .dashboard-badges {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .dashboard-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(34, 21, 27, 0.08);
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .dashboard-card {
+      padding: 14px 14px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.84);
+      display: grid;
+      gap: 8px;
+      min-height: 126px;
+      align-content: start;
+    }
+
+    .dashboard-card[data-tone="primary"] {
+      background: linear-gradient(180deg, rgba(165, 0, 52, 0.09) 0%, rgba(255, 255, 255, 0.9) 100%);
+      border-color: rgba(165, 0, 52, 0.12);
+    }
+
+    .dashboard-card[data-tone="danger"] {
+      background: linear-gradient(180deg, rgba(180, 35, 24, 0.08) 0%, rgba(255, 255, 255, 0.9) 100%);
+      border-color: rgba(180, 35, 24, 0.14);
+    }
+
+    .dashboard-card[data-tone="warning"] {
+      background: linear-gradient(180deg, rgba(153, 108, 0, 0.08) 0%, rgba(255, 255, 255, 0.9) 100%);
+      border-color: rgba(153, 108, 0, 0.14);
+    }
+
+    .dashboard-card[data-tone="success"] {
+      background: linear-gradient(180deg, rgba(15, 118, 110, 0.08) 0%, rgba(255, 255, 255, 0.9) 100%);
+      border-color: rgba(15, 118, 110, 0.14);
+    }
+
+    .dashboard-card[data-tone="neutral"] {
+      background: linear-gradient(180deg, rgba(57, 81, 90, 0.07) 0%, rgba(255, 255, 255, 0.9) 100%);
+      border-color: rgba(57, 81, 90, 0.12);
+    }
+
+    .dashboard-card-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .dashboard-card-value {
+      font-size: 1.9rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .dashboard-card-copy {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .dashboard-insights {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .dashboard-insight {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.8);
+      display: grid;
+      gap: 6px;
+    }
+
+    .dashboard-insight-label {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .dashboard-insight strong {
+      display: block;
+      font-size: 0.98rem;
+      line-height: 1.35;
+    }
+
+    .dashboard-insight span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
     .welcome {
       width: min(var(--workspace-content-max), 100%);
       margin: 28px auto 16px;
@@ -1582,9 +1746,50 @@
       color: var(--ink);
     }
 
+    .case-note-summary {
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .case-note-log {
+      display: grid;
+      gap: 8px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+    }
+
+    .case-note-log.empty {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .case-note-entry {
+      color: var(--ink);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .case-note-entry + .case-note-entry {
+      padding-top: 8px;
+      border-top: 1px dashed rgba(34, 21, 27, 0.1);
+    }
+
+    .case-note-entry-signature {
+      color: rgba(99, 81, 90, 0.86);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
     .case-note-textarea {
       width: 100%;
-      min-height: 132px;
+      min-height: 92px;
       resize: vertical;
       padding: 12px 14px;
       border-radius: 14px;
@@ -2010,14 +2215,36 @@
       }
 
       .analysis-top,
+      .dashboard-top,
       .analysis-meta,
       .case-desk-top,
       .case-note-footer {
         flex-direction: column;
       }
 
+      .dashboard-grid,
+      .dashboard-insights {
+        grid-template-columns: 1fr;
+      }
+
       .user-form-grid {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1120px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .dashboard-insights {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 920px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
   </style>
@@ -2127,6 +2354,7 @@
         </div>
 
         <div id="contentShell" class="content-shell">
+          <div id="workspaceDashboard" class="dashboard-strip"></div>
           <div id="welcomeState" class="welcome">
             <div class="welcome-board">
               <div class="welcome-copy">
@@ -2376,6 +2604,7 @@
       quickThemeButton: document.getElementById("quickThemeButton"),
       logoutButton: document.getElementById("logoutButton"),
       contentShell: document.getElementById("contentShell"),
+      workspaceDashboard: document.getElementById("workspaceDashboard"),
       welcomeState: document.getElementById("welcomeState"),
       customerFraudPanel: document.getElementById("customerFraudPanel"),
       chatHistory: document.getElementById("chatHistory"),
@@ -2614,7 +2843,11 @@
         caseStatus: normalizeCaseStatus(seed.caseStatus),
         caseStatusUpdatedAt: seed.caseStatusUpdatedAt || seed.updatedAt || "",
         investigatorNotes: String(seed.investigatorNotes || ""),
+        noteEntries: Array.isArray(seed.noteEntries) ? seed.noteEntries : [],
         notesUpdatedAt: String(seed.notesUpdatedAt || ""),
+        notesUpdatedByUserId: String(seed.notesUpdatedByUserId || ""),
+        notesUpdatedByDisplayName: String(seed.notesUpdatedByDisplayName || ""),
+        notesUpdatedByRoleLabel: String(seed.notesUpdatedByRoleLabel || ""),
         workflowMode,
         conversationState: { ...defaultConversationState(workflowMode), ...(seed.conversationState || {}) },
         capabilities: { ...(seed.capabilities || {}) }
@@ -2717,7 +2950,11 @@
       conversation.caseStatus = normalizeCaseStatus(rawConversation && rawConversation.caseStatus);
       conversation.caseStatusUpdatedAt = String((rawConversation && rawConversation.caseStatusUpdatedAt) || conversation.caseStatusUpdatedAt || "");
       conversation.investigatorNotes = String((rawConversation && rawConversation.investigatorNotes) || "");
+      conversation.noteEntries = Array.isArray(rawConversation && rawConversation.noteEntries) ? rawConversation.noteEntries : [];
       conversation.notesUpdatedAt = String((rawConversation && rawConversation.notesUpdatedAt) || "");
+      conversation.notesUpdatedByUserId = String((rawConversation && rawConversation.notesUpdatedByUserId) || "");
+      conversation.notesUpdatedByDisplayName = String((rawConversation && rawConversation.notesUpdatedByDisplayName) || "");
+      conversation.notesUpdatedByRoleLabel = String((rawConversation && rawConversation.notesUpdatedByRoleLabel) || "");
       conversation.capabilities = { ...((rawConversation && rawConversation.capabilities) || {}) };
 
       return conversation;
@@ -3509,6 +3746,399 @@
       return analysis && Object.keys(analysis).length ? analysis : null;
     }
 
+    function noteEditorDisplay(conversation, options = {}) {
+      if (!conversation) return "";
+      const name = String(conversation.notesUpdatedByDisplayName || "").trim();
+      const userId = String(conversation.notesUpdatedByUserId || "").trim();
+      const roleText = String(conversation.notesUpdatedByRoleLabel || "").trim();
+      const base = name || userId;
+      if (!base) return "";
+      if (options.withRole && roleText) return `${base} - ${roleText}`;
+      return base;
+    }
+
+    function normalizeNoteEntry(entry) {
+      if (!entry || typeof entry !== "object") return null;
+      const content = String(entry.content || "").trim();
+      if (!content) return null;
+      const authorUserId = String(entry.authorUserId || "").trim().toLowerCase();
+      const authorDisplayName = String(entry.authorDisplayName || authorUserId || "AXIS User").trim() || authorUserId || "AXIS User";
+      const authorRoleLabel = String(entry.authorRoleLabel || "Investigator").trim() || "Investigator";
+      const createdAt = String(entry.createdAt || "").trim();
+      return {
+        content,
+        authorUserId,
+        authorDisplayName,
+        authorRoleLabel,
+        createdAt
+      };
+    }
+
+    function legacyNoteEntriesForConversation(conversation) {
+      if (!conversation || !String(conversation.investigatorNotes || "").trim()) return [];
+      const legacyEntry = normalizeNoteEntry({
+        content: conversation.investigatorNotes,
+        authorUserId: conversation.notesUpdatedByUserId || conversation.ownerUserId || "",
+        authorDisplayName: conversation.notesUpdatedByDisplayName || conversation.ownerDisplayName || conversation.ownerUserId || "AXIS User",
+        authorRoleLabel: conversation.notesUpdatedByRoleLabel || conversation.ownerRoleLabel || "Investigator",
+        createdAt: conversation.notesUpdatedAt || conversation.updatedAt || conversation.createdAt || ""
+      });
+      return legacyEntry ? [legacyEntry] : [];
+    }
+
+    function noteEntriesForConversation(conversation) {
+      if (!conversation) return [];
+      const entries = Array.isArray(conversation.noteEntries)
+        ? conversation.noteEntries.map(normalizeNoteEntry).filter(Boolean)
+        : [];
+      return entries.length ? entries : legacyNoteEntriesForConversation(conversation);
+    }
+
+    function noteEntriesAsText(entries) {
+      return entries.map((entry) => `${entry.content} (${entry.authorDisplayName} - ${entry.authorRoleLabel})`).join("\n").trim();
+    }
+
+    function noteSignatureLabel(displayName, roleText) {
+      return `${displayName || "AXIS User"} - ${roleText || "Investigator"}`;
+    }
+
+    function lineHasAuthorSignature(line) {
+      return /\([^()\n]+ - [^()\n]+\)\s*$/u.test(String(line || "").trim());
+    }
+
+    function signedNotesText(savedNotes, draftNotes, displayName, roleText) {
+      const normalizedSaved = String(savedNotes || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+      const normalizedDraft = String(draftNotes || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+      if (!normalizedDraft) return "";
+
+      const signature = `(${noteSignatureLabel(displayName, roleText)})`;
+      const signLines = (text) => text
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => (lineHasAuthorSignature(line) ? line : `${line} ${signature}`));
+
+      if (!normalizedSaved) {
+        return signLines(normalizedDraft).join("\n");
+      }
+
+      if (normalizedDraft === normalizedSaved) {
+        return normalizedSaved;
+      }
+
+      if (normalizedDraft.startsWith(normalizedSaved)) {
+        const appended = normalizedDraft.slice(normalizedSaved.length).trim();
+        if (!appended) return normalizedSaved;
+        return [normalizedSaved, ...signLines(appended)].join("\n");
+      }
+
+      return signLines(normalizedDraft).join("\n");
+    }
+
+    function conversationHasDashboardSignal(conversation) {
+      if (!conversation) return false;
+      if (hasMeaningfulConversationHistory(conversation)) return true;
+      if (String(conversation.investigatorNotes || "").trim()) return true;
+      if (latestCustomerFraudAnalysis(conversation)) return true;
+      return normalizeCaseStatus(conversation.caseStatus) !== "Open";
+    }
+
+    function dashboardScopeConversations() {
+      const ownerFilter = new Set((Array.isArray(ui.ownerFilter) ? ui.ownerFilter : []).map((value) => String(value || "").trim().toLowerCase()).filter(Boolean));
+      const roleFilter = new Set((Array.isArray(ui.roleFilter) ? ui.roleFilter : []).map((value) => String(value || "").trim().toLowerCase()).filter(Boolean));
+      return sortedConversations().filter((conversation) => {
+        if (!conversationHasDashboardSignal(conversation)) return false;
+        if (!workspaceFilterVisible()) return true;
+        if (ownerFilter.size && !ownerFilter.has(String(conversation.ownerUserId || "").trim().toLowerCase())) return false;
+        if (roleFilter.size && !roleFilter.has(String(conversation.ownerRole || "").trim().toLowerCase())) return false;
+        return true;
+      });
+    }
+
+    function conversationHasReportArtifact(conversation) {
+      return Boolean((conversation && conversation.chatHistory || []).some((item) => {
+        if (!item || item.role !== "documents" || !Array.isArray(item.items)) return false;
+        return item.items.some((doc) => {
+          const url = String(doc && doc.downloadUrl || "").trim().toLowerCase();
+          const name = String(doc && doc.name || "").trim().toLowerCase();
+          const label = String(doc && doc.buttonLabel || "").trim().toLowerCase();
+          return url.includes("/reports/")
+            || name.includes("investigation report")
+            || label.includes("investigation report");
+        });
+      }));
+    }
+
+    function conversationHasHistoricalArtifact(conversation) {
+      return Boolean((conversation && conversation.chatHistory || []).some((item) => {
+        if (!item || item.role !== "documents") return false;
+        if (String(item.title || "").trim().toLowerCase().includes("historical fraud case references")) return true;
+        if (!Array.isArray(item.items)) return false;
+        return item.items.some((doc) => Boolean(
+          doc
+          && (
+            doc.incidentSummary
+            || doc.transactionPattern
+            || doc.sopRelevance
+            || (Array.isArray(doc.suspiciousIndicators) && doc.suspiciousIndicators.length)
+          )
+        ));
+      }));
+    }
+
+    function dashboardChannelForConversation(conversation) {
+      const analysis = latestCustomerFraudAnalysis(conversation);
+      if (!analysis) return "";
+      const flagged = Array.isArray(analysis.flagged_transactions) ? analysis.flagged_transactions : [];
+      const timeline = Array.isArray(analysis.transaction_timeline) ? analysis.transaction_timeline : [];
+      const channel = flagged.map((item) => String(item && item.channel || "").trim()).find(Boolean)
+        || timeline.map((item) => String(item && item.channel || "").trim()).find(Boolean)
+        || String(analysis.customer_baseline && analysis.customer_baseline.dominant_channel || "").trim();
+      return channel;
+    }
+
+    function dashboardFraudTypeForConversation(conversation) {
+      const analysis = latestCustomerFraudAnalysis(conversation);
+      return String(
+        (analysis && (
+          analysis.fraud_classification
+          || analysis.fraud_category
+        ))
+        || conversation.fraudCategory
+        || ""
+      ).trim();
+    }
+
+    function topCountEntry(countMap) {
+      const entries = Object.entries(countMap || {}).filter((entry) => entry[1] > 0);
+      if (!entries.length) return null;
+      entries.sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]));
+      return { label: entries[0][0], count: entries[0][1] };
+    }
+
+    function buildDashboardMetricCard({ label, value, copy, tone = "primary" }) {
+      const card = document.createElement("article");
+      card.className = "dashboard-card";
+      card.dataset.tone = tone;
+
+      const heading = document.createElement("div");
+      heading.className = "dashboard-card-label";
+      heading.textContent = label;
+
+      const metric = document.createElement("div");
+      metric.className = "dashboard-card-value";
+      metric.textContent = value;
+
+      const body = document.createElement("div");
+      body.className = "dashboard-card-copy";
+      body.textContent = copy;
+
+      card.appendChild(heading);
+      card.appendChild(metric);
+      card.appendChild(body);
+      return card;
+    }
+
+    function buildDashboardInsight(label, title, copy) {
+      const card = document.createElement("article");
+      card.className = "dashboard-insight";
+
+      const heading = document.createElement("div");
+      heading.className = "dashboard-insight-label";
+      heading.textContent = label;
+
+      const titleNode = document.createElement("strong");
+      titleNode.textContent = title;
+
+      const copyNode = document.createElement("span");
+      copyNode.textContent = copy;
+
+      card.appendChild(heading);
+      card.appendChild(titleNode);
+      card.appendChild(copyNode);
+      return card;
+    }
+
+    function dashboardRoleHeadline() {
+      const role = String(state.role || "").toLowerCase();
+      if (role === "admin") {
+        return "Admin-ready snapshot of live case posture, risk concentration, and investigation throughput.";
+      }
+      if (role === "supervisor") {
+        return "Supervisor-ready view of current case posture, escalations, and investigation throughput.";
+      }
+      if (role === "auditor") {
+        return "Read-only oversight snapshot for reviewing current case posture and investigation activity.";
+      }
+      return "Investigator snapshot of current case posture, live risk reviews, and follow-through activity.";
+    }
+
+    function renderWorkspaceDashboard() {
+      els.workspaceDashboard.innerHTML = "";
+      if (!state.loggedIn) {
+        setHidden(els.workspaceDashboard, true);
+        return;
+      }
+
+      const conversations = dashboardScopeConversations();
+      const totalCases = conversations.length;
+      const openCases = conversations.filter((conversation) => normalizeCaseStatus(conversation.caseStatus) === "Open").length;
+      const underReview = conversations.filter((conversation) => normalizeCaseStatus(conversation.caseStatus) === "Under Review").length;
+      const escalated = conversations.filter((conversation) => normalizeCaseStatus(conversation.caseStatus) === "Escalated").length;
+      const closedCases = conversations.filter((conversation) => normalizeCaseStatus(conversation.caseStatus) === "Closed").length;
+      const highRisk = conversations.filter((conversation) => String((latestCustomerFraudAnalysis(conversation) && latestCustomerFraudAnalysis(conversation).risk_level) || "").trim().toLowerCase() === "high").length;
+      const reportsReady = conversations.filter(conversationHasReportArtifact).length;
+      const historicalMatches = conversations.filter(conversationHasHistoricalArtifact).length;
+
+      const channelCounts = {};
+      const fraudCounts = {};
+      let mostRecentUpdatedAt = "";
+
+      for (const conversation of conversations) {
+        const updatedAt = String(conversation.updatedAt || "").trim();
+        if (updatedAt && (!mostRecentUpdatedAt || new Date(updatedAt) > new Date(mostRecentUpdatedAt))) {
+          mostRecentUpdatedAt = updatedAt;
+        }
+
+        const channel = dashboardChannelForConversation(conversation);
+        if (channel) {
+          channelCounts[channel] = (channelCounts[channel] || 0) + 1;
+        }
+
+        const fraudType = dashboardFraudTypeForConversation(conversation);
+        if (fraudType) {
+          fraudCounts[fraudType] = (fraudCounts[fraudType] || 0) + 1;
+        }
+      }
+
+      const topChannel = topCountEntry(channelCounts);
+      const topFraudType = topCountEntry(fraudCounts);
+      const filtersActive = workspaceFilterVisible() && (ui.ownerFilter.length || ui.roleFilter.length);
+
+      const board = document.createElement("section");
+      board.className = "dashboard-board";
+
+      const top = document.createElement("div");
+      top.className = "dashboard-top";
+
+      const copy = document.createElement("div");
+      copy.className = "dashboard-copy";
+
+      const eyebrow = document.createElement("span");
+      eyebrow.className = "workflow-label";
+      eyebrow.textContent = "Workspace Snapshot";
+
+      const title = document.createElement("h2");
+      title.className = "dashboard-title";
+      title.textContent = dashboardRoleHeadline();
+
+      const subtitle = document.createElement("p");
+      subtitle.className = "dashboard-subtitle";
+      subtitle.textContent = totalCases
+        ? "These cards update from the cases already reviewed in this workspace, including risk analysis, case status handling, report exports, and historical-reference usage."
+        : "Start reviewing cases and the dashboard will begin to reflect risk posture, status handling, reports, and historical-reference usage for this workspace.";
+
+      copy.appendChild(eyebrow);
+      copy.appendChild(title);
+      copy.appendChild(subtitle);
+
+      const badges = document.createElement("div");
+      badges.className = "dashboard-badges";
+
+      const roleBadge = document.createElement("span");
+      roleBadge.className = "dashboard-badge";
+      roleBadge.textContent = `${roleLabel(state.role)} view`;
+      badges.appendChild(roleBadge);
+
+      const scopeBadge = document.createElement("span");
+      scopeBadge.className = "dashboard-badge";
+      scopeBadge.textContent = filtersActive ? "Filtered workspace scope" : "Full workspace scope";
+      badges.appendChild(scopeBadge);
+
+      const updateBadge = document.createElement("span");
+      updateBadge.className = "dashboard-badge";
+      updateBadge.textContent = mostRecentUpdatedAt ? `Last case update ${formatDateTime(mostRecentUpdatedAt)}` : "No reviewed case activity yet";
+      badges.appendChild(updateBadge);
+
+      top.appendChild(copy);
+      top.appendChild(badges);
+      board.appendChild(top);
+
+      const grid = document.createElement("div");
+      grid.className = "dashboard-grid";
+      grid.appendChild(buildDashboardMetricCard({
+        label: "Cases In Scope",
+        value: String(totalCases),
+        copy: filtersActive ? "Current owner and role filters are applied to this snapshot." : "Reviewed cases currently visible in this workspace snapshot.",
+        tone: "primary"
+      }));
+      grid.appendChild(buildDashboardMetricCard({
+        label: "High Risk",
+        value: String(highRisk),
+        copy: totalCases ? "Cases whose latest fraud review is currently marked High risk." : "High-risk counts appear here after case reviews start.",
+        tone: "danger"
+      }));
+      grid.appendChild(buildDashboardMetricCard({
+        label: "Open Cases",
+        value: String(openCases),
+        copy: "Cases still open and not yet moved into active review handling.",
+        tone: "primary"
+      }));
+      grid.appendChild(buildDashboardMetricCard({
+        label: "Under Review",
+        value: String(underReview),
+        copy: "Cases actively being reviewed with investigator follow-through underway.",
+        tone: "warning"
+      }));
+      grid.appendChild(buildDashboardMetricCard({
+        label: "Escalated",
+        value: String(escalated),
+        copy: "Cases already pushed upward for tighter fraud-operations attention.",
+        tone: "danger"
+      }));
+      grid.appendChild(buildDashboardMetricCard({
+        label: "Closed Cases",
+        value: String(closedCases),
+        copy: "Cases already completed, documented, and moved out of active handling.",
+        tone: "neutral"
+      }));
+      grid.appendChild(buildDashboardMetricCard({
+        label: "Reports Ready",
+        value: String(reportsReady),
+        copy: "Cases where downloadable investigation reports have already been generated.",
+        tone: "success"
+      }));
+      board.appendChild(grid);
+
+      const insights = document.createElement("div");
+      insights.className = "dashboard-insights";
+      insights.appendChild(buildDashboardInsight(
+        "Historical Matching",
+        historicalMatches ? `${historicalMatches} case${historicalMatches === 1 ? "" : "s"} used historical references` : "Historical references not used yet",
+        historicalMatches
+          ? "Comparable past fraud cases are already contributing to investigation context in this workspace."
+          : "Historical reference usage will appear here after investigators expand comparable past cases."
+      ));
+      insights.appendChild(buildDashboardInsight(
+        "Channel Focus",
+        topChannel ? `${topChannel.label} leads across ${topChannel.count} case${topChannel.count === 1 ? "" : "s"}` : "Channel signal will appear after reviewed cases build up",
+        topChannel
+          ? "This highlights the most common channel appearing in current reviewed fraud activity."
+          : "Once case reviews accumulate, the dominant channel will appear here for quick oversight."
+      ));
+      insights.appendChild(buildDashboardInsight(
+        "Leading Fraud Pattern",
+        topFraudType ? topFraudType.label : "Fraud pattern will appear after case reviews accumulate",
+        topFraudType
+          ? `Currently the most common reviewed fraud pattern across the visible workspace cases (${topFraudType.count}).`
+          : "As cases are analysed, the most common fraud classification will surface here for quick executive review."
+      ));
+      board.appendChild(insights);
+
+      els.workspaceDashboard.appendChild(board);
+      setHidden(els.workspaceDashboard, false);
+    }
+
     function buildAnalysisMetric(label, value) {
       const metric = document.createElement("div");
       metric.className = "analysis-metric";
@@ -3892,18 +4522,40 @@
 
     async function saveInvestigatorNotes(conversationId, notesValue) {
       const normalizedNotes = String(notesValue || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+      if (!normalizedNotes) return;
+      const noteEditorName = currentDisplayName();
+      const noteEditorUserId = String(state.userId || "").trim().toLowerCase();
+      const noteEditorRoleLabel = roleLabel(state.role);
+      const noteCreatedAt = new Date().toISOString();
 
       await persistCaseDeskConversation(
         conversationId,
-        (current) => ({
-          ...current,
-          investigatorNotes: normalizedNotes,
-          notesUpdatedAt: normalizedNotes ? new Date().toISOString() : ""
-        }),
+        (current) => {
+          const existingEntries = noteEntriesForConversation(current);
+          const nextEntries = [
+            ...existingEntries,
+            {
+              content: normalizedNotes,
+              authorUserId: noteEditorUserId,
+              authorDisplayName: noteEditorName,
+              authorRoleLabel: noteEditorRoleLabel,
+              createdAt: noteCreatedAt
+            }
+          ];
+          return {
+            ...current,
+            investigatorNotes: noteEntriesAsText(nextEntries),
+            noteEntries: nextEntries,
+            notesUpdatedAt: noteCreatedAt,
+            notesUpdatedByUserId: noteEditorUserId,
+            notesUpdatedByDisplayName: noteEditorName,
+            notesUpdatedByRoleLabel: noteEditorRoleLabel
+          };
+        },
         "Investigator Notes Save Error",
         () => {
           delete ui.caseNotesDrafts[conversationId];
-          setStatus(normalizedNotes ? "Investigator notes saved." : "Investigator notes cleared.");
+          setStatus("Investigation note added.");
         }
       );
     }
@@ -3918,13 +4570,15 @@
       const capabilities = conversationCapabilities(conversation);
       const analysis = latestCustomerFraudAnalysis(conversation);
       const currentStatus = normalizeCaseStatus(conversation.caseStatus);
+      const noteEntries = noteEntriesForConversation(conversation);
       const notesDraft = Object.prototype.hasOwnProperty.call(ui.caseNotesDrafts, conversation.id)
         ? ui.caseNotesDrafts[conversation.id]
-        : String(conversation.investigatorNotes || "");
-      const savedNotes = String(conversation.investigatorNotes || "");
-      const notesDirty = notesDraft !== savedNotes;
+        : "";
+      const notesDirty = Boolean(String(notesDraft || "").trim());
       const isBusy = ui.caseDeskBusyConversationId === conversation.id;
       const canEdit = capabilities.canChat && !isBusy;
+      const noteEditor = noteEditorDisplay(conversation, { withRole: true });
+      const noteUpdatedText = conversation.notesUpdatedAt ? formatDateTime(conversation.notesUpdatedAt) : "";
 
       const panel = document.createElement("section");
       panel.className = "case-desk";
@@ -3991,8 +4645,8 @@
             : "0"
         },
         {
-          label: "Notes Updated",
-          value: conversation.notesUpdatedAt ? formatDateTime(conversation.notesUpdatedAt) : "Not saved yet"
+          label: "Notes Trail",
+          value: noteEntries.length ? `${noteEntries.length} update${noteEntries.length === 1 ? "" : "s"}` : "No notes yet"
         }
       ];
 
@@ -4012,13 +4666,40 @@
       notesHeader.innerHTML = `
         <div>
           <h4 class="case-note-title">Investigator Notes</h4>
-          <div class="case-note-helper">Capture callback outcomes, containment steps, branch coordination, and supervisor instructions for this case.</div>
+          <div class="case-note-helper">Capture callback outcomes, containment steps, branch coordination, and supervisor instructions as a running investigation trail.</div>
         </div>
       `;
 
+      const noteSummary = document.createElement("div");
+      noteSummary.className = "case-note-summary";
+      noteSummary.textContent = noteUpdatedText
+        ? `${noteEditor || "Latest editor"} | ${noteUpdatedText}`
+        : "No note updates yet";
+      notesHeader.appendChild(noteSummary);
+
+      const noteLog = document.createElement("div");
+      noteLog.className = `case-note-log${noteEntries.length ? "" : " empty"}`;
+
+      if (noteEntries.length) {
+        for (const entry of noteEntries) {
+          const entryLine = document.createElement("div");
+          entryLine.className = "case-note-entry";
+
+          const signature = document.createElement("span");
+          signature.className = "case-note-entry-signature";
+          signature.textContent = ` (${entry.authorDisplayName} - ${entry.authorRoleLabel})`;
+
+          entryLine.append(document.createTextNode(entry.content));
+          entryLine.appendChild(signature);
+          noteLog.appendChild(entryLine);
+        }
+      } else {
+        noteLog.textContent = "No investigation notes have been saved yet for this case.";
+      }
+
       const noteTextarea = document.createElement("textarea");
       noteTextarea.className = "case-note-textarea";
-      noteTextarea.placeholder = "Example: Customer contacted on registered mobile. Debit rail restriction requested. Beneficiary escalation sent to fraud operations. Awaiting reversal confirmation.";
+      noteTextarea.placeholder = "Add the next investigation update for this case...";
       noteTextarea.value = notesDraft;
       noteTextarea.disabled = !capabilities.canChat || isBusy;
 
@@ -4040,23 +4721,23 @@
       const saveButton = document.createElement("button");
       saveButton.type = "button";
       saveButton.className = "case-note-button";
-      saveButton.textContent = isBusy ? "Saving..." : "Save Notes";
+      saveButton.textContent = isBusy ? "Adding..." : "Add Note";
       saveButton.disabled = !notesDirty || !capabilities.canChat || isBusy;
 
       const syncNoteMeta = () => {
-        const nextDirty = noteTextarea.value !== savedNotes;
+        const nextDirty = Boolean(String(noteTextarea.value || "").trim());
         saveButton.disabled = !nextDirty || !capabilities.canChat || isBusy;
         discardButton.disabled = !nextDirty || !capabilities.canChat || isBusy;
         if (!capabilities.canChat) {
           noteMeta.textContent = "Your role can view notes, but only chat-enabled roles can update them.";
         } else if (isBusy) {
-          noteMeta.textContent = "Saving case desk changes...";
+          noteMeta.textContent = "Saving the latest investigation note...";
         } else if (nextDirty) {
-          noteMeta.textContent = "Unsaved note changes for this case.";
-        } else if (conversation.notesUpdatedAt) {
-          noteMeta.textContent = `Last saved ${formatDateTime(conversation.notesUpdatedAt)}.`;
+          noteMeta.textContent = "Ready to add this note to the investigation trail.";
+        } else if (noteEntries.length) {
+          noteMeta.textContent = "Add another note to continue the investigation trail.";
         } else {
-          noteMeta.textContent = "No investigator notes saved yet for this case.";
+          noteMeta.textContent = "Add the first note for this case.";
         }
       };
 
@@ -4083,6 +4764,7 @@
       footer.appendChild(actions);
 
       notesBlock.appendChild(notesHeader);
+      notesBlock.appendChild(noteLog);
       notesBlock.appendChild(noteTextarea);
       notesBlock.appendChild(footer);
       panel.appendChild(notesBlock);
@@ -4530,6 +5212,7 @@
       els.loginView.style.display = state.loggedIn ? "none" : "";
       els.appView.style.display = state.loggedIn ? "" : "none";
       els.userId.value = state.userId || "";
+      renderWorkspaceDashboard();
       renderSidebarFilters();
       renderChatList();
       renderCustomerFraudPanel(conversation);
@@ -5232,6 +5915,7 @@
       ui.ownerFilter = [];
       ui.roleFilter = [];
       renderSidebarFilters();
+      renderWorkspaceDashboard();
       renderChatList();
     });
     els.ownerFilter.addEventListener("change", (event) => {
@@ -5240,6 +5924,7 @@
       ui.ownerFilter = selectedCheckboxValues(els.ownerFilter);
       syncCheckboxOptionStyles(els.ownerFilter);
       renderSidebarFilters();
+      renderWorkspaceDashboard();
       renderChatList();
     });
     els.roleFilter.addEventListener("change", (event) => {
@@ -5248,6 +5933,7 @@
       ui.roleFilter = selectedCheckboxValues(els.roleFilter);
       syncCheckboxOptionStyles(els.roleFilter);
       renderSidebarFilters();
+      renderWorkspaceDashboard();
       renderChatList();
     });
     els.activitySearch.addEventListener("input", () => {

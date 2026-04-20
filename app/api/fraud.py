@@ -67,6 +67,14 @@ class ConversationHistoryItemPayload(BaseModel):
     analysis: dict[str, Any] = Field(default_factory=dict)
 
 
+class ConversationNoteEntryPayload(BaseModel):
+    content: str
+    authorUserId: str | None = None
+    authorDisplayName: str | None = None
+    authorRoleLabel: str | None = None
+    createdAt: str | None = None
+
+
 class ConversationPayload(BaseModel):
     id: str
     title: str = "New chat"
@@ -80,7 +88,11 @@ class ConversationPayload(BaseModel):
     caseStatus: str | None = "Open"
     caseStatusUpdatedAt: str | None = None
     investigatorNotes: str | None = ""
+    noteEntries: list[ConversationNoteEntryPayload] = Field(default_factory=list)
     notesUpdatedAt: str | None = None
+    notesUpdatedByUserId: str | None = None
+    notesUpdatedByDisplayName: str | None = None
+    notesUpdatedByRoleLabel: str | None = None
     conversationState: dict[str, Any] = Field(default_factory=dict)
     workflowMode: str | None = "blueprint"
 
