@@ -77,6 +77,10 @@ class ConversationPayload(BaseModel):
     members: list[ConversationMemberPayload] = Field(default_factory=list)
     chatHistory: list[ConversationHistoryItemPayload] = Field(default_factory=list)
     fraudCategory: str | None = None
+    caseStatus: str | None = "Open"
+    caseStatusUpdatedAt: str | None = None
+    investigatorNotes: str | None = ""
+    notesUpdatedAt: str | None = None
     conversationState: dict[str, Any] = Field(default_factory=dict)
     workflowMode: str | None = "blueprint"
 

@@ -1263,6 +1263,207 @@
       gap: 14px;
     }
 
+    .case-desk {
+      width: 100%;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(238, 248, 246, 0.9) 100%);
+      box-shadow: 0 16px 34px rgba(34, 21, 27, 0.08);
+      display: grid;
+      gap: 16px;
+    }
+
+    .case-desk-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .case-desk-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .case-desk-title {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .case-desk-subtitle,
+    .case-note-helper,
+    .case-note-meta {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .case-status-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .case-status-open {
+      background: rgba(52, 84, 209, 0.1);
+      color: #3454d1;
+      border-color: rgba(52, 84, 209, 0.16);
+    }
+
+    .case-status-under-review {
+      background: rgba(15, 118, 110, 0.12);
+      color: #0f766e;
+      border-color: rgba(15, 118, 110, 0.16);
+    }
+
+    .case-status-escalated {
+      background: rgba(180, 35, 24, 0.12);
+      color: var(--danger);
+      border-color: rgba(180, 35, 24, 0.16);
+    }
+
+    .case-status-closed {
+      background: rgba(99, 81, 90, 0.12);
+      color: #5f545a;
+      border-color: rgba(99, 81, 90, 0.16);
+    }
+
+    .case-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .case-status-chip {
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--ink);
+      box-shadow: none;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .case-status-chip:hover:not(:disabled) {
+      transform: none;
+      box-shadow: 0 8px 18px rgba(34, 21, 27, 0.08);
+    }
+
+    .case-status-chip.is-active {
+      color: #ffffff;
+      border-color: transparent;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-2) 100%);
+      box-shadow: 0 10px 22px rgba(165, 0, 52, 0.2);
+    }
+
+    .case-desk-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .case-desk-metric {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.84);
+      display: grid;
+      gap: 4px;
+    }
+
+    .case-desk-metric span {
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    .case-desk-metric strong {
+      font-size: 0.92rem;
+      color: var(--ink);
+    }
+
+    .case-note-block {
+      display: grid;
+      gap: 10px;
+    }
+
+    .case-note-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .case-note-title {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .case-note-textarea {
+      width: 100%;
+      min-height: 132px;
+      resize: vertical;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--ink);
+      line-height: 1.55;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+    }
+
+    .case-note-textarea:focus {
+      border-color: rgba(165, 0, 52, 0.2);
+      box-shadow: 0 0 0 3px rgba(165, 0, 52, 0.08);
+      outline: none;
+    }
+
+    .case-note-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .case-note-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .case-note-button {
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .case-note-button.secondary {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--ink);
+    }
+
     .analysis-card {
       width: 100%;
       padding: 18px;
@@ -1644,7 +1845,9 @@
       }
 
       .analysis-top,
-      .analysis-meta {
+      .analysis-meta,
+      .case-desk-top,
+      .case-note-footer {
         flex-direction: column;
       }
 
@@ -1936,6 +2139,12 @@
       admin: "Admin",
       auditor: "Auditor"
     };
+    const CASE_STATUS_OPTIONS = Object.freeze([
+      { value: "Open", label: "Open" },
+      { value: "Under Review", label: "Under Review" },
+      { value: "Escalated", label: "Escalated" },
+      { value: "Closed", label: "Closed" }
+    ]);
     const PERMISSION_TEMPLATE = Object.freeze({
       canChat: false,
       canCreateChat: false,
@@ -2044,8 +2253,23 @@
       roleFilter: [],
       activitySearch: "",
       activityActionFilter: [],
-      activityActorFilter: []
+      activityActorFilter: [],
+      caseDeskBusyConversationId: "",
+      caseNotesDrafts: {},
+      preserveHistoryScroll: false
     };
+
+    function normalizeCaseStatus(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (normalized === "under review") return "Under Review";
+      if (normalized === "escalated") return "Escalated";
+      if (normalized === "closed") return "Closed";
+      return "Open";
+    }
+
+    function caseStatusSlug(value) {
+      return normalizeCaseStatus(value).toLowerCase().replace(/\s+/g, "-");
+    }
 
     function normalizeWorkflowMode(value) {
       const normalized = String(value || "").trim().toLowerCase();
@@ -2197,6 +2421,10 @@
         members: Array.isArray(seed.members) ? seed.members : [],
         chatHistory: normalizeChatHistoryItems(seed.chatHistory),
         fraudCategory: seed.fraudCategory || "",
+        caseStatus: normalizeCaseStatus(seed.caseStatus),
+        caseStatusUpdatedAt: seed.caseStatusUpdatedAt || seed.updatedAt || "",
+        investigatorNotes: String(seed.investigatorNotes || ""),
+        notesUpdatedAt: String(seed.notesUpdatedAt || ""),
         workflowMode,
         conversationState: { ...defaultConversationState(workflowMode), ...(seed.conversationState || {}) },
         capabilities: { ...(seed.capabilities || {}) }
@@ -2296,6 +2524,10 @@
       if (rawConversation && rawConversation.createdBy) {
         conversation.createdBy = rawConversation.createdBy;
       }
+      conversation.caseStatus = normalizeCaseStatus(rawConversation && rawConversation.caseStatus);
+      conversation.caseStatusUpdatedAt = String((rawConversation && rawConversation.caseStatusUpdatedAt) || conversation.caseStatusUpdatedAt || "");
+      conversation.investigatorNotes = String((rawConversation && rawConversation.investigatorNotes) || "");
+      conversation.notesUpdatedAt = String((rawConversation && rawConversation.notesUpdatedAt) || "");
       conversation.capabilities = { ...((rawConversation && rawConversation.capabilities) || {}) };
 
       return conversation;
@@ -2489,7 +2721,9 @@
         conversation_created: "Conversation Created",
         conversation_renamed: "Conversation Renamed",
         conversation_deleted: "Conversation Deleted",
-        conversation_members_updated: "Member Changes"
+        conversation_members_updated: "Member Changes",
+        conversation_case_status_updated: "Case Status Updated",
+        conversation_notes_updated: "Investigator Notes Updated"
       };
 
       return labels[value] || value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
@@ -2500,16 +2734,19 @@
 
       const capabilities = conversationCapabilities(conversation);
       const ownerName = conversationOwnerName(conversation);
+      const parts = [normalizeCaseStatus(conversation.caseStatus)];
 
       if (capabilities.isShared && ownerName) {
-        return `Shared by ${ownerName}`;
+        parts.push(`Shared by ${ownerName}`);
+        return parts.join(" · ");
       }
 
       if (isSupervisorView() && ownerName) {
-        return `Owner: ${ownerName}`;
+        parts.push(`Owner: ${ownerName}`);
+        return parts.join(" · ");
       }
 
-      return "";
+      return parts.join(" · ");
     }
 
     function conversationHeaderMeta(conversation) {
@@ -2521,6 +2758,7 @@
       const ownerName = conversationOwnerName(conversation);
       const parts = [];
       parts.push(workflowConfig(currentWorkflowMode(conversation)).shortLabel);
+      parts.push(normalizeCaseStatus(conversation.caseStatus));
 
       if (conversation.fraudCategory) {
         parts.push(conversation.fraudCategory);
@@ -3420,9 +3658,247 @@
       return card;
     }
 
-    function renderCustomerFraudPanel(_conversation) {
+    async function persistCaseDeskConversation(conversationId, updater, errorPrefix, onSuccess) {
+      const existingConversation = state.conversations.find((item) => item.id === conversationId);
+      if (!existingConversation) return;
+
+      const previousConversation = JSON.parse(JSON.stringify(existingConversation));
+      updateConversation(conversationId, (current) => ({
+        ...updater(current),
+        updatedAt: new Date().toISOString()
+      }));
+      ui.caseDeskBusyConversationId = conversationId;
+      ui.preserveHistoryScroll = true;
+      render();
+
+      try {
+        await syncConversation(conversationId);
+        if (typeof onSuccess === "function") onSuccess();
+      } catch (error) {
+        updateConversation(conversationId, () => previousConversation);
+        setError(`${errorPrefix}: ${error.message}`);
+      } finally {
+        ui.caseDeskBusyConversationId = "";
+        ui.preserveHistoryScroll = true;
+        render();
+      }
+    }
+
+    async function updateCaseStatus(conversationId, nextStatus) {
+      const normalizedStatus = normalizeCaseStatus(nextStatus);
+      const conversation = state.conversations.find((item) => item.id === conversationId);
+      if (!conversation || normalizeCaseStatus(conversation.caseStatus) === normalizedStatus) return;
+
+      await persistCaseDeskConversation(
+        conversationId,
+        (current) => ({
+          ...current,
+          caseStatus: normalizedStatus,
+          caseStatusUpdatedAt: new Date().toISOString()
+        }),
+        "Case Status Save Error"
+      );
+    }
+
+    async function saveInvestigatorNotes(conversationId, notesValue) {
+      const normalizedNotes = String(notesValue || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+
+      await persistCaseDeskConversation(
+        conversationId,
+        (current) => ({
+          ...current,
+          investigatorNotes: normalizedNotes,
+          notesUpdatedAt: normalizedNotes ? new Date().toISOString() : ""
+        }),
+        "Investigator Notes Save Error",
+        () => {
+          delete ui.caseNotesDrafts[conversationId];
+          setStatus(normalizedNotes ? "Investigator notes saved." : "Investigator notes cleared.");
+        }
+      );
+    }
+
+    function renderCustomerFraudPanel(conversation) {
       els.customerFraudPanel.innerHTML = "";
-      setHidden(els.customerFraudPanel, true);
+      if (!conversation) {
+        setHidden(els.customerFraudPanel, true);
+        return;
+      }
+
+      const capabilities = conversationCapabilities(conversation);
+      const analysis = latestCustomerFraudAnalysis(conversation);
+      const currentStatus = normalizeCaseStatus(conversation.caseStatus);
+      const notesDraft = Object.prototype.hasOwnProperty.call(ui.caseNotesDrafts, conversation.id)
+        ? ui.caseNotesDrafts[conversation.id]
+        : String(conversation.investigatorNotes || "");
+      const savedNotes = String(conversation.investigatorNotes || "");
+      const notesDirty = notesDraft !== savedNotes;
+      const isBusy = ui.caseDeskBusyConversationId === conversation.id;
+      const canEdit = capabilities.canChat && !isBusy;
+
+      const panel = document.createElement("section");
+      panel.className = "case-desk";
+
+      const top = document.createElement("div");
+      top.className = "case-desk-top";
+
+      const copy = document.createElement("div");
+      copy.className = "case-desk-copy";
+
+      const title = document.createElement("h3");
+      title.className = "case-desk-title";
+      title.textContent = "Case Desk";
+
+      const subtitle = document.createElement("div");
+      subtitle.className = "case-desk-subtitle";
+      subtitle.textContent = "Track the investigation status for this case and keep investigator notes attached to the same conversation.";
+
+      copy.appendChild(title);
+      copy.appendChild(subtitle);
+
+      const statusBadge = document.createElement("span");
+      statusBadge.className = `case-status-badge case-status-${caseStatusSlug(currentStatus)}`;
+      statusBadge.textContent = currentStatus;
+
+      top.appendChild(copy);
+      top.appendChild(statusBadge);
+      panel.appendChild(top);
+
+      const statusRow = document.createElement("div");
+      statusRow.className = "case-status-row";
+      for (const option of CASE_STATUS_OPTIONS) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `case-status-chip${normalizeCaseStatus(option.value) === currentStatus ? " is-active" : ""}`;
+        button.textContent = option.label;
+        button.disabled = !canEdit;
+        button.addEventListener("click", async () => {
+          if (button.disabled) return;
+          await updateCaseStatus(conversation.id, option.value);
+        });
+        statusRow.appendChild(button);
+      }
+      panel.appendChild(statusRow);
+
+      const summaryGrid = document.createElement("div");
+      summaryGrid.className = "case-desk-grid";
+
+      const summaryItems = [
+        {
+          label: "Current Risk",
+          value: analysis && analysis.risk_level ? `${analysis.risk_level} Risk` : (conversation.fraudCategory || "Awaiting review")
+        },
+        {
+          label: "Customer",
+          value: analysis && analysis.customer && analysis.customer.name
+            ? `${analysis.customer.name}${analysis.customer.cif_id ? ` (${analysis.customer.cif_id})` : ""}`
+            : "Awaiting customer confirmation"
+        },
+        {
+          label: "Flagged Transactions",
+          value: analysis && Array.isArray(analysis.flagged_transactions)
+            ? String(analysis.flagged_transactions.length)
+            : "0"
+        },
+        {
+          label: "Notes Updated",
+          value: conversation.notesUpdatedAt ? formatDateTime(conversation.notesUpdatedAt) : "Not saved yet"
+        }
+      ];
+
+      for (const item of summaryItems) {
+        const metric = document.createElement("div");
+        metric.className = "case-desk-metric";
+        metric.innerHTML = `<span>${item.label}</span><strong>${item.value}</strong>`;
+        summaryGrid.appendChild(metric);
+      }
+      panel.appendChild(summaryGrid);
+
+      const notesBlock = document.createElement("div");
+      notesBlock.className = "case-note-block";
+
+      const notesHeader = document.createElement("div");
+      notesHeader.className = "case-note-header";
+      notesHeader.innerHTML = `
+        <div>
+          <h4 class="case-note-title">Investigator Notes</h4>
+          <div class="case-note-helper">Capture callback outcomes, containment steps, branch coordination, and supervisor instructions for this case.</div>
+        </div>
+      `;
+
+      const noteTextarea = document.createElement("textarea");
+      noteTextarea.className = "case-note-textarea";
+      noteTextarea.placeholder = "Example: Customer contacted on registered mobile. Debit rail restriction requested. Beneficiary escalation sent to fraud operations. Awaiting reversal confirmation.";
+      noteTextarea.value = notesDraft;
+      noteTextarea.disabled = !capabilities.canChat || isBusy;
+
+      const footer = document.createElement("div");
+      footer.className = "case-note-footer";
+
+      const noteMeta = document.createElement("div");
+      noteMeta.className = "case-note-meta";
+
+      const actions = document.createElement("div");
+      actions.className = "case-note-actions";
+
+      const discardButton = document.createElement("button");
+      discardButton.type = "button";
+      discardButton.className = "case-note-button secondary";
+      discardButton.textContent = "Discard Changes";
+      discardButton.disabled = !notesDirty || !capabilities.canChat || isBusy;
+
+      const saveButton = document.createElement("button");
+      saveButton.type = "button";
+      saveButton.className = "case-note-button";
+      saveButton.textContent = isBusy ? "Saving..." : "Save Notes";
+      saveButton.disabled = !notesDirty || !capabilities.canChat || isBusy;
+
+      const syncNoteMeta = () => {
+        const nextDirty = noteTextarea.value !== savedNotes;
+        saveButton.disabled = !nextDirty || !capabilities.canChat || isBusy;
+        discardButton.disabled = !nextDirty || !capabilities.canChat || isBusy;
+        if (!capabilities.canChat) {
+          noteMeta.textContent = "Your role can view notes, but only chat-enabled roles can update them.";
+        } else if (isBusy) {
+          noteMeta.textContent = "Saving case desk changes...";
+        } else if (nextDirty) {
+          noteMeta.textContent = "Unsaved note changes for this case.";
+        } else if (conversation.notesUpdatedAt) {
+          noteMeta.textContent = `Last saved ${formatDateTime(conversation.notesUpdatedAt)}.`;
+        } else {
+          noteMeta.textContent = "No investigator notes saved yet for this case.";
+        }
+      };
+
+      noteTextarea.addEventListener("input", () => {
+        ui.caseNotesDrafts[conversation.id] = noteTextarea.value;
+        syncNoteMeta();
+      });
+
+      discardButton.addEventListener("click", () => {
+        delete ui.caseNotesDrafts[conversation.id];
+        ui.preserveHistoryScroll = true;
+        render();
+      });
+
+      saveButton.addEventListener("click", async () => {
+        await saveInvestigatorNotes(conversation.id, noteTextarea.value);
+      });
+
+      syncNoteMeta();
+
+      actions.appendChild(discardButton);
+      actions.appendChild(saveButton);
+      footer.appendChild(noteMeta);
+      footer.appendChild(actions);
+
+      notesBlock.appendChild(notesHeader);
+      notesBlock.appendChild(noteTextarea);
+      notesBlock.appendChild(footer);
+      panel.appendChild(notesBlock);
+
+      els.customerFraudPanel.appendChild(panel);
+      setHidden(els.customerFraudPanel, false);
     }
 
     function conversationPreview(conversation) {
@@ -3602,7 +4078,11 @@
         }
       }
       if (els.contentShell) {
-        els.contentShell.scrollTop = els.contentShell.scrollHeight;
+        if (ui.preserveHistoryScroll) {
+          ui.preserveHistoryScroll = false;
+        } else {
+          els.contentShell.scrollTop = els.contentShell.scrollHeight;
+        }
       }
     }
 
@@ -3839,7 +4319,7 @@
       els.userId.value = state.userId || "";
       renderSidebarFilters();
       renderChatList();
-      setHidden(els.customerFraudPanel, true);
+      renderCustomerFraudPanel(conversation);
       renderHistory();
       setHidden(els.welcomeState, Boolean(conversation && hasMeaningfulConversationHistory(conversation)));
       setHidden(els.chatHistory, !conversation);
@@ -4311,6 +4791,7 @@
         return;
       }
       state.conversations = state.conversations.filter((item) => item.id !== conversationId);
+      delete ui.caseNotesDrafts[conversationId];
       state.activeConversationId = state.conversations.length ? state.conversations[0].id : "";
       closeTransientUi();
       saveState();
@@ -4464,6 +4945,8 @@
     }
 
     function logout() {
+      ui.caseDeskBusyConversationId = "";
+      ui.caseNotesDrafts = {};
       state = defaultState();
       saveState();
       closeTransientUi();

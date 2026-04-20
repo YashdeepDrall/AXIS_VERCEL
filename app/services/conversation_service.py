@@ -12,6 +12,7 @@ from app.services.auth_service import find_workspace_user
 STORE_VERSION = 1
 STORE_LOCK = Lock()
 MEMBER_COLORS = ["#a50034", "#0f766e", "#3454d1", "#996c00"]
+CASE_STATUS_OPTIONS = {"open", "under review", "escalated", "closed"}
 
 
 def _now_iso():
@@ -194,6 +195,22 @@ def _normalize_conversation_state(state):
     return deepcopy(state)
 
 
+def _normalize_case_status(value):
+    normalized = str(value or "").strip().lower()
+    if normalized not in CASE_STATUS_OPTIONS:
+        return "Open"
+    return normalized.title() if normalized != "under review" else "Under Review"
+
+
+def _normalize_investigator_notes(value):
+    if value is None:
+        return ""
+
+    lines = [line.rstrip() for line in str(value).replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+    normalized = "\n".join(lines).strip()
+    return normalized[:6000]
+
+
 def _conversation_member_ids(conversation):
     return {
         str(member.get("id") or "").strip().lower()
@@ -349,8 +366,28 @@ def _prepare_conversation_for_store(user_context, payload, existing=None):
     members_source = payload.get("members") if can_manage_members else existing.get("members")
     chat_history_source = payload.get("chatHistory") if can_update_content else existing.get("chatHistory")
     fraud_category_source = payload.get("fraudCategory") if can_update_content else existing.get("fraudCategory")
+    case_status_source = payload.get("caseStatus") if can_update_content else existing.get("caseStatus")
+    notes_source = payload.get("investigatorNotes") if can_update_content else existing.get("investigatorNotes")
     conversation_state_source = payload.get("conversationState") if can_update_content else existing.get("conversationState")
     workflow_mode_source = payload.get("workflowMode") if can_update_content else existing.get("workflowMode")
+
+    existing_case_status = _normalize_case_status(existing.get("caseStatus"))
+    prepared_case_status = _normalize_case_status(case_status_source or existing.get("caseStatus"))
+    existing_notes = _normalize_investigator_notes(existing.get("investigatorNotes"))
+    prepared_notes = _normalize_investigator_notes(notes_source if notes_source is not None else existing.get("investigatorNotes"))
+
+    case_status_updated_at = str(existing.get("caseStatusUpdatedAt") or payload.get("caseStatusUpdatedAt") or created_at or now)
+    if not existing or prepared_case_status != existing_case_status:
+        case_status_updated_at = now
+
+    notes_updated_at = str(existing.get("notesUpdatedAt") or payload.get("notesUpdatedAt") or "")
+    if prepared_notes:
+        if not existing_notes or prepared_notes != existing_notes:
+            notes_updated_at = now
+        elif not notes_updated_at:
+            notes_updated_at = created_at or now
+    else:
+        notes_updated_at = ""
 
     return {
         "id": str(payload.get("id") or existing.get("id") or "").strip(),
@@ -366,6 +403,10 @@ def _prepare_conversation_for_store(user_context, payload, existing=None):
         "members": _normalize_members(members_source or existing.get("members") or [], user_context, existing=existing),
         "chatHistory": _normalize_chat_history(chat_history_source or existing.get("chatHistory") or []),
         "fraudCategory": str(fraud_category_source or existing.get("fraudCategory") or ""),
+        "caseStatus": prepared_case_status,
+        "caseStatusUpdatedAt": case_status_updated_at,
+        "investigatorNotes": prepared_notes,
+        "notesUpdatedAt": notes_updated_at,
         "conversationState": _normalize_conversation_state(conversation_state_source or existing.get("conversationState") or {}),
         "workflowMode": str(workflow_mode_source or existing.get("workflowMode") or "blueprint").strip() or "blueprint",
     }
@@ -454,6 +495,40 @@ def upsert_conversation_for_user(user_context, payload):
                 details={
                     "addedMembers": added_members,
                     "removedMembers": removed_members,
+                    "ownerUserId": prepared.get("ownerUserId"),
+                    "relatedUserIds": _member_id_list(prepared),
+                },
+            )
+
+        existing_case_status = _normalize_case_status(existing.get("caseStatus"))
+        prepared_case_status = _normalize_case_status(prepared.get("caseStatus"))
+        if existing_case_status != prepared_case_status:
+            log_activity(
+                "conversation_case_status_updated",
+                actor=user_context,
+                target_type="conversation",
+                target_id=prepared["id"],
+                summary=f'{user_context.get("displayName") or user_context.get("userId")} changed case status to "{prepared_case_status}" on "{prepared_title}".',
+                details={
+                    "before": existing_case_status,
+                    "after": prepared_case_status,
+                    "ownerUserId": prepared.get("ownerUserId"),
+                    "relatedUserIds": _member_id_list(prepared),
+                },
+            )
+
+        existing_notes = _normalize_investigator_notes(existing.get("investigatorNotes"))
+        prepared_notes = _normalize_investigator_notes(prepared.get("investigatorNotes"))
+        if existing_notes != prepared_notes:
+            note_summary = "saved investigator notes" if prepared_notes else "cleared investigator notes"
+            log_activity(
+                "conversation_notes_updated",
+                actor=user_context,
+                target_type="conversation",
+                target_id=prepared["id"],
+                summary=f'{user_context.get("displayName") or user_context.get("userId")} {note_summary} on "{prepared_title}".',
+                details={
+                    "notesLength": len(prepared_notes),
                     "ownerUserId": prepared.get("ownerUserId"),
                     "relatedUserIds": _member_id_list(prepared),
                 },
