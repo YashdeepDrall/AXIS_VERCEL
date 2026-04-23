@@ -4181,6 +4181,46 @@
       const baseline = analysis.customer_baseline && typeof analysis.customer_baseline === "object" ? analysis.customer_baseline : {};
       const actions = Array.isArray(analysis.recommended_actions) ? analysis.recommended_actions : [];
       const riskLevel = String(analysis.risk_level || "Low").trim() || "Low";
+      const familyCards = Array.isArray(analysis.family_cards) ? analysis.family_cards : [];
+      const caseFamily = String(analysis.case_family || "Transaction Fraud").trim() || "Transaction Fraud";
+      const suspicionDirection = String(analysis.suspicion_direction || "Customer Victim").trim() || "Customer Victim";
+      const investigationBasis = String(analysis.investigation_basis || "Transaction-Led").trim() || "Transaction-Led";
+      const transactionRelevance = String(analysis.transaction_relevance || "primary").trim().toLowerCase() || "primary";
+      const reviewScopeLabel = String(analysis.review_scope_label || "").trim();
+      const reviewScopeMode = String(analysis.review_scope_mode || "").trim().toLowerCase();
+      const evidenceModules = Array.isArray(analysis.evidence_modules_used) ? analysis.evidence_modules_used.filter(Boolean) : [];
+      const relatedData = analysis.related_data_summary && typeof analysis.related_data_summary === "object" ? analysis.related_data_summary : {};
+      const loanExposure = analysis.loan_exposure && typeof analysis.loan_exposure === "object" ? analysis.loan_exposure : {};
+      const documentReview = analysis.document_review && typeof analysis.document_review === "object" ? analysis.document_review : {};
+      const caseEventSummary = analysis.case_event_summary && typeof analysis.case_event_summary === "object" ? analysis.case_event_summary : {};
+      const caseSummary = String(analysis.case_summary || analysis.reasoning_summary || "").trim();
+      const relevanceLabel = transactionRelevance === "not_applicable"
+        ? "Not Applicable"
+        : transactionRelevance === "supporting"
+          ? "Supporting"
+          : "Primary";
+      const displayScope = reviewScopeLabel || (
+        queryWindow.start_datetime && queryWindow.end_datetime
+          ? `${formatDateTime(queryWindow.start_datetime)} to ${formatDateTime(queryWindow.end_datetime)}`
+          : ""
+      );
+      const classificationLabelRaw = String(analysis.fraud_classification || "").trim();
+      const displayClassificationLabel = /^[A-Z0-9_-]{3,}$/.test(classificationLabelRaw)
+        ? (caseFamily || "Fraud Assessment")
+        : (classificationLabelRaw || "Fraud assessment");
+      const transactionTitles = transactionRelevance === "supporting"
+        ? {
+            timeline: reviewScopeMode === "relationship_history" ? "Supporting Account History" : "Supporting Transaction Timeline",
+            baseline: "Supporting Customer Baseline",
+            patterns: "Supporting Transaction Patterns",
+            flagged: "Supporting Transactions"
+          }
+        : {
+            timeline: "Transaction Timeline",
+            baseline: "Customer Baseline",
+            patterns: "Suspicious Patterns",
+            flagged: "Flagged Transactions"
+          };
 
       const top = document.createElement("div");
       top.className = "analysis-top";
@@ -4203,8 +4243,8 @@
         customer.mobile ? `Mobile: ${customer.mobile}` : "",
         customer.pan ? `PAN: ${customer.pan}` : "",
         Array.isArray(customer.accounts) && customer.accounts.length ? `Accounts: ${customer.accounts.join(", ")}` : "",
-        queryWindow.start_datetime && queryWindow.end_datetime
-          ? `Window: ${formatDateTime(queryWindow.start_datetime)} to ${formatDateTime(queryWindow.end_datetime)}`
+        displayScope
+          ? `${reviewScopeLabel ? "Scope" : "Window"}: ${displayScope}`
           : ""
       ].filter(Boolean).join(" | ");
 
@@ -4222,12 +4262,33 @@
 
       const metrics = document.createElement("div");
       metrics.className = "analysis-metrics";
-      metrics.appendChild(buildAnalysisMetric("Risk Score", String(analysis.risk_score || 0)));
-      metrics.appendChild(buildAnalysisMetric("Transactions", String(summary.total_transactions || 0)));
-      metrics.appendChild(buildAnalysisMetric("Debit Outflow", formatCurrency(summary.total_debit_amount)));
-      metrics.appendChild(buildAnalysisMetric("Flagged", String(flaggedTransactions.length)));
-      metrics.appendChild(buildAnalysisMetric("New Beneficiaries", String(summary.new_beneficiary_transactions || 0)));
-      metrics.appendChild(buildAnalysisMetric("High-Value Debits", String(summary.high_value_debits || 0)));
+      if (transactionRelevance === "not_applicable") {
+        metrics.appendChild(buildAnalysisMetric("Risk Score", String(analysis.risk_score || 0)));
+        metrics.appendChild(buildAnalysisMetric("Loan Files", String(relatedData.loan_accounts || 0)));
+        metrics.appendChild(buildAnalysisMetric("Doc Checks", String(relatedData.document_verifications || 0)));
+        metrics.appendChild(buildAnalysisMetric("Case Events", String(relatedData.case_events || 0)));
+        metrics.appendChild(buildAnalysisMetric("Transaction Relevance", relevanceLabel));
+        metrics.appendChild(buildAnalysisMetric("Evidence Modules", String(evidenceModules.length || 0)));
+        metrics.appendChild(buildAnalysisMetric(
+          loanExposure.product_type ? "Primary Product" : "Flagged Docs",
+          loanExposure.product_type || String(documentReview.failed_documents || 0)
+        ));
+      } else if (transactionRelevance === "supporting") {
+        metrics.appendChild(buildAnalysisMetric("Risk Score", String(analysis.risk_score || 0)));
+        metrics.appendChild(buildAnalysisMetric("Supporting Txns", String(summary.total_transactions || 0)));
+        metrics.appendChild(buildAnalysisMetric("Loan Files", String(relatedData.loan_accounts || 0)));
+        metrics.appendChild(buildAnalysisMetric("Doc Checks", String(relatedData.document_verifications || 0)));
+        metrics.appendChild(buildAnalysisMetric("Case Events", String(relatedData.case_events || caseEventSummary.total_events || 0)));
+        metrics.appendChild(buildAnalysisMetric("Transaction Relevance", relevanceLabel));
+        metrics.appendChild(buildAnalysisMetric("Supporting Outflow", formatCurrency(summary.total_debit_amount)));
+      } else {
+        metrics.appendChild(buildAnalysisMetric("Risk Score", String(analysis.risk_score || 0)));
+        metrics.appendChild(buildAnalysisMetric("Transactions", String(summary.total_transactions || 0)));
+        metrics.appendChild(buildAnalysisMetric("Debit Outflow", formatCurrency(summary.total_debit_amount)));
+        metrics.appendChild(buildAnalysisMetric("Flagged", String(flaggedTransactions.length)));
+        metrics.appendChild(buildAnalysisMetric("New Beneficiaries", String(summary.new_beneficiary_transactions || 0)));
+        metrics.appendChild(buildAnalysisMetric("High-Value Debits", String(summary.high_value_debits || 0)));
+      }
       card.appendChild(metrics);
 
       if (analysis.case_description) {
@@ -4244,117 +4305,209 @@
         card.appendChild(caseSection);
       }
 
-      const timelineSection = document.createElement("div");
-      timelineSection.className = "analysis-section";
-      const timelineTitle = document.createElement("h4");
-      timelineTitle.className = "analysis-section-title";
-      timelineTitle.textContent = "Transaction Timeline";
-      timelineSection.appendChild(timelineTitle);
-      if (timelineItems.length) {
-        const timelineList = document.createElement("div");
-        timelineList.className = "analysis-timeline";
-        for (const item of timelineItems) {
-          const timelineCard = document.createElement("div");
-          timelineCard.className = `analysis-timeline-item analysis-timeline-${String(item.severity || "info").toLowerCase()}`;
+      const routingSection = document.createElement("div");
+      routingSection.className = "analysis-section";
+      const routingTitle = document.createElement("h4");
+      routingTitle.className = "analysis-section-title";
+      routingTitle.textContent = "Investigation Routing";
+      routingSection.appendChild(routingTitle);
 
-          const topRow = document.createElement("div");
-          topRow.className = "analysis-timeline-top";
+      const routingBody = document.createElement("div");
+      routingBody.className = "analysis-summary";
+      routingBody.textContent = caseSummary || "Case-family routing is not yet available for this review.";
+      routingSection.appendChild(routingBody);
 
-          const heading = document.createElement("div");
-          heading.className = "analysis-timeline-heading";
-          heading.textContent = item.title || `${item.channel || "Channel"} transaction`;
+      const routingMetrics = document.createElement("div");
+      routingMetrics.className = "analysis-metrics";
+      routingMetrics.appendChild(buildAnalysisMetric("Case Family", caseFamily));
+      routingMetrics.appendChild(buildAnalysisMetric("Suspicion Direction", suspicionDirection));
+      routingMetrics.appendChild(buildAnalysisMetric("Review Basis", investigationBasis));
+      routingMetrics.appendChild(buildAnalysisMetric("Transaction Relevance", relevanceLabel));
+      routingSection.appendChild(routingMetrics);
 
-          const timestamp = document.createElement("div");
-          timestamp.className = "analysis-timeline-time";
-          timestamp.textContent = formatDateTime(item.timestamp);
+      if (evidenceModules.length) {
+        const evidenceRow = document.createElement("div");
+        evidenceRow.className = "analysis-reasons";
+        for (const moduleName of evidenceModules) {
+          const chip = document.createElement("span");
+          chip.className = "analysis-reason";
+          chip.textContent = moduleName;
+          evidenceRow.appendChild(chip);
+        }
+        routingSection.appendChild(evidenceRow);
+      }
 
-          topRow.appendChild(heading);
-          if (timestamp.textContent) topRow.appendChild(timestamp);
-          timelineCard.appendChild(topRow);
+      card.appendChild(routingSection);
 
-          const copy = document.createElement("div");
-          copy.className = "analysis-timeline-copy";
-          copy.textContent = [
-            item.txn_id ? `Txn: ${item.txn_id}` : "",
-            item.details || "",
-          ].filter(Boolean).join(" | ");
-          if (copy.textContent) timelineCard.appendChild(copy);
+      if (familyCards.length) {
+        for (const familyCard of familyCards) {
+          const evidenceSection = document.createElement("div");
+          evidenceSection.className = "analysis-section";
 
-          if (Array.isArray(item.reasons) && item.reasons.length) {
-            const reasons = document.createElement("div");
-            reasons.className = "analysis-reasons";
-            for (const reason of item.reasons) {
+          const evidenceTitle = document.createElement("h4");
+          evidenceTitle.className = "analysis-section-title";
+          evidenceTitle.textContent = familyCard.title || "Investigation Evidence";
+          evidenceSection.appendChild(evidenceTitle);
+
+          if (familyCard.summary) {
+            const evidenceSummary = document.createElement("div");
+            evidenceSummary.className = "analysis-summary";
+            evidenceSummary.textContent = familyCard.summary;
+            evidenceSection.appendChild(evidenceSummary);
+          }
+
+          if (Array.isArray(familyCard.items) && familyCard.items.length) {
+            const evidenceList = document.createElement("ul");
+            for (const itemText of familyCard.items) {
+              const item = document.createElement("li");
+              item.textContent = itemText;
+              evidenceList.appendChild(item);
+            }
+            evidenceSection.appendChild(evidenceList);
+          }
+
+          if (familyCard.emphasis) {
+            const evidenceEmphasis = document.createElement("div");
+            evidenceEmphasis.className = "analysis-meta-copy";
+            evidenceEmphasis.textContent = familyCard.emphasis;
+            evidenceSection.appendChild(evidenceEmphasis);
+          }
+
+          card.appendChild(evidenceSection);
+        }
+      }
+
+      if (transactionRelevance === "not_applicable") {
+        const transactionNoteSection = document.createElement("div");
+        transactionNoteSection.className = "analysis-section";
+        const transactionNoteTitle = document.createElement("h4");
+        transactionNoteTitle.className = "analysis-section-title";
+        transactionNoteTitle.textContent = "Transaction Review";
+        transactionNoteSection.appendChild(transactionNoteTitle);
+
+        const transactionNote = document.createElement("div");
+        transactionNote.className = "analysis-summary";
+        transactionNote.textContent = summary.total_transactions
+          ? `Transaction review is not the primary evidence source for this case. ${summary.total_transactions} account-history transaction(s) are available only as background context and are intentionally not expanded in this card.`
+          : "Transaction review is not the primary evidence source for this case. No meaningful reviewed transaction activity is available in the selected window.";
+        transactionNoteSection.appendChild(transactionNote);
+        card.appendChild(transactionNoteSection);
+      } else {
+        const timelineSection = document.createElement("div");
+        timelineSection.className = "analysis-section";
+        const timelineTitle = document.createElement("h4");
+        timelineTitle.className = "analysis-section-title";
+        timelineTitle.textContent = transactionTitles.timeline;
+        timelineSection.appendChild(timelineTitle);
+        if (timelineItems.length) {
+          const timelineList = document.createElement("div");
+          timelineList.className = "analysis-timeline";
+          for (const item of timelineItems) {
+            const timelineCard = document.createElement("div");
+            timelineCard.className = `analysis-timeline-item analysis-timeline-${String(item.severity || "info").toLowerCase()}`;
+
+            const topRow = document.createElement("div");
+            topRow.className = "analysis-timeline-top";
+
+            const heading = document.createElement("div");
+            heading.className = "analysis-timeline-heading";
+            heading.textContent = item.title || `${item.channel || "Channel"} transaction`;
+
+            const timestamp = document.createElement("div");
+            timestamp.className = "analysis-timeline-time";
+            timestamp.textContent = formatDateTime(item.timestamp);
+
+            topRow.appendChild(heading);
+            if (timestamp.textContent) topRow.appendChild(timestamp);
+            timelineCard.appendChild(topRow);
+
+            const copy = document.createElement("div");
+            copy.className = "analysis-timeline-copy";
+            copy.textContent = [
+              item.txn_id ? `Txn: ${item.txn_id}` : "",
+              item.details || "",
+            ].filter(Boolean).join(" | ");
+            if (copy.textContent) timelineCard.appendChild(copy);
+
+            if (Array.isArray(item.reasons) && item.reasons.length) {
+              const reasons = document.createElement("div");
+              reasons.className = "analysis-reasons";
+              for (const reason of item.reasons) {
+                const chip = document.createElement("span");
+                chip.className = "analysis-reason";
+                chip.textContent = reason;
+                reasons.appendChild(chip);
+              }
+              timelineCard.appendChild(reasons);
+            }
+
+            timelineList.appendChild(timelineCard);
+          }
+          timelineSection.appendChild(timelineList);
+        } else {
+          const emptyTimeline = document.createElement("div");
+          emptyTimeline.className = "analysis-empty";
+          emptyTimeline.textContent = "No reviewed transaction activity is available to build a timeline for this window.";
+          timelineSection.appendChild(emptyTimeline);
+        }
+        card.appendChild(timelineSection);
+
+        if (
+          reviewScopeMode !== "relationship_history"
+          && (
+          baseline.comparison_summary
+          || Number(baseline.historical_debit_count || 0)
+          || Number(baseline.review_window_debit_count || 0)
+          )
+        ) {
+          const baselineSection = document.createElement("div");
+          baselineSection.className = "analysis-section";
+          const baselineTitle = document.createElement("h4");
+          baselineTitle.className = "analysis-section-title";
+          baselineTitle.textContent = transactionTitles.baseline;
+          baselineSection.appendChild(baselineTitle);
+
+          const baselineBody = document.createElement("div");
+          baselineBody.className = "analysis-summary";
+          baselineBody.textContent = baseline.comparison_summary || "Customer baseline comparison is not available for this review window.";
+          baselineSection.appendChild(baselineBody);
+
+          const baselineMetrics = document.createElement("div");
+          baselineMetrics.className = "analysis-metrics";
+          baselineMetrics.appendChild(buildAnalysisMetric("Lookback", `${baseline.lookback_days || 0} days`));
+          baselineMetrics.appendChild(buildAnalysisMetric("Typical Debit", formatCurrency(baseline.typical_debit_amount)));
+          baselineMetrics.appendChild(buildAnalysisMetric("Prior Max", formatCurrency(baseline.prior_max_debit)));
+          baselineMetrics.appendChild(buildAnalysisMetric("Window Max", formatCurrency(baseline.review_window_max_debit)));
+          baselineMetrics.appendChild(buildAnalysisMetric("Daily Outflow", formatCurrency(baseline.average_daily_debit_outflow)));
+          baselineMetrics.appendChild(buildAnalysisMetric(
+            baseline.dominant_channel ? `${baseline.dominant_channel} History` : "History Count",
+            baseline.dominant_channel
+              ? String(baseline.same_channel_history_count || 0)
+              : String(baseline.historical_debit_count || 0)
+          ));
+          baselineSection.appendChild(baselineMetrics);
+
+          if (Array.isArray(baseline.anomalies) && baseline.anomalies.length) {
+            const anomalyRow = document.createElement("div");
+            anomalyRow.className = "analysis-reasons";
+            for (const anomaly of baseline.anomalies) {
               const chip = document.createElement("span");
               chip.className = "analysis-reason";
-              chip.textContent = reason;
-              reasons.appendChild(chip);
+              chip.textContent = anomaly;
+              anomalyRow.appendChild(chip);
             }
-            timelineCard.appendChild(reasons);
+            baselineSection.appendChild(anomalyRow);
           }
 
-          timelineList.appendChild(timelineCard);
+          card.appendChild(baselineSection);
         }
-        timelineSection.appendChild(timelineList);
-      } else {
-        const emptyTimeline = document.createElement("div");
-        emptyTimeline.className = "analysis-empty";
-        emptyTimeline.textContent = "No reviewed transaction activity is available to build a timeline for this window.";
-        timelineSection.appendChild(emptyTimeline);
-      }
-      card.appendChild(timelineSection);
-
-      if (
-        baseline.comparison_summary
-        || Number(baseline.historical_debit_count || 0)
-        || Number(baseline.review_window_debit_count || 0)
-      ) {
-        const baselineSection = document.createElement("div");
-        baselineSection.className = "analysis-section";
-        const baselineTitle = document.createElement("h4");
-        baselineTitle.className = "analysis-section-title";
-        baselineTitle.textContent = "Customer Baseline";
-        baselineSection.appendChild(baselineTitle);
-
-        const baselineBody = document.createElement("div");
-        baselineBody.className = "analysis-summary";
-        baselineBody.textContent = baseline.comparison_summary || "Customer baseline comparison is not available for this review window.";
-        baselineSection.appendChild(baselineBody);
-
-        const baselineMetrics = document.createElement("div");
-        baselineMetrics.className = "analysis-metrics";
-        baselineMetrics.appendChild(buildAnalysisMetric("Lookback", `${baseline.lookback_days || 0} days`));
-        baselineMetrics.appendChild(buildAnalysisMetric("Typical Debit", formatCurrency(baseline.typical_debit_amount)));
-        baselineMetrics.appendChild(buildAnalysisMetric("Prior Max", formatCurrency(baseline.prior_max_debit)));
-        baselineMetrics.appendChild(buildAnalysisMetric("Window Max", formatCurrency(baseline.review_window_max_debit)));
-        baselineMetrics.appendChild(buildAnalysisMetric("Daily Outflow", formatCurrency(baseline.average_daily_debit_outflow)));
-        baselineMetrics.appendChild(buildAnalysisMetric(
-          baseline.dominant_channel ? `${baseline.dominant_channel} History` : "History Count",
-          baseline.dominant_channel
-            ? String(baseline.same_channel_history_count || 0)
-            : String(baseline.historical_debit_count || 0)
-        ));
-        baselineSection.appendChild(baselineMetrics);
-
-        if (Array.isArray(baseline.anomalies) && baseline.anomalies.length) {
-          const anomalyRow = document.createElement("div");
-          anomalyRow.className = "analysis-reasons";
-          for (const anomaly of baseline.anomalies) {
-            const chip = document.createElement("span");
-            chip.className = "analysis-reason";
-            chip.textContent = anomaly;
-            anomalyRow.appendChild(chip);
-          }
-          baselineSection.appendChild(anomalyRow);
-        }
-
-        card.appendChild(baselineSection);
       }
 
       const reasoningSection = document.createElement("div");
       reasoningSection.className = "analysis-section";
       const reasoningTitle = document.createElement("h4");
       reasoningTitle.className = "analysis-section-title";
-      reasoningTitle.textContent = analysis.fraud_classification || "Fraud assessment";
+      reasoningTitle.textContent = transactionRelevance === "primary" ? displayClassificationLabel : "Case Assessment";
       const reasoningSummary = document.createElement("div");
       reasoningSummary.className = "analysis-summary";
       reasoningSummary.textContent = analysis.reasoning_summary || "No reasoning summary available.";
@@ -4362,77 +4515,79 @@
       reasoningSection.appendChild(reasoningSummary);
       card.appendChild(reasoningSection);
 
-      const patternsSection = document.createElement("div");
-      patternsSection.className = "analysis-section";
-      const patternsTitle = document.createElement("h4");
-      patternsTitle.className = "analysis-section-title";
-      patternsTitle.textContent = "Suspicious Patterns";
-      patternsSection.appendChild(patternsTitle);
-      if (patterns.length) {
-        const patternList = document.createElement("ul");
-        for (const pattern of patterns) {
-          const item = document.createElement("li");
-          item.textContent = `${pattern.pattern || "Pattern"}: ${pattern.details || "Details unavailable."}`;
-          patternList.appendChild(item);
-        }
-        patternsSection.appendChild(patternList);
-      } else {
-        const emptyPatterns = document.createElement("div");
-        emptyPatterns.className = "analysis-empty";
-        emptyPatterns.textContent = "No suspicious pattern was triggered in the selected review window.";
-        patternsSection.appendChild(emptyPatterns);
-      }
-      card.appendChild(patternsSection);
-
-      const flaggedSection = document.createElement("div");
-      flaggedSection.className = "analysis-section";
-      const flaggedTitle = document.createElement("h4");
-      flaggedTitle.className = "analysis-section-title";
-      flaggedTitle.textContent = "Flagged Transactions";
-      flaggedSection.appendChild(flaggedTitle);
-      if (flaggedTransactions.length) {
-        const transactionList = document.createElement("div");
-        transactionList.className = "analysis-transactions";
-        for (const transaction of flaggedTransactions.slice(0, 5)) {
-          const item = document.createElement("div");
-          item.className = "analysis-transaction";
-
-          const heading = document.createElement("strong");
-          heading.textContent = `${transaction.txn_id || "Transaction"} | ${formatCurrency(transaction.amount)} | ${transaction.channel || "Channel N/A"}`;
-
-          const metaLine = document.createElement("div");
-          metaLine.className = "analysis-transaction-meta";
-          metaLine.textContent = [
-            formatDateTime(transaction.timestamp),
-            transaction.beneficiary ? `Beneficiary: ${transaction.beneficiary}` : "",
-            transaction.account_id ? `Account: ${transaction.account_id}` : ""
-          ].filter(Boolean).join(" | ");
-
-          item.appendChild(heading);
-          if (metaLine.textContent) item.appendChild(metaLine);
-
-          if (Array.isArray(transaction.reasons) && transaction.reasons.length) {
-            const reasons = document.createElement("div");
-            reasons.className = "analysis-reasons";
-            for (const reason of transaction.reasons) {
-              const chip = document.createElement("span");
-              chip.className = "analysis-reason";
-              chip.textContent = reason;
-              reasons.appendChild(chip);
-            }
-            item.appendChild(reasons);
+      if (transactionRelevance !== "not_applicable") {
+        const patternsSection = document.createElement("div");
+        patternsSection.className = "analysis-section";
+        const patternsTitle = document.createElement("h4");
+        patternsTitle.className = "analysis-section-title";
+        patternsTitle.textContent = transactionTitles.patterns;
+        patternsSection.appendChild(patternsTitle);
+        if (patterns.length) {
+          const patternList = document.createElement("ul");
+          for (const pattern of patterns) {
+            const item = document.createElement("li");
+            item.textContent = `${pattern.pattern || "Pattern"}: ${pattern.details || "Details unavailable."}`;
+            patternList.appendChild(item);
           }
-
-          transactionList.appendChild(item);
+          patternsSection.appendChild(patternList);
+        } else {
+          const emptyPatterns = document.createElement("div");
+          emptyPatterns.className = "analysis-empty";
+          emptyPatterns.textContent = "No suspicious pattern was triggered in the selected review window.";
+          patternsSection.appendChild(emptyPatterns);
         }
-        flaggedSection.appendChild(transactionList);
-      } else {
-        const emptyFlagged = document.createElement("div");
-        emptyFlagged.className = "analysis-empty";
-        emptyFlagged.textContent = "No individual transactions were flagged in this review window.";
-        flaggedSection.appendChild(emptyFlagged);
+        card.appendChild(patternsSection);
+
+        const flaggedSection = document.createElement("div");
+        flaggedSection.className = "analysis-section";
+        const flaggedTitle = document.createElement("h4");
+        flaggedTitle.className = "analysis-section-title";
+        flaggedTitle.textContent = transactionTitles.flagged;
+        flaggedSection.appendChild(flaggedTitle);
+        if (flaggedTransactions.length) {
+          const transactionList = document.createElement("div");
+          transactionList.className = "analysis-transactions";
+          for (const transaction of flaggedTransactions.slice(0, 5)) {
+            const item = document.createElement("div");
+            item.className = "analysis-transaction";
+
+            const heading = document.createElement("strong");
+            heading.textContent = `${transaction.txn_id || "Transaction"} | ${formatCurrency(transaction.amount)} | ${transaction.channel || "Channel N/A"}`;
+
+            const metaLine = document.createElement("div");
+            metaLine.className = "analysis-transaction-meta";
+            metaLine.textContent = [
+              formatDateTime(transaction.timestamp),
+              transaction.beneficiary ? `Beneficiary: ${transaction.beneficiary}` : "",
+              transaction.account_id ? `Account: ${transaction.account_id}` : ""
+            ].filter(Boolean).join(" | ");
+
+            item.appendChild(heading);
+            if (metaLine.textContent) item.appendChild(metaLine);
+
+            if (Array.isArray(transaction.reasons) && transaction.reasons.length) {
+              const reasons = document.createElement("div");
+              reasons.className = "analysis-reasons";
+              for (const reason of transaction.reasons) {
+                const chip = document.createElement("span");
+                chip.className = "analysis-reason";
+                chip.textContent = reason;
+                reasons.appendChild(chip);
+              }
+              item.appendChild(reasons);
+            }
+
+            transactionList.appendChild(item);
+          }
+          flaggedSection.appendChild(transactionList);
+        } else {
+          const emptyFlagged = document.createElement("div");
+          emptyFlagged.className = "analysis-empty";
+          emptyFlagged.textContent = "No individual transactions were flagged in this review window.";
+          flaggedSection.appendChild(emptyFlagged);
+        }
+        card.appendChild(flaggedSection);
       }
-      card.appendChild(flaggedSection);
 
       if (analysis.sop_summary || analysis.fraud_category || analysis.recommended_action || (Array.isArray(analysis.references) && analysis.references.length)) {
         const sopSection = document.createElement("div");

@@ -1,0 +1,130 @@
+[
+  {
+    "collateral_id": "COLL00001",
+    "loan_id": "LOAN00001",
+    "cif_id": "CIF1002",
+    "collateral_type": "Residential Flat",
+    "property_address": "Flat 804, Plot 348, Vijay Nagar, Indore",
+    "declared_owner_name": "Aman Verma",
+    "verified_owner_name": "Sushila Devi",
+    "declared_market_value": 6200000.0,
+    "assessed_value": 0.0,
+    "verification_status": "suspected_forged",
+    "encumbrance_status": "registry_mismatch",
+    "registry_reference": "INDORE-REG-2024-10002",
+    "duplicate_collateral_hits": 1,
+    "issues": [
+      "Submitted deed number does not match the land-registry extract.",
+      "Declared owner name differs from the verified registry owner.",
+      "The same property reference appears in a prior third-party mortgage search hit."
+    ],
+    "supporting_document_ids": [
+      "DOCV00001",
+      "DOCV00002",
+      "DOCV00003"
+    ],
+    "last_verified_at": "2026-04-15 13:03:00",
+    "created_at": "2026-03-01 13:03:00",
+    "updated_at": "2026-04-15 13:03:00"
+  },
+  {
+    "collateral_id": "COLL00002",
+    "loan_id": "LOAN00003",
+    "cif_id": "CIF1005",
+    "collateral_type": "Residential Flat",
+    "property_address": "Plot 301, Vaishali Nagar, Jaipur",
+    "declared_owner_name": "Priya Mehta",
+    "verified_owner_name": "Priya Mehta",
+    "declared_market_value": 1813421.58,
+    "assessed_value": 1580071.11,
+    "verification_status": "verified",
+    "encumbrance_status": "clear",
+    "registry_reference": "CLR-REG-2025-9001",
+    "duplicate_collateral_hits": 0,
+    "issues": [
+      "No critical ownership or enforceability issue detected during verification."
+    ],
+    "supporting_document_ids": [
+      "DOCV00010",
+      "DOCV00011"
+    ],
+    "last_verified_at": "2024-12-21 16:03:00",
+    "created_at": "2024-11-06 16:03:00",
+    "updated_at": "2024-12-21 16:03:00"
+  },
+  {
+    "collateral_id": "COLL00005",
+    "loan_id": "LOAN00009",
+    "cif_id": "CIF1015",
+    "collateral_type": "Independent House",
+    "property_address": "Plot 307, Vaishali Nagar, Jaipur",
+    "declared_owner_name": "Niharika Anand",
+    "verified_owner_name": "Niharika Anand",
+    "declared_market_value": 2564388.13,
+    "assessed_value": 2446876.89,
+    "verification_status": "verified",
+    "encumbrance_status": "clear",
+    "registry_reference": "CLR-REG-2025-9007",
+    "duplicate_collateral_hits": 0,
+    "issues": [
+      "No critical ownership or enforceability issue detected during verification."
+    ],
+    "supporting_document_ids": [
+      "DOCV00022",
+      "DOCV00023"
+    ],
+    "last_verified_at": "2024-12-20 16:03:00",
+    "created_at": "2024-11-05 16:03:00",
+    "updated_at": "2024-12-20 16:03:00"
+  },
+  {
+    "collateral_id": "COLL00003",
+    "loan_id": "LOAN00004",
+    "cif_id": "CIF1006",
+    "collateral_type": "Residential Plot",
+    "property_address": "Plot 302, Dwarka, New Delhi",
+    "declared_owner_name": "Ankit Yadav",
+    "verified_owner_name": "Ankit Yadav",
+    "declared_market_value": 938539.81,
+    "assessed_value": 1112047.73,
+    "verification_status": "verified",
+    "encumbrance_status": "clear",
+    "registry_reference": "CLR-REG-2024-9002",
+    "duplicate_collateral_hits": 0,
+    "issues": [
+      "No critical ownership or enforceability issue detected during verification."
+    ],
+    "supporting_document_ids": [
+      "DOCV00012",
+      "DOCV00013"
+    ],
+    "last_verified_at": "2024-09-20 16:03:00",
+    "created_at": "2024-08-06 16:03:00",
+    "updated_at": "2024-09-20 16:03:00"
+  },
+  {
+    "collateral_id": "COLL00004",
+    "loan_id": "LOAN00007",
+    "cif_id": "CIF1011",
+    "collateral_type": "Independent House",
+    "property_address": "Plot 305, Gomti Nagar, Lucknow",
+    "declared_owner_name": "Anirudh Bhalla",
+    "verified_owner_name": "Anirudh Bhalla",
+    "declared_market_value": 2076116.02,
+    "assessed_value": 1575570.15,
+    "verification_status": "verified",
+    "encumbrance_status": "clear",
+    "registry_reference": "CLR-REG-2025-9005",
+    "duplicate_collateral_hits": 0,
+    "issues": [
+      "No critical ownership or enforceability issue detected during verification."
+    ],
+    "supporting_document_ids": [
+      "DOCV00018",
+      "DOCV00019"
+    ],
+    "last_verified_at": "2024-01-07 16:03:00",
+    "created_at": "2023-11-23 16:03:00",
+    "updated_at": "2024-01-07 16:03:00"
+  }
+]

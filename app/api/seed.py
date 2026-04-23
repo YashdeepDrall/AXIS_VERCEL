@@ -27,7 +27,7 @@ class SeedRunResponse(BaseModel):
     )
     collections: list[str] = Field(
         description="Collections refreshed during the seed run.",
-        examples=[["customers", "transactions"]],
+        examples=[["customers", "transactions", "loan_accounts", "collateral_records", "document_verifications", "case_events"]],
     )
     customers_inserted: int = Field(
         description="Number of customer records inserted into MongoDB.",
@@ -37,6 +37,22 @@ class SeedRunResponse(BaseModel):
         description="Number of transaction records inserted into MongoDB.",
         examples=[721],
     )
+    loan_accounts_inserted: int = Field(
+        description="Number of loan-account records inserted into MongoDB.",
+        examples=[12],
+    )
+    collateral_records_inserted: int = Field(
+        description="Number of collateral-review records inserted into MongoDB.",
+        examples=[6],
+    )
+    document_verifications_inserted: int = Field(
+        description="Number of document-verification records inserted into MongoDB.",
+        examples=[24],
+    )
+    case_events_inserted: int = Field(
+        description="Number of case-event records inserted into MongoDB.",
+        examples=[10],
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -44,9 +60,13 @@ class SeedRunResponse(BaseModel):
                 "status": "success",
                 "mongo_host": "cluster0.jbhyihm.mongodb.net",
                 "database_name": "axis_fraud_chatbot",
-                "collections": ["customers", "transactions"],
+                "collections": ["customers", "transactions", "loan_accounts", "collateral_records", "document_verifications", "case_events"],
                 "customers_inserted": 80,
                 "transactions_inserted": 721,
+                "loan_accounts_inserted": 12,
+                "collateral_records_inserted": 6,
+                "document_verifications_inserted": 24,
+                "case_events_inserted": 10,
             }
         }
     )
@@ -67,9 +87,13 @@ class SeedRunResponse(BaseModel):
                         "status": "success",
                         "mongo_host": "cluster0.jbhyihm.mongodb.net",
                         "database_name": "axis_fraud_chatbot",
-                        "collections": ["customers", "transactions"],
+                        "collections": ["customers", "transactions", "loan_accounts", "collateral_records", "document_verifications", "case_events"],
                         "customers_inserted": 80,
                         "transactions_inserted": 721,
+                        "loan_accounts_inserted": 12,
+                        "collateral_records_inserted": 6,
+                        "document_verifications_inserted": 24,
+                        "case_events_inserted": 10,
                     }
                 }
             },
@@ -89,6 +113,10 @@ def run_seed_endpoint() -> SeedRunResponse:
         collections=result["collections"],
         customers_inserted=result["customers_inserted"],
         transactions_inserted=result["transactions_inserted"],
+        loan_accounts_inserted=result["loan_accounts_inserted"],
+        collateral_records_inserted=result["collateral_records_inserted"],
+        document_verifications_inserted=result["document_verifications_inserted"],
+        case_events_inserted=result["case_events_inserted"],
     )
 
 
@@ -112,4 +140,8 @@ def get_seed_status() -> SeedRunResponse:
         collections=list(snapshot["collections"]),
         customers_inserted=int(snapshot["customers_count"]),
         transactions_inserted=int(snapshot["transactions_count"]),
+        loan_accounts_inserted=int(snapshot["loan_accounts_count"]),
+        collateral_records_inserted=int(snapshot["collateral_records_count"]),
+        document_verifications_inserted=int(snapshot["document_verifications_count"]),
+        case_events_inserted=int(snapshot["case_events_count"]),
     )

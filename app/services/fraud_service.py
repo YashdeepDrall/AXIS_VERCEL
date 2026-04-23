@@ -117,6 +117,92 @@ def _report_fraud_type(analysis):
     return "Manual review required"
 
 
+def _report_transaction_relevance(analysis):
+    return _normalize_text(analysis.get("transaction_relevance"), "primary").lower()
+
+
+def _report_indicator_lines(analysis):
+    transaction_relevance = _report_transaction_relevance(analysis)
+    case_family = _normalize_text(analysis.get("case_family"))
+    document_review = analysis.get("document_review") or {}
+    collateral_review = analysis.get("collateral_review") or {}
+    loan_exposure = analysis.get("loan_exposure") or {}
+    case_event_summary = analysis.get("case_event_summary") or {}
+    indicators = []
+
+    def add_indicator(value):
+        text = _normalize_text(value)
+        if text and text not in indicators:
+            indicators.append(text)
+
+    if transaction_relevance == "not_applicable":
+        if case_family == "Loan / Mortgage Fraud":
+            status = _normalize_text(collateral_review.get("verification_status")).replace("_", " ")
+            if status:
+                add_indicator(f"Collateral verification status: {status.title()}")
+            for item in (collateral_review.get("issues") or [])[:2]:
+                add_indicator(item)
+            repayment_status = _normalize_text(loan_exposure.get("repayment_status")).replace("_", " ")
+            if repayment_status:
+                add_indicator(f"Repayment status: {repayment_status.title()}")
+            dpd = int(loan_exposure.get("days_past_due") or 0)
+            if dpd:
+                add_indicator(f"Loan delinquency reached {dpd} day(s) past due.")
+        elif case_family in {"Document Fraud", "KYC / Identity Fraud"}:
+            for item in (document_review.get("primary_mismatch_types") or [])[:3]:
+                add_indicator(f"Mismatch identified: {item}")
+            for item in (document_review.get("highlights") or [])[:3]:
+                add_indicator(item)
+        elif case_family == "Dispute / First-Party Abuse":
+            for item in (case_event_summary.get("highlights") or [])[:3]:
+                add_indicator(item)
+
+        for item in (case_event_summary.get("highlights") or [])[:2]:
+            add_indicator(item)
+
+    if not indicators:
+        indicators = _normalize_list(analysis.get("suspicious_indicators"))
+
+    return indicators[:5]
+
+
+def _report_evidence_lines(analysis):
+    transaction_relevance = _report_transaction_relevance(analysis)
+    case_family = _normalize_text(analysis.get("case_family"))
+
+    if transaction_relevance == "not_applicable":
+        if case_family == "Loan / Mortgage Fraud":
+            return [
+                "- Complete loan sanction file, underwriting notes, and repayment/default trail.",
+                "- Submitted collateral papers, registry extract, ownership verification, and valuation trail.",
+                "- Collateral re-verification findings, legal review notes, and recovery-enforceability observations.",
+            ]
+        if case_family == "Document Fraud":
+            return [
+                "- Original submitted salary slips, bank statements, ITR documents, and loan application pack.",
+                "- Source-record verification logs, reconciliation outputs, and exact mismatch findings.",
+                "- Linked exposure review notes and formal escalation records for the document-authenticity review.",
+            ]
+        if case_family == "KYC / Identity Fraud":
+            return [
+                "- Original KYC set, onboarding records, profile-change history, and submitted identity proofs.",
+                "- Aadhaar/PAN/address verification outputs, liveness or face-match results, and linked-identity checks.",
+                "- Account-opening or profile-update audit trail preserved with escalation notes.",
+            ]
+        if case_family == "Dispute / First-Party Abuse":
+            return [
+                "- Complaint history, prior dispute outcomes, merchant descriptors, and authorization evidence.",
+                "- Approval/authentication trail and any customer acknowledgement or device/session artefacts tied to the complaint.",
+                "- Review notes showing whether the denial aligns with or contradicts the evidence trail.",
+            ]
+
+    return [
+        "- Obtain customer confirmation and dispute narration for the reviewed transactions.",
+        "- Capture account statement trail, beneficiary/VPA details, and relevant channel/session evidence as supported by the SOP.",
+        "- Preserve screening notes, containment actions, and recovery/escalation checkpoints in the case record.",
+    ]
+
+
 def _strip_code_fences(text):
     cleaned = _normalize_text(text)
     cleaned = re.sub(r"^```(?:text)?\s*", "", cleaned, flags=re.IGNORECASE)
@@ -173,8 +259,18 @@ def _format_ranked_chunks(ranked_chunks):
 def _build_report_prompt(query, ranked_chunks, analysis):
     formatted_chunks = _format_ranked_chunks(ranked_chunks)
     joined_context = "\n\n".join(formatted_chunks)
-    indicators = analysis.get("suspicious_indicators") or []
+    indicators = _report_indicator_lines(analysis)
     indicator_text = ", ".join(indicators) if indicators else "None explicitly identified yet"
+    case_family = _normalize_text(analysis.get("case_family"), "Manual Review")
+    suspicion_direction = _normalize_text(analysis.get("suspicion_direction"), "Manual Review")
+    investigation_basis = _normalize_text(analysis.get("investigation_basis"), "Mixed")
+    transaction_relevance = _normalize_text(analysis.get("transaction_relevance"), "Supporting")
+    review_scope = _normalize_text(analysis.get("review_scope_label"), "Supplied review scope")
+    related_data_summary = analysis.get("related_data_summary") or {}
+    loan_summary = _normalize_text((analysis.get("loan_exposure") or {}).get("summary"))
+    collateral_summary = _normalize_text((analysis.get("collateral_review") or {}).get("summary"))
+    document_summary = _normalize_text((analysis.get("document_review") or {}).get("summary"))
+    case_event_summary = _normalize_text((analysis.get("case_event_summary") or {}).get("summary"))
 
     return dedent(f"""
     You are preparing an AXIS Bank fraud investigation report.
@@ -200,14 +296,31 @@ def _build_report_prompt(query, ranked_chunks, analysis):
     - If something is uncertain, say "Based on retrieved SOP context" instead of assuming.
     - Under Source References, list the retrieved source file names.
     - Use flat bullet points under each heading.
+    - Respect the investigation basis and transaction relevance exactly as provided in the grounded analysis.
+    - If transaction relevance is `Not Applicable`, do not introduce debit velocity, beneficiary creation, customer-victim loss language, or post-disbursal transaction suspicion as primary evidence unless the grounded analysis explicitly says those are material.
+    - If transaction relevance is `Supporting`, mention transactions only as supporting context and do not let them override the stated case family.
 
     Grounded analysis:
+    - Case family: {case_family}
+    - Suspicion direction: {suspicion_direction}
+    - Investigation basis: {investigation_basis}
+    - Transaction relevance: {transaction_relevance}
+    - Review scope: {review_scope}
     - Fraud category: {analysis.get('fraud_category', 'Unknown')}
     - Fraud classification: {analysis.get('fraud_classification', 'Manual review required')}
     - Risk level: {analysis.get('risk_level', 'Medium')}
-- Indicators: {indicator_text}
-- Relevant information: {analysis.get('relevant_information', '')}
-- Recommended action: {analysis.get('recommended_action', '')}
+    - Indicators: {indicator_text}
+    - Relevant information: {analysis.get('relevant_information', '')}
+    - Recommended action: {analysis.get('recommended_action', '')}
+    - Routing summary: {_normalize_text(analysis.get('case_summary'))}
+    - Related loan files: {int(related_data_summary.get('loan_accounts') or 0)}
+    - Related collateral records: {int(related_data_summary.get('collateral_records') or 0)}
+    - Related document verifications: {int(related_data_summary.get('document_verifications') or 0)}
+    - Related case events: {int(related_data_summary.get('case_events') or 0)}
+    - Loan exposure summary: {loan_summary or 'Not material'}
+    - Collateral summary: {collateral_summary or 'Not material'}
+    - Document verification summary: {document_summary or 'Not material'}
+    - Case-event summary: {case_event_summary or 'Not material'}
 
     User query:
     {query}
@@ -293,7 +406,7 @@ def detect_fraud(query, bank_id):
 
 def _fallback_report(query, analysis, service_note=""):
     references = analysis.get("references") or []
-    indicators = analysis.get("suspicious_indicators") or []
+    indicators = _report_indicator_lines(analysis)
     indicator_lines = [f"- {item}" for item in indicators] if indicators else ["- No specific indicators extracted"]
     source_lines = [f"- {item}" for item in references] if references else ["- No source references available"]
     action_lines = [f"- {item}" for item in _normalize_action_lines(analysis)]
@@ -328,9 +441,7 @@ def _fallback_report(query, analysis, service_note=""):
         *action_lines,
         "",
         "Evidence and Documentation Required:",
-        "- Obtain customer confirmation and dispute narration for the reviewed transactions.",
-        "- Capture account statement trail, beneficiary/VPA details, and relevant channel/session evidence as supported by the SOP.",
-        "- Preserve screening notes, containment actions, and recovery/escalation checkpoints in the case record.",
+        *_report_evidence_lines(analysis),
         "",
         "Escalation and Reporting:",
         "- Record the case in the appropriate AXIS fraud workflow and continue escalation in line with the retrieved SOP guidance.",

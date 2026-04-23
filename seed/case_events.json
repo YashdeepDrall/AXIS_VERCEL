@@ -1,0 +1,187 @@
+[
+  {
+    "event_id": "CASEEV00010",
+    "cif_id": "CIF1008",
+    "loan_id": null,
+    "case_family": "Dispute / First-Party Abuse",
+    "event_type": "authorization_evidence_found",
+    "severity": "medium",
+    "status": "confirmed",
+    "summary": "Merchant and channel records indicate a normal authorization path for the disputed merchant transaction.",
+    "occurred_at": "2026-04-19 08:03:00",
+    "linked_txn_ids": [
+      "TXN00060"
+    ],
+    "linked_document_ids": [],
+    "outcome_note": "Liability decision deferred until the repeat-dispute review is completed.",
+    "created_at": "2026-04-19 08:03:00",
+    "updated_at": "2026-04-19 12:03:00"
+  },
+  {
+    "event_id": "CASEEV00009",
+    "cif_id": "CIF1008",
+    "loan_id": null,
+    "case_family": "Dispute / First-Party Abuse",
+    "event_type": "repeat_dispute_pattern",
+    "severity": "high",
+    "status": "under_review",
+    "summary": "Repeat complaint behaviour matches prior disputes raised against similar merchant spends.",
+    "occurred_at": "2026-04-18 05:03:00",
+    "linked_txn_ids": [
+      "TXN00060",
+      "TXN00061"
+    ],
+    "linked_document_ids": [],
+    "outcome_note": "Complaint history suggests potential first-party fraud and needs supervisor review.",
+    "created_at": "2026-04-18 05:03:00",
+    "updated_at": "2026-04-18 09:03:00"
+  },
+  {
+    "event_id": "CASEEV00003",
+    "cif_id": "CIF1002",
+    "loan_id": "LOAN00001",
+    "case_family": "Loan / Mortgage Fraud",
+    "event_type": "legal_recovery_review",
+    "severity": "medium",
+    "status": "under_review",
+    "summary": "Legal and recovery teams were asked to review enforceability before recovery action.",
+    "occurred_at": "2026-04-17 12:03:00",
+    "linked_txn_ids": [],
+    "linked_document_ids": [
+      "DOCV00001",
+      "DOCV00002"
+    ],
+    "outcome_note": "Awaiting legal enforceability opinion on the submitted collateral set.",
+    "created_at": "2026-04-17 12:03:00",
+    "updated_at": "2026-04-17 16:03:00"
+  },
+  {
+    "event_id": "CASEEV00002",
+    "cif_id": "CIF1002",
+    "loan_id": "LOAN00001",
+    "case_family": "Loan / Mortgage Fraud",
+    "event_type": "collateral_registry_mismatch",
+    "severity": "high",
+    "status": "escalated",
+    "summary": "Collateral re-verification found a registry-owner mismatch against the submitted property papers.",
+    "occurred_at": "2026-04-15 13:03:00",
+    "linked_txn_ids": [],
+    "linked_document_ids": [
+      "DOCV00001",
+      "DOCV00002",
+      "DOCV00003"
+    ],
+    "outcome_note": "Legal and fraud review escalated after registry mismatch confirmation.",
+    "created_at": "2026-04-15 13:03:00",
+    "updated_at": "2026-04-15 17:03:00"
+  },
+  {
+    "event_id": "CASEEV00008",
+    "cif_id": "CIF1008",
+    "loan_id": null,
+    "case_family": "Dispute / First-Party Abuse",
+    "event_type": "dispute_received",
+    "severity": "medium",
+    "status": "open",
+    "summary": "Customer denied recent merchant debits and requested reversal despite a normal authorization trail.",
+    "occurred_at": "2026-04-14 13:03:00",
+    "linked_txn_ids": [
+      "TXN00060"
+    ],
+    "linked_document_ids": [],
+    "outcome_note": "Initial dispute logged pending merchant and channel evidence review.",
+    "created_at": "2026-04-14 13:03:00",
+    "updated_at": "2026-04-14 17:03:00"
+  },
+  {
+    "event_id": "CASEEV00007",
+    "cif_id": "CIF1004",
+    "loan_id": null,
+    "case_family": "KYC / Identity Fraud",
+    "event_type": "profile_change_alert",
+    "severity": "medium",
+    "status": "open",
+    "summary": "Recent mobile and email changes were recorded shortly before the KYC mismatch escalation.",
+    "occurred_at": "2026-04-02 07:03:00",
+    "linked_txn_ids": [],
+    "linked_document_ids": [],
+    "outcome_note": "Profile changes require linked-account review before closure.",
+    "created_at": "2026-04-02 07:03:00",
+    "updated_at": "2026-04-02 11:03:00"
+  },
+  {
+    "event_id": "CASEEV00006",
+    "cif_id": "CIF1004",
+    "loan_id": null,
+    "case_family": "KYC / Identity Fraud",
+    "event_type": "onboarding_flag",
+    "severity": "high",
+    "status": "under_review",
+    "summary": "Onboarding review flagged identity mismatch indicators across PAN, Aadhaar, and address proof.",
+    "occurred_at": "2026-03-31 16:03:00",
+    "linked_txn_ids": [],
+    "linked_document_ids": [
+      "DOCV00007",
+      "DOCV00008",
+      "DOCV00009"
+    ],
+    "outcome_note": "Relationship remains on enhanced due-diligence hold.",
+    "created_at": "2026-03-31 16:03:00",
+    "updated_at": "2026-03-31 20:03:00"
+  },
+  {
+    "event_id": "CASEEV00005",
+    "cif_id": "CIF1003",
+    "loan_id": "LOAN00002",
+    "case_family": "Document Fraud",
+    "event_type": "income_document_mismatch",
+    "severity": "high",
+    "status": "open",
+    "summary": "Salary and bank-statement checks produced multiple mismatches against source records.",
+    "occurred_at": "2026-03-04 10:03:00",
+    "linked_txn_ids": [],
+    "linked_document_ids": [
+      "DOCV00004",
+      "DOCV00005"
+    ],
+    "outcome_note": "Fraud team requested a forensic review of the submitted income pack.",
+    "created_at": "2026-03-04 10:03:00",
+    "updated_at": "2026-03-04 14:03:00"
+  },
+  {
+    "event_id": "CASEEV00004",
+    "cif_id": "CIF1003",
+    "loan_id": "LOAN00002",
+    "case_family": "Document Fraud",
+    "event_type": "underwriting_hold",
+    "severity": "high",
+    "status": "under_review",
+    "summary": "Loan underwriting was paused after income-proof verification failed.",
+    "occurred_at": "2026-03-03 16:03:00",
+    "linked_txn_ids": [],
+    "linked_document_ids": [
+      "DOCV00004",
+      "DOCV00005",
+      "DOCV00006"
+    ],
+    "outcome_note": "Credit approval is on hold pending manual document review.",
+    "created_at": "2026-03-03 16:03:00",
+    "updated_at": "2026-03-03 20:03:00"
+  },
+  {
+    "event_id": "CASEEV00001",
+    "cif_id": "CIF1002",
+    "loan_id": "LOAN00001",
+    "case_family": "Loan / Mortgage Fraud",
+    "event_type": "repayment_default",
+    "severity": "high",
+    "status": "open",
+    "summary": "EMI obligations remained unpaid for over 120 days after the initial repayment cycle.",
+    "occurred_at": "2025-12-13 16:03:00",
+    "linked_txn_ids": [],
+    "linked_document_ids": [],
+    "outcome_note": "Recovery queue opened after prolonged delinquency.",
+    "created_at": "2025-12-13 16:03:00",
+    "updated_at": "2025-12-13 20:03:00"
+  }
+]

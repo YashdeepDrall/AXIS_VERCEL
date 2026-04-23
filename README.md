@@ -10,6 +10,8 @@ This project is scoped for AXIS Bank fraud investigation workflows and runs as a
 - RAG: Gemini embeddings plus Gemini answer generation through API calls
 - Vector storage: document chunk embeddings are cached locally on disk and reused for unchanged PDFs
 - Conversation history: persisted locally in `local_cache/axis_conversations.json` with role-based visibility
+- Multi-case design blueprint: `docs/multi-case-investigation-blueprint.md`
+- Phase 1 implementation breakdown: `docs/phase-1-case-family-router-plan.md`
 
 ## Environment
 

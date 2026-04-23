@@ -15,6 +15,12 @@ router = APIRouter(prefix="/customer-fraud", tags=["Customer Fraud Chat"])
 class CustomerFraudConversationState(BaseModel):
     step: str | None = None
     sessionId: str | None = None
+    case_query: str | None = None
+    case_description: str | None = None
+    case_family: str | None = None
+    suspicion_direction: str | None = None
+    investigation_basis: str | None = None
+    transaction_relevance: str | None = None
     cif_id: str | None = None
     account_id: str | None = None
     pan: str | None = None
@@ -22,9 +28,11 @@ class CustomerFraudConversationState(BaseModel):
     mobile: str | None = None
     start_datetime: str | None = None
     end_datetime: str | None = None
+    evidence_modules_used: list[str] = Field(default_factory=list)
     resolved_customer: dict[str, Any] = Field(default_factory=dict)
     missing_fields: list[str] = Field(default_factory=list)
     latest_analysis: dict[str, Any] = Field(default_factory=dict)
+    sop_analysis: dict[str, Any] = Field(default_factory=dict)
 
 
 class CustomerFraudChatRequest(BaseModel):
@@ -123,11 +131,95 @@ class CustomerBaselinePayload(BaseModel):
     anomalies: list[str] = Field(default_factory=list)
 
 
+class FamilyEvidenceCardPayload(BaseModel):
+    title: str
+    summary: str
+    items: list[str] = Field(default_factory=list)
+    emphasis: str | None = None
+
+
+class RelatedDataSummaryPayload(BaseModel):
+    loan_accounts: int = 0
+    collateral_records: int = 0
+    document_verifications: int = 0
+    case_events: int = 0
+
+
+class LoanExposurePayload(BaseModel):
+    available: bool = False
+    loan_count: int = 0
+    loan_id: str | None = None
+    loan_account_number: str | None = None
+    product_type: str | None = None
+    sanction_amount: float = 0.0
+    disbursed_amount: float = 0.0
+    outstanding_amount: float = 0.0
+    overdue_amount: float = 0.0
+    emi_amount: float = 0.0
+    sanctioned_at: str | None = None
+    repayment_status: str | None = None
+    days_past_due: int = 0
+    last_repayment_at: str | None = None
+    branch_name: str | None = None
+    loan_status: str | None = None
+    underwriting_flags: list[str] = Field(default_factory=list)
+    summary: str | None = None
+
+
+class CollateralReviewPayload(BaseModel):
+    available: bool = False
+    collateral_count: int = 0
+    collateral_id: str | None = None
+    loan_id: str | None = None
+    collateral_type: str | None = None
+    property_address: str | None = None
+    declared_owner_name: str | None = None
+    verified_owner_name: str | None = None
+    declared_market_value: float = 0.0
+    assessed_value: float = 0.0
+    verification_status: str | None = None
+    encumbrance_status: str | None = None
+    registry_reference: str | None = None
+    duplicate_collateral_hits: int = 0
+    supporting_document_count: int = 0
+    issues: list[str] = Field(default_factory=list)
+    summary: str | None = None
+
+
+class DocumentReviewPayload(BaseModel):
+    available: bool = False
+    documents_reviewed: int = 0
+    failed_documents: int = 0
+    primary_mismatch_types: list[str] = Field(default_factory=list)
+    verification_statuses: list[str] = Field(default_factory=list)
+    highlights: list[str] = Field(default_factory=list)
+    latest_submitted_at: str | None = None
+    summary: str | None = None
+
+
+class CaseEventSummaryPayload(BaseModel):
+    available: bool = False
+    total_events: int = 0
+    open_events: int = 0
+    escalated_events: int = 0
+    high_severity_events: int = 0
+    recent_event_types: list[str] = Field(default_factory=list)
+    latest_event_at: str | None = None
+    latest_status: str | None = None
+    latest_summary: str | None = None
+    highlights: list[str] = Field(default_factory=list)
+    summary: str | None = None
+
+
 class CustomerFraudAnalysisPayload(BaseModel):
     customer: CustomerRecordPayload
     query_window: QueryWindowPayload
     risk_level: str
     risk_score: int
+    case_family: str
+    suspicion_direction: str
+    investigation_basis: str
+    transaction_relevance: str
     fraud_classification: str
     suspicious_patterns: list[FraudPatternPayload] = Field(default_factory=list)
     flagged_transactions: list[FlaggedTransactionPayload] = Field(default_factory=list)
@@ -135,6 +227,14 @@ class CustomerFraudAnalysisPayload(BaseModel):
     reviewed_transactions: list[ReviewedTransactionPayload] = Field(default_factory=list)
     transaction_summary: TransactionSummaryPayload
     customer_baseline: CustomerBaselinePayload | dict[str, Any] = Field(default_factory=dict)
+    related_data_summary: RelatedDataSummaryPayload | dict[str, Any] = Field(default_factory=dict)
+    loan_exposure: LoanExposurePayload | dict[str, Any] = Field(default_factory=dict)
+    collateral_review: CollateralReviewPayload | dict[str, Any] = Field(default_factory=dict)
+    document_review: DocumentReviewPayload | dict[str, Any] = Field(default_factory=dict)
+    case_event_summary: CaseEventSummaryPayload | dict[str, Any] = Field(default_factory=dict)
+    evidence_modules_used: list[str] = Field(default_factory=list)
+    case_summary: str
+    family_cards: list[FamilyEvidenceCardPayload] = Field(default_factory=list)
     reasoning_summary: str
     recommended_actions: list[str] = Field(default_factory=list)
 
@@ -178,6 +278,10 @@ class CustomerFraudChatResponse(BaseModel):
                     },
                     "risk_level": "High",
                     "risk_score": 82,
+                    "case_family": "Transaction Fraud",
+                    "suspicion_direction": "Customer Victim",
+                    "investigation_basis": "Transaction-Led",
+                    "transaction_relevance": "primary",
                     "fraud_classification": "Likely mule-account payout or account takeover pattern",
                     "suspicious_patterns": [
                         {
@@ -199,6 +303,15 @@ class CustomerFraudChatResponse(BaseModel):
                         "new_beneficiary_transactions": 2,
                         "high_value_debits": 0,
                     },
+                    "evidence_modules_used": [
+                        "Universal Case Header",
+                        "Transaction Review",
+                        "Transaction Timeline",
+                        "Customer Baseline",
+                        "SOP Grounding"
+                    ],
+                    "case_summary": "Transaction Fraud is being reviewed as a transaction-led case with customer victim suspicion. Transaction activity is the primary evidence source for this investigation.",
+                    "family_cards": [],
                     "reasoning_summary": "I reviewed the selected transaction window...",
                     "recommended_actions": [
                         "Call the customer on the registered mobile number and trigger immediate fraud-operations review."
@@ -207,6 +320,11 @@ class CustomerFraudChatResponse(BaseModel):
                 "conversation_state": {
                     "step": "analysis_complete",
                     "sessionId": "axis001_demo_session",
+                    "case_description": "Repeated UPI debits reported by the customer.",
+                    "case_family": "Transaction Fraud",
+                    "suspicion_direction": "Customer Victim",
+                    "investigation_basis": "Transaction-Led",
+                    "transaction_relevance": "primary",
                     "cif_id": "CIF1001",
                     "customer_name": "Rahul Sharma",
                     "mobile": "9876543210",
